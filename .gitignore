@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+#Folders
+raw_data/
+metadata/
+visualization/
