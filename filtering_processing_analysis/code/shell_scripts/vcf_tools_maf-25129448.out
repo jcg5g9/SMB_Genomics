@@ -1,0 +1,17 @@
+
+VCFtools - 0.1.14
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf ../../../raw_data/smb_genomics.vcf
+	--recode-INFO-all
+	--min-meanDP 15
+	--out ../../data/processed_vcf/01_filter_depth
+	--recode
+
+CONTIG declaration found without ID: /A
+
+After filtering, kept 95 out of 95 Individuals
+Outputting VCF file...
+After filtering, kept 127429 out of a possible 127429 Sites
+Run Time = 34.00 seconds
