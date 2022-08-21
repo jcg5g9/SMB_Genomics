@@ -12,6 +12,7 @@ In this analysis, we generated easily readible maps displaying the native distri
 #### Run the code: `map_analysis/smb_genomics_map_analysis.Rmd`
 
 ### Analysis 2: SNP Filtering, Data Processing, and Preliminary Calculations
+In this analysis, we performed further quality filtering on the processed and genotyped SNPs generated at Floragenex, Inc. for Smallmouth Bass and Neosho Bass. Specifically, we screened the processed data for SNPs with greater than 15X read depth; fish samples with less than 20% genotype calls across all SNPs ("badsamples"); SNPs with a phred quality score less than 20 ("qual"); and SNPs with greater than 20% missing genotype calls across fish individuals ('missing').
 
 
-#### Run the code: `allele_frequenc_analysis/smb_genomics_allele_frequency_analysis.Rmd`
+#### Run the code: `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd`
