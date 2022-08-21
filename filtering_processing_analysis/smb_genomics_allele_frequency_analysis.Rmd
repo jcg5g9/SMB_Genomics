@@ -25,6 +25,49 @@ library(pcadapt)
 library(ggforce)
 ```
 
+## PHASE 1: Filter SNPs
+In this phase of the analysis, we are filtering the final, raw VCF file which was generated with stringent filtering criteria at Floragenex, Inc. (see `project_info/Floragenex_project_report.pdf`). The file was originally named "AR21_Aligned_Genotypes_stringent.vcf"; we renamed the file "smb_genomics.vcf" for convenience, and the file can be found here: `raw_data/smb_genomics.vcf`. <br><br>
+
+<b>See below for information on SNPs in the original VCF file</b>: <br><br>
+<b>Total SNPs:</b> 127,429
+
+<b>Programs needed</b>: <br><br>
+
+VCFTools v.0.1.14 (Danecek et al. 2011) <br>
+
+<br><b>Citation</b>:<br>
+
+Danecek, P., Auton, A., Abecasis, G., Albers, C. A., Banks, E., DePristo, M. A., … Durbin, R. (2011). The variant call format and VCFtools. Bioinformatics, 27, 2156–2158. doi:10.1093/bioinformatics/btr330
+
+### STEP 1: Generate a general bash shell script for all VCF commands header with which to run all VCF commands
+In this step, we are generating the header for a universal shell script 
+
+### STEP 1: Filter SNPs for a minimum average depth of coverage of 15X
+In this step, we are filtering the dataset to retain only SNPs that have a minimum average depth of coverage across all individuals of 15X. 
+
+#### 1a: Generate a bash shell script to run VCFTOOLS to filter for mean depth of coverage; run the Rmd chunk below:
+
+##### Bash shell script for VCFTools
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J get_meanDP  # give the job a custom name
+#SBATCH -o vcf_meanDP-%j.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# Load VCFtools module
+module load rss/rss-2020
+module load vcftools/vcftools-v0.1.14
+
+# Commands with srun will run on all cores in the allocation
+vcftools --vcf ../../../raw_data/smb_genomics.vcf --min-meanDP 15 --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_depth
+```
+
+
 ## Preliminary Data Analyses
 ### All preliminary filtering steps were conducted sequentially on VCF files in VCFTOOLS. Outputs from VCFTOOLS were converted into SNP tables (easily readable files which include total number of homozygotes and heterozgyotes of reference and alternative alleles) with GATK and read into Excel. Excel files were then manipulated and analyzed in R.
 
@@ -563,6 +606,7 @@ ggplot(minor_allele_all_pops, aes(x=freq_min, fill = population)) +
 dev.off()
 ```
 ```
+
 
 
 
