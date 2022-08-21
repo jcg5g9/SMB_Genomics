@@ -23,11 +23,12 @@ library(cowplot)
 library(maps)
 library(mapdata)
 library(stringr)
+library(devtools)
 library(sf)
-library(ggsn)
 library(raster)
 library(maptools)
 library(rgdal)
+library(ggsn)
 ```
 
 We are generating two types of species' native range maps: 1) a full species range map for Smallmouth Bass and Neosho Bass superimposed on the United States and southern Canada, and 2) a close-up species range map within the Central Interior Highlands (CIH) ecoregion. We are reading in the following data layers, which were downloaded from publically avaialbe online GIS databases:
@@ -49,8 +50,8 @@ shape_na <- readOGR(dsn = "data/north_america_shape_files",
                     layer = "north_america")
 
 # Read in shape files for the states of the United States
-shape_state <- readOGR(dsn = "data/state_shape_files", 
-                       layer = "states") 
+shape_state <- readOGR(dsn = "data/states_shape_files",
+                       layer = "states")
 
 # Read in shape files for Canada
 shape_canada <- readOGR(dsn = "data/canada_shape_files", 
@@ -90,6 +91,7 @@ plot(shape_na,
 
 # Plot Canada second
 plot(shape_canada, 
+     add = T,
      col= alpha("white", 0.8), 
      border = "black", 
      axes = T, 
@@ -98,6 +100,7 @@ plot(shape_canada,
 
 # Plot states in the United States third
 plot(shape_state, 
+     add = T,
      col= alpha("white", 0.8), 
      border = "black", 
      axes = T, 
@@ -106,26 +109,26 @@ plot(shape_state,
 
 # Plot smallmouth bass fourth
 plot(shape_smb, 
-     add = TRUE, 
+     add = T,
      col = alpha("grey84", 0.8), 
      border = T, 
      axes = TRUE, 
-     ylim = c(20,48), 
-     xlim = c(-110,-60))
+     ylim = c(25,51), 
+     xlim = c(-126,-60))
 
 # Plot neosho bass fifth
 plot(shape_neosho, 
-     add = TRUE, 
+     add = T,
      col = alpha("grey54", 0.9), 
      border = T, 
      axes = TRUE, 
-     ylim = c(30,48), 
-     xlim = c(-130,-60)) 
+     ylim = c(25,51), 
+     xlim = c(-126,-60)) 
 
 # Plot legend last
-legend(x = -129, 
-       y = 30, 
-       legend = c("Smallmouth Bass Range", "Neosho Bass Range"),
+legend(x = -80, 
+       y = 35, 
+       legend = c("Smallmouth", "Neosho"),
        bty = "n",
        fill = c("grey84","grey54"), 
        cex = 1.2) 
@@ -157,7 +160,7 @@ plot(shape_state,
 
 # Plot smallmouth bass range second
 plot(shape_smb, 
-     add = TRUE, 
+     add = T, 
      col = "gray94", 
      border = T, 
      axes=TRUE, 
@@ -167,7 +170,7 @@ plot(shape_smb,
 
 # Plot neosho bass range third
 plot(shape_neosho, 
-     add = TRUE, 
+     add = T, 
      col = "grey74", 
      border = T, 
      axes = TRUE, 
@@ -177,18 +180,24 @@ plot(shape_neosho,
 
 # Plot rivers fourth
 plot(shape_river, 
-     add = T, col="blue", 
-     border = F, axes = T, 
+     add = T, 
+     col="blue", 
+     border = F, 
+     axes = T, 
      ylim = c(35,38), 
      xlim = c(-96,-91), 
      cex.axis = 2)
 
 # Plot scalebar last
-scalebar(200, 
-         xy = c(-96, 34.85), 
-         type = "bar", 
-         divs = 4, 
-         cex = 2)
+scalebar(transform = T,
+         location = "bottomleft",
+         x.min = -96,
+         x.max = -91,
+         y.min = 35,
+         y.max = 38,
+         dist = 50,
+         dist_unit = "km")
+
 
 dev.off()
 ```
