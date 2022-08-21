@@ -62,13 +62,13 @@ In this step, we are generating a universal bash shell script to run all SNP and
 ```
 
 ### STEP 2: Filter SNPs for a minimum average depth of coverage of 15X
-In this step, we are filtering the dataset to retain only SNPs that have a minimum average depth of coverage across all individuals of 15X. 
+In this step, we are filtering the dataset to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
 
-#### 2a: Include the code below in the vctools.sh shell script to filter for minimum average depth of coverage:
+#### 2a: Include the code below in the vctools.sh shell script to filter for minimum depth of coverage:
 
 ##### Command line code for filtering SNPs at minimum depth of coverage. UNCOMMENT this code in the shell script.
 ```{bash}
-#vcftools --vcf ../../../raw_data/smb_genomics.vcf --min-meanDP 15 --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_depth
+#vcftools --vcf ../../../raw_data/smb_genomics.vcf --minDP 15 --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_depth
 ```
 
 <b>Filtering results</b>: <br><br>
