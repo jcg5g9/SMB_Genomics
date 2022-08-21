@@ -1,0 +1,202 @@
+---
+title: "Generating Species Native Range Maps"
+author: "Joe Gunn"
+date: "9/11/2019"
+output: html_document
+---
+
+# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## Specific Aim: Generating species range maps for Smallmouth Bass and Neosho Bass
+In this analysis, we generate easily readible maps displaying the native distributions of the two species of interest, Smallmouth Bass and Neosho Bass. The following code generates two types of maps: 1) a full range map, in which the full native range of each species is displayed, and 2) a close-up map of the Central Interior Highlands (CIH), where the paraptry of the species' ranges is shown in detail. These are geo-referenced outline maps only. Shapes representing stream sites and/or populations were superimposed a posteriori on the maps in PowerPoint for publication figures.
+
+## Phases of analysis
+### Phase 1: Read-in and plot maps
+
+### Libraries needed for analysis
+```{r setup, echo = FALSE, include = FALSE}
+library(sp)
+library(readxl)
+library(tidyverse)
+library(cowplot)
+library(maps)
+library(mapdata)
+library(stringr)
+library(sf)
+library(ggsn)
+library(raster)
+library(maptools)
+library(rgdal)
+```
+
+We are generating two types of species' native range maps: 1) a full species range map for Smallmouth Bass and Neosho Bass superimposed on the United States and southern Canada, and 2) a close-up species range map within the Central Interior Highlands (CIH) ecoregion. We are reading in the following data layers, which were downloaded from publically avaialbe online GIS databases:
+
+<b>Data layers used:</b> <br><br>
+North America <br>
+States of the United States <br>
+Canada <br>
+Rivers of the CIH <br>
+Smallmouth Bass species range <br>
+Neosho Bass species range <br>
+
+### STEP 1: Read-in shape files for each of the above-listed data layers; run the Rmd chunk below:
+
+##### Read in shape files
+```{r, include = FALSE}
+# Read in shape files for North America
+shape_na <- readOGR(dsn = "data/north_america_shape_files", 
+                    layer = "north_america")
+
+# Read in shape files for the states of the United States
+shape_state <- readOGR(dsn = "data/state_shape_files", 
+                       layer = "states") 
+
+# Read in shape files for Canada
+shape_canada <- readOGR(dsn = "data/canada_shape_files", 
+                        layer = "canada")
+
+# Read in shape files for rivers in the area of interest
+shape_river <- readOGR(dsn = "data/river_shape_files", 
+                       layer = "rivers")
+
+# Read in shape files for the Smallmouth Bass native range
+shape_smb <- readOGR(dsn = "data/species_range_shape_files/smb", 
+                     layer = "smb") 
+
+# Read in shape files for the Neosho Bass native range
+shape_neosho <- readOGR(dsn = "data/species_range_shape_files/neosho", 
+                        layer = "neosho") 
+```
+
+### STEP 2: Generate maps
+
+#### 2a: Generate a full species native range map, including the United States, Canada, outlines of the states of the United States, rivers in the CIH, the Smallmouth Bass native range, and the Neosho Bass native range.
+
+##### 2a.1. Run the Rmd chunk below to generate a full range map:
+
+##### Generate full range map: `figures/full_range.pdf`
+```{r}
+# Generate a full range map 
+pdf("figures/full_range.pdf", width=7, height = 5)
+
+# Plot North America first
+plot(shape_na, 
+     col= alpha("white", 0.8), 
+     border = "black", 
+     axes = T, 
+     ylim = c(25,51), 
+     xlim = c(-126,-60)) 
+
+# Plot Canada second
+plot(shape_canada, 
+     col= alpha("white", 0.8), 
+     border = "black", 
+     axes = T, 
+     ylim = c(25,51), 
+     xlim = c(-126,-60)) 
+
+# Plot states in the United States third
+plot(shape_state, 
+     col= alpha("white", 0.8), 
+     border = "black", 
+     axes = T, 
+     ylim = c(25,51), 
+     xlim = c(-126,-60)) 
+
+# Plot smallmouth bass fourth
+plot(shape_smb, 
+     add = TRUE, 
+     col = alpha("grey84", 0.8), 
+     border = T, 
+     axes = TRUE, 
+     ylim = c(20,48), 
+     xlim = c(-110,-60))
+
+# Plot neosho bass fifth
+plot(shape_neosho, 
+     add = TRUE, 
+     col = alpha("grey54", 0.9), 
+     border = T, 
+     axes = TRUE, 
+     ylim = c(30,48), 
+     xlim = c(-130,-60)) 
+
+# Plot legend last
+legend(x = -129, 
+       y = 30, 
+       legend = c("Smallmouth Bass Range", "Neosho Bass Range"),
+       bty = "n",
+       fill = c("grey84","grey54"), 
+       cex = 1.2) 
+
+dev.off()
+```
+
+Note: we did not include a scalebar in the United States map as we were only interested in plotting ranges qualitatively for visual reference. The generated map is not necessarily drawn to exact scale.
+
+#### 2b: Generate a close-up map of the CIH, including states of the United States, rivers in the CIH, the Smallmouth Bass native range, and the Neosho Bass native range. 
+
+### IMPORTANT NOTE: Order of plotting data layers matters for our analysis.
+
+##### 2b.1. Run the Rmd chunk below to generate a CIH range map:
+
+##### Generate CIH range map: `figures/cih.pdf`
+```{r}
+# Generate full range map
+pdf("figures/cih.pdf", width = 9, height = 8) 
+
+# Plot states first
+plot(shape_state, 
+     col=alpha("white", 0.3), 
+     border = "black", 
+     axes = T, 
+     ylim = c(35,38), 
+     xlim = c(-96,-91.1), 
+     cex.axis = 1.6)
+
+# Plot smallmouth bass range second
+plot(shape_smb, 
+     add = TRUE, 
+     col = "gray94", 
+     border = T, 
+     axes=TRUE, 
+     ylim = c(35,38), 
+     xlim = c(-96,-91), 
+     cex.axis = 2)
+
+# Plot neosho bass range third
+plot(shape_neosho, 
+     add = TRUE, 
+     col = "grey74", 
+     border = T, 
+     axes = TRUE, 
+     ylim = c(35,38), 
+     xlim = c(-96,-91), 
+     cex.axis = 2)
+
+# Plot rivers fourth
+plot(shape_river, 
+     add = T, col="blue", 
+     border = F, axes = T, 
+     ylim = c(35,38), 
+     xlim = c(-96,-91), 
+     cex.axis = 2)
+
+# Plot scalebar last
+scalebar(200, 
+         xy = c(-96, 34.85), 
+         type = "bar", 
+         divs = 4, 
+         cex = 2)
+
+dev.off()
+```
+
+### STEP 3: Edit maps for publication-ready figure.
+After generating these outline maps, colored-in shapes and other map details were superimposed on the figures manually in PowerPoint to approximate GPS coordinates (not accurate or to scale).
+
+## ------------------------ END OF PHASE 1 ----------------------- ##
+
+## ------------------------ END OF MAP ANALYSIS  ----------------------- ##
+
