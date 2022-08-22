@@ -1,0 +1,13 @@
+
+VCFtools - 0.1.14
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf ../../data/processed_vcf/02_filter_qual.vcf
+	--missing-indv
+	--out ../../data/filtering_data/smb_genomics_missing_genotype_again
+
+After filtering, kept 95 out of 95 Individuals
+Outputting Individual Missingness
+After filtering, kept 127023 out of a possible 127023 Sites
+Run Time = 3.00 seconds

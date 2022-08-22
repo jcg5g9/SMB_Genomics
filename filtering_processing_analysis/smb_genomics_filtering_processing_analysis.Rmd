@@ -61,7 +61,7 @@ In this step, we are generating a universal bash shell script to run all SNP and
 #module load vcftools/vcftools-v0.1.14 (UNCOMMENT THIS LINE TO RUN THE CODE)
 ```
 
-### STEP 2: Filter SNPs for a minimum average depth of coverage of 15X
+### STEP 2: Filter SNPs for a minimum depth of coverage of 15X
 In this step, we are filtering the dataset to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
 
 #### 2a: Include the code below in the vctools.sh shell script to filter for minimum depth of coverage:
@@ -74,6 +74,37 @@ In this step, we are filtering the dataset to retain only SNPs that have a minim
 <b>Filtering results</b>: <br><br>
 <b>SNPs filtered out</b> = 0 <br>
 <b>SNPs retained </b> = 127,429 <br>
+
+### STEP 3: Filter individuals from the dataset with greater than 20% missing data across SNPS.
+In this step, we are omitting any individual samples which do not have genotypes at greater than 20% of SNP loci. We first run command line code in VCFTools which prints a list of all individuals and their associated genotype call rates across loci. We then run an additional command line code which eliminates individuals greater than the 20% threshold from the filtered dataset.
+
+#### 3a: Include the code below to generate a file with missing genotype call rate information for all samples:
+
+##### Command line code for obtaining missing genotype call rate information. UNCOMMENT this code in the shell script.
+```{r}
+#vcftools --vcf ../../data/processed_vcf/01_filter_depth.vcf --missing-indv --out ../../data/filtering_data/smb_genomnics_missing_genotype
+```
+
+This code generates the file: `data/filtering_data/smb_genomics_missing_genotype.imiss`. This file should be used to generate a list of sample IDs with missing genotype call rates greater than 20%.
+
+#### 3b: Generate list of sample IDs for individuals with greater than 20% missing data; run the Rmd chunk below:
+
+##### Generate list of sample IDs:
+```{r}
+# read in missing genotype file ('.imiss')
+genotypes_missing <- read_tsv("data/filtering_data/smb_genomics_missing_genotype_again.imiss")
+
+# turn file into data frame and mutate
+genotypes_missing <- genotypes_missing %>%
+  as.data.frame() %>%
+  mutate(INDV = factor(INDV))
+
+indivs_missing <- genotypes_missing %>%
+  filter(F_MISS > 0.2)
+```
+
+
+
 
 ## Preliminary Data Analyses
 ### All preliminary filtering steps were conducted sequentially on VCF files in VCFTOOLS. Outputs from VCFTOOLS were converted into SNP tables (easily readable files which include total number of homozygotes and heterozgyotes of reference and alternative alleles) with GATK and read into Excel. Excel files were then manipulated and analyzed in R.
