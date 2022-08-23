@@ -25,7 +25,7 @@ library(pcadapt)
 library(ggforce)
 ```
 
-## PHASE 1: Filter SNPs
+## PHASE 1: Filter raw VCF file
 In this phase of the analysis, we are filtering the final, raw VCF file which was generated with stringent filtering criteria at Floragenex, Inc. (see `project_info/Floragenex_project_report.pdf`). The file was originally named "AR21_Aligned_Genotypes_stringent.vcf"; we renamed the file "smb_genomics.vcf" for convenience, and the file can be found here: `raw_data/smb_genomics.vcf`. <br><br>
 
 <b>See below for information on SNPs in the original VCF file</b>: <br><br>
@@ -59,6 +59,38 @@ In this step, we are generating a universal bash shell script to run all SNP and
 ## Load VCFtools module
 #module load rss/rss-2020 (UNCOMMENT THIS LINE TO RUN THE CODE)
 #module load vcftools/vcftools-v0.1.14 (UNCOMMENT THIS LINE TO RUN THE CODE)
+```
+
+### STEP 2: Filter out individual samples with greater than 20% missing data across all SNPs.
+In this step, we are filtering the dataset to omit any individual samples that did not genotype well across SNPs. Specifically, we are omitting all individuals that had greater than 20% missing genotype data (more than 20% of SNPs had no genotype call).
+
+#### 2a: Copy and paste the code below in the shell file generated in Step 1a above, which will generate a file with missing genotype call rate information for all samples:
+
+##### Command line code for obtaining missing genotype call rate information. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../../raw_data/smb_genomics.vcf --missing-indv --out ../../data/filtering_data/smb_missing
+```
+
+This code generates the file: `data/filtering_data/smb_missing.imiss`. This file should be used to generate a separate list of sample IDs with missing genotype call rates greater than 20%, which will subsequently be used to omit these samples from the full VCF.
+
+#### 3b: Generate list of sample IDs for individuals with greater than 20% missing data; run the Rmd chunk below:
+
+##### Generate list of sample IDs: `smb_genomics_badsamples.txt`
+```{r}
+## read in .imiss file
+smb_genomics_missing <- read_tsv("data/filtering_data/smb_genomics_missing.imiss")
+
+## Convert to data frame and mutate individual to factor
+smb_genomics_missing <- as.data.frame(smb_genomics_missing) %>%
+  mutate(INDV = factor(INDV))
+
+## Generate list of samples above missing genotype threshold
+smb_genomics_badsamples <- smb_genomics_missing %>%
+  filter(F_MISS > 0.2)
+
+smb_genomics_badsamples <- data.frame(smb_genomics_badsamples[,c(1)])
+
+write_tsv(smb_genomics_badsamples, file = "data/filtering_data/smb_genomics_badsamples.txt", col_names = FALSE)
 ```
 
 ### STEP 2: Filter SNPs for a minimum depth of coverage of 15X
