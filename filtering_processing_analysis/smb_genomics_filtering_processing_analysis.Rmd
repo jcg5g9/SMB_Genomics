@@ -139,29 +139,37 @@ This code generates the file: `data/processed_vcf/01_filter_badsamples.vcf`. Thi
 <b>Individuals filtered</b>: BFORK32 (Neosho), GRSPB34 (Spotted), ER05 (Neosho) <br>
 <b>Individuals remaining</b> = 92 <br>
 
+### STEP 4: Filter SNPs for a minimum depth of coverage of 15X
+In this step, we are filtering the dataset generated in Step 3d above to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
 
+#### 4a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with depth of coverage less than 15X:
 
-
-
-
-
-### STEP 2: Filter SNPs for a minimum depth of coverage of 15X
-In this step, we are filtering the dataset to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
-
-#### 2a: Include the code below in the vctools.sh shell script to filter for minimum depth of coverage:
-
-##### Command line code for filtering SNPs at minimum depth of coverage. UNCOMMENT this code in the shell script.
+##### Command line code for omitting low depth SNPs. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
 ```{bash}
-#vcftools --vcf ../../../raw_data/smb_genomics.vcf --minDP 15 --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_depth
+#vcftools --vcf ../../data/processed_vcf/01_filter_badsamples.vcf --minDP 15 --recode --recode-INFO-all --out ../../data/processed_vcf/02_filter_depth
 ```
+
+This code generates the file: `data/processed_vcf/02_filter_depth.vcf`. This file serves as input for the next filtering step.
 
 <b>Filtering results</b>: <br><br>
 <b>SNPs filtered out</b> = 0 <br>
 <b>SNPs retained </b> = 127,429 <br>
 
+### STEP 5: Filter SNPs for a minimum depth of coverage of 15X
+In this step, we are filtering the dataset generated in Step 3d above to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
 
+#### 5a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with phred quality score less than 20.
 
+##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../data/processed_vcf/02_filter_depth.vcf --minQ 20 --recode --recode-INFO-all --out ../../data/processed_vcf/03_filter_qual
+```
 
+This code generates the file: `data/processed_vcf/03_filter_qual.vcf`. This file serves as input for the next filtering step.
+
+<b>Filtering results</b>: <br><br>
+<b>SNPs filtered out</b> = 406 <br>
+<b>SNPs retained </b> = 127,023 <br>
 
 ## Preliminary Data Analyses
 ### All preliminary filtering steps were conducted sequentially on VCF files in VCFTOOLS. Outputs from VCFTOOLS were converted into SNP tables (easily readable files which include total number of homozygotes and heterozgyotes of reference and alternative alleles) with GATK and read into Excel. Excel files were then manipulated and analyzed in R.
