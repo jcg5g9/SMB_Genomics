@@ -39,15 +39,23 @@ VCFTools v.0.1.14 (Danecek et al. 2011) <br>
 
 <b>Citation</b>:<br>
 
-Danecek, P., Auton, A., Abecasis, G., Albers, C. A., Banks, E., DePristo, M. A., … Durbin, R. (2011). The variant call format and VCFtools. Bioinformatics, 27, 2156–2158. doi:10.1093/bioinformatics/btr330
+Danecek, P., Auton, A., Abecasis, G., Albers, C. A., Banks, E., DePristo, M. A., … Durbin, R. (2011). The variant call format and VCFtools. Bioinformatics, 27, 2156–2158. doi:10.1093/bioinformatics/btr330 <br><br>
+
+
+GATK v.4.0.1.1 (Depristo et al. 2011)
+
+<b>Citation</b>:<br>
+
+Depristo, M. A., Banks, E., Poplin, R., Garimella, K. V., Maguire, J. R., Hartl, C., … Daly, M. J. (2011). A framework for variation discovery and genotyping using next-generation DNA sequencing data. Nature Genetics, 43, 491–501. doi:10.1038/ng.806 <br><br>
+
 
 ### STEP 1: Prepare the VCF file for all downstream analyses.
-In this step, we are editing two minor attributes of the raw vcf file ('smb_genomics.vcf'): 1) removing the "RAD_kmer_000000" portion of the #CHROM label (column 1), as this is not considered proper format for some bioinformatic software programs. This leaves only the numerical designation for each contig; and 2) removing the "_1" from all of the sample IDs, for easier reference to sample names in all figures. Both of these steps were done by using "ctrl + \" (the "find and replace" tool in bash nano) and replacing the unwanted strings with nothing. 
+In this step, we are editing three minor attributes of the raw vcf file ('smb_genomics.vcf'): 1) removing the "RAD_kmer_000000" portion of the #CHROM label (column 1), as this is not considered proper format for some bioinformatic software programs. This leaves only the numerical designation for each contig; 2) removing the "_1" from all of the sample IDs, for easier reference to sample names in all figures; and 3) removing the ##contig=N/A header line. Steps 1 and 2 were done by using "ctrl + \" (the "find and replace" tool in bash nano) and replacing the unwanted strings with nothing; step 3 was done by simply deleting the ##contig line of the header.
 
 #### 1a: Save the edited VCF file as `raw_data/smb_genomics_edited.vcf`
 
-### STEP 2: Generate a general bash shell script for all VCF commands header with which to run all VCF commands
-In this step, we are generating a universal bash shell script to run all SNP and individual filtering on the full VCF file with the program VCFTools. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each filtering decision and the associated lines of code in Rmd chunks. The shell script for running all VCFTools is called "vcftools.sh"
+### STEP 2: Generate a general bash shell script header for all VCF commands with which to run all VCF commands
+In this step, we are generating a universal bash shell script to run all SNP and individual filtering on the full VCF file with the program VCFTools. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each filtering decision and the associated lines of code in Rmd chunks. The shell script for running all VCFTools is called "vcftools.sh".
 
 #### 2a: Generate the header for a general bash shell script to run VCFTOOLS:
 
@@ -156,7 +164,7 @@ This code generates the file: `data/processed_vcf/02_filter_depth.vcf`. This fil
 <b>SNPs retained </b> = 127,429 <br>
 
 ### STEP 5: Filter SNPs for a minimum depth of coverage of 15X
-In this step, we are filtering the dataset generated in Step 3d above to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
+In this step, we are filtering the dataset generated in Step 4a above to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
 
 #### 5a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with phred quality score less than 20.
 
@@ -170,6 +178,176 @@ This code generates the file: `data/processed_vcf/03_filter_qual.vcf`. This file
 <b>Filtering results</b>: <br><br>
 <b>SNPs filtered out</b> = 406 <br>
 <b>SNPs retained </b> = 127,023 <br>
+
+### STEP 6: Filter SNPs for minimum genotype call rate across individuals of 80%
+In this step, we are filtering the dataset generated in Step 5a above to retain only SNPs that have a minimum genotype call rate across individual samples of 80%. Any SNPs genotyped at less than 80% of SNPs are removed from further analyses.
+
+#### 6a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with genotype call rates across individuals less than 80%.
+
+##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../data/processed_vcf/03_filter_qual.vcf --minQ 20 --recode --recode-INFO-all --out ../../data/processed_vcf/04_filter_genotype
+```
+
+This code generates the file: `data/processed_vcf/04_filter_genotype.vcf`. This file serves as input for the next filtering step.
+
+<b>Filtering results</b>: <br><br>
+<b>SNPs filtered out</b> = 0 <br>
+<b>SNPs retained </b> = 127,023 <br>
+
+### STEP 7: Split the dataset into two datasets for two avenues of analysis and filter each dataset further
+In this step, we split the dataset filtered in Step 6a into two distinct datasets to be used in specific downstream analyses: 1) a full, <i><b>thinned</b></i> dataset retaining only one SNP per RAD tag (to avoid bias in population genomic analyses from tight nucleotide linkage), and 2) a full, non-thinned dataset retaining all SNPs to be used in haplotype inference of fine population structure. Both of these datasets are further filtered for a minimum minor allele count and maximum heterozygosity threshold, which are detailed in the steps below.
+
+#### 7a: Generate POPGEN dataset. 
+
+##### 7a.1. Thin popgen dataset to retain only one SNP per RAD kmer.
+
+###### 7a.1.1. Copy and paste the code below in the shell file generated in Step 2a above, which will retain only one SNP per RAD kmer in a thinning procedure (thin 100 used since RAD tags are each 95 base pairs long)
+
+##### Command line code for one SNP per RAD tag. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --thin 100 --recode --recode-INFO-all --out ../../data/processed_vcf/A_01_popgen_filter_thin
+```
+
+This code generates the file: `data/processed_vcf/A_01_popgen_filter_thin.vcf`. This file serves as input for the next filtering step for the POPGEN (thinned) dataset.
+
+<b>Filtering results for POPGEN (thinned) dataset </b>: <br><br>
+<b>SNPs filtered out</b> = 61,769 <br>
+<b>SNPs retained </b> = 65,254 <br>
+
+##### 7a.2. From the POPGEN dataset, filter out SNPs with minor allele frequency less than or equal to 2 (minor allele frequency ~0.011).
+
+##### 7a.2.1. Copy and paste the code below in the shell file generated in Step 2a above, which will filter out any SNPs with minor allele count less than or equal to 2 (this is equivalent to a minor allele frequency of ~0.011).
+
+#### Command line code for minor allele count filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../data/processed_vcf/A_01_popgen_filter_thin.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/A_02_popgen_filter_mac
+```
+
+This code generates the file: `data/processed_vcf/A_02_popgen_filter_mac.vcf`. This file serves as input for the next filtering step for the POPGEN (thinned) dataset.
+
+<b>Filtering results for POPGEN (thinned) dataset </b>: <br><br>
+<b>SNPs filtered out</b> = 13,903 <br>
+<b>SNPs retained </b> = 51,351 <br>
+
+#### 7b: Generate FINERAD dataset. 
+
+##### 7b.1. From the FINERAD dataset, filter out SNPs with minor allele frequency less than or equal to 2 (minor allele frequency ~0.011).
+
+###### 7b.1.1. Copy and paste the code below in the shell file generated in Step 2a above, which will filter out any SNPs with minor allele count less than or equal to 2 (this is equivalent to a minor allele frequency of ~0.011).
+
+#### Command line code for minor allele count filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/B_01_finerad_filter_mac
+```
+
+This code generates the file: `data/processed_vcf/B_01_finerad_filter_mac.vcf`. This file serves as input for the next filtering step for the FINERAD (non-thinned) dataset
+
+<b>Filtering results for FINERAD (non-thinned) dataset </b>: <br><br>
+<b>SNPs filtered out</b> = 25,876 <br>
+<b>SNPs retained </b> = 101,147 <br>
+
+The next step of the filtering process entails omitting SNPs with heterozygosity greater than 0.45 to avoid potential additional bias due to paralogs (excess heterozygosity may be indicate of highly copied/duplicated loci in the genome). To identify snps with heterozygosity greater than 0.45, we use the software program GATK to generate SNP tables, which we use in R directly to calculate heterozygosity values and filter out SNPs.
+
+### STEP 8: Generate a general bash shell script header for all GATK commands with which to run all GATK commands
+In this step, we are generating a universal bash shell script to generate SNP tables with the program GATK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each line of code in the Rmd chunks. The shell script for running all GATK commands is called "gatk.sh".
+
+#### 8a: Generate the header for a general bash shell script to run GATK:
+
+##### Generate vcftools bash shell script: `code/shell_scripts/gatk.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J get_snp_table  # give the job a custom name
+#SBATCH -o snp_table_vcf_allfilters-%j.out # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# Load GATK module
+
+# module load rss/rss-2020
+# module load gatk/gatk-4.0.1.1
+
+# Commands with srun will run on all cores in the allocation
+```
+
+### STEP 9: Generate SNP tables for the popgen (thinned) and finerad (non-thinned) datasets.
+In this step, we are generating SNP tables for the popgen (thinned) and finerad (non-thinned) datasets to compute allele and genotype frequencies for all SNPs across individuals. Specifically, we are computing heterozygosity at all SNPs to identify those with excess heterozygosity (greater than 0.45 across samples). 
+
+#### 9a: Copy and paste the code below in the shell file generated in Step 8a above, which will generate a .txt file with allele counts for all SNPs:
+
+##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script and run: `sbatch gatk.sh`
+```{bash}
+#gatk VariantsToTable \
+       # -V ../../data/processed_vcf/A_02_popgen_filter_mac.vcf \
+      #  -F CHROM \
+       # -F POS \
+      #  -F ID \
+       # -F QUAL \
+      #  -F AC \
+       # -F HET \
+      #  -F HOM-REF \
+       # -F HOM-VAR \
+      #  -F NO-CALL \
+       # -F VAR \
+      #  -F NCALLED \
+      #  -O ../../data/filtering_data/A_02_popgen_snps.txt```
+```
+
+This code generates the file: `data/filtering_data/A_02_popgen_snps.txt`. This file should be used to compute genotype frequencies and generate a separate list of SNP IDs with excess heterozygosity.
+
+#### 3b: Compute genotype frequencies and generate a list of SNP IDs for SNPs with excess heterozygosity
+
+##### Generate list of sample IDs: `A_02_popgen_het.txt`
+```{r}
+## read in .txt file
+popgen_snps <- read_tsv("data/filtering_data/A_01_popgen_snps.txt")
+
+## Convert to data frame and mutate individual to factor
+popgen_snps <-popgen_snps %>%
+  mutate(snp_het = HET/NCALLED)
+
+## Generate list of samples above missing genotype threshold
+popgen_excess_het <- popgen_snps %>%
+  filter(snp_het >= 0.45)
+
+popgen_excess_het <- popgen_excess_het %>%
+  arrange((snp_het))
+
+# Select the first column and convert to data frame
+smb_genomics_badsamples <- data.frame(smb_genomics_badsamples[,c(1)])
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(smb_genomics_badsamples, file = "data/filtering_data/smb_genomics_badsamples.txt", col_names = FALSE)
+```
+
+
+
+##### 7a.3. From the POPGEN dataset, filter out SNPs with heterozygosity greater than 45%.
+
+###### 7a.3.1.
+
+##### 7a.2.1. Copy and paste the code below in the shell file generated in Step 2a above, which will filter out any SNPs with minor allele count less than or equal to 2 (this is equivalent to a minor allele frequency of ~0.011).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Preliminary Data Analyses
 ### All preliminary filtering steps were conducted sequentially on VCF files in VCFTOOLS. Outputs from VCFTOOLS were converted into SNP tables (easily readable files which include total number of homozygotes and heterozgyotes of reference and alternative alleles) with GATK and read into Excel. Excel files were then manipulated and analyzed in R.
