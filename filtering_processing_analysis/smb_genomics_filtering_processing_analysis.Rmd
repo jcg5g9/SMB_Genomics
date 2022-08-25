@@ -50,9 +50,9 @@ Depristo, M. A., Banks, E., Poplin, R., Garimella, K. V., Maguire, J. R., Hartl,
 
 
 ### STEP 1: Prepare the VCF file for all downstream analyses.
-In this step, we are editing three minor attributes of the raw vcf file ('smb_genomics.vcf'): 1) removing the "RAD_kmer_000000" portion of the #CHROM label (column 1), as this is not considered proper format for some bioinformatic software programs. This leaves only the numerical designation for each contig; 2) removing the "_1" from all of the sample IDs, for easier reference to sample names in all figures; and 3) removing the ##contig=N/A header line. Steps 1 and 2 were done by using "ctrl + \" (the "find and replace" tool in bash nano) and replacing the unwanted strings with nothing; step 3 was done by simply deleting the ##contig line of the header.
+In this step, we are copying the raw VCF file containing SNPs called with stringent filters at Floragenex, Inc. (AR21_Aligned_genotypes_stringent.vcf) and renaming for downstream analyses.
 
-#### 1a: Save the edited VCF file as `raw_data/smb_genomics_edited.vcf`
+#### 1a: Save the edited VCF file as `raw_data/smb_genomics.vcf`
 
 ### STEP 2: Generate a general bash shell script header for all VCF commands with which to run all VCF commands
 In this step, we are generating a universal bash shell script to run all SNP and individual filtering on the full VCF file with the program VCFTools. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each filtering decision and the associated lines of code in Rmd chunks. The shell script for running all VCFTools is called "vcftools.sh".
@@ -97,14 +97,15 @@ smb_genomics_missing <- read_tsv("data/filtering_data/smb_genomics_missing.imiss
 
 ## Convert to data frame and mutate individual to factor
 smb_genomics_missing <- as.data.frame(smb_genomics_missing) %>%
-  mutate(INDV = factor(INDV))
+  mutate(INDV = factor(INDV))  %>%
+  separate(col = INDV, into = c("INDV", NA), sep = "_1")
 
 ## Generate list of samples above missing genotype threshold
 smb_genomics_badsamples <- smb_genomics_missing %>%
   filter(F_MISS > 0.2)
 
 # Select the first column and convert to data frame
-smb_genomics_badsamples <- data.frame(smb_genomics_badsamples[,c(1)])
+smb_genomics_badsamples <- data.frame(smb_genomics_badsamples[,c(1)]) 
 
 # Save the list of bad samples as a .txt file without column names
 write_tsv(smb_genomics_badsamples, file = "data/filtering_data/smb_genomics_badsamples.txt", col_names = FALSE)
@@ -227,8 +228,8 @@ This code generates the file: `data/processed_vcf/A_01_popgen_filter_thin.vcf`. 
 This code generates the file: `data/processed_vcf/A_02_popgen_filter_mac.vcf`. This file serves as input for the next filtering step for the POPGEN (thinned) dataset.
 
 <b>Filtering results for POPGEN (thinned) dataset </b>: <br><br>
-<b>SNPs filtered out</b> = 13,903 <br>
-<b>SNPs retained </b> = 51,351 <br>
+<b>SNPs filtered out</b> = 13,492 <br>
+<b>SNPs retained </b> = 51,762 <br>
 
 #### 7b: Generate FINERAD dataset. 
 
@@ -244,8 +245,8 @@ This code generates the file: `data/processed_vcf/A_02_popgen_filter_mac.vcf`. T
 This code generates the file: `data/processed_vcf/B_01_finerad_filter_mac.vcf`. This file serves as input for the next filtering step for the FINERAD (non-thinned) dataset
 
 <b>Filtering results for FINERAD (non-thinned) dataset </b>: <br><br>
-<b>SNPs filtered out</b> = 25,876 <br>
-<b>SNPs retained </b> = 101,147 <br>
+<b>SNPs filtered out</b> = 25,091 <br>
+<b>SNPs retained </b> = 101,932 <br>
 
 The next step of the filtering process entails omitting SNPs with heterozygosity greater than 0.45 to avoid potential additional bias due to paralogs (excess heterozygosity may be indicate of highly copied/duplicated loci in the genome). To identify snps with heterozygosity greater than 0.45, we use the software program GATK to generate SNP tables, which we use in R directly to calculate heterozygosity values and filter out SNPs.
 
