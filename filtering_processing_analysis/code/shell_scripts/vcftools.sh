@@ -42,12 +42,6 @@ module load vcftools/vcftools-v0.1.14
 #vcftools --vcf ../../data/processed_vcf/A_01_popgen_filter_thin.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/A_02_popgen_filter_mac
 
 ## filter B_01:	filter out SNPs with minor allele count less than or equal to 2 (minor allele frequency ~ 0.011) in the finerad dataset (dataset B)
-vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/B_01_finerad_filter_mac
+#vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/B_01_finerad_filter_mac
 
-## filter 05: filter out SNPs with minor allele count less than or equal to 2 (minor allele frequency ~0.011)
-#vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/05_filter_mac
-
-#vcftools --vcf ../../data/processed_vcf/05_filter_mac.recode.vcf --thin 100 --recode --recode-INFO-all --out ../../data/processed_vcf/05_filter_mac_onerad
-
-#vcftools --vcf vcf_pass2_badsamples_qual_onerad.vcf --mac 2 --recode --recode-INFO-all --out OG_test
 
