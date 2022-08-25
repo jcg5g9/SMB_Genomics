@@ -50,7 +50,7 @@ Depristo, M. A., Banks, E., Poplin, R., Garimella, K. V., Maguire, J. R., Hartl,
 
 
 ### STEP 1: Prepare the VCF file for all downstream analyses.
-In this step, we are copying the raw VCF file containing SNPs called with stringent filters at Floragenex, Inc. (AR21_Aligned_genotypes_stringent.vcf) and renaming for downstream analyses.
+In this step, we are copying the raw VCF file containing SNPs called with stringent filters at Floragenex, Inc. (AR21_Aligned_genotypes_stringent.vcf) and renaming for downstream analyses. Additionally, we are deleting one row of the header in the file: "##contig=NA" because this header line is for some reason incompatible with the snp table generation tool in GATK.
 
 #### 1a: Save the edited VCF file as `raw_data/smb_genomics.vcf`
 
