@@ -278,7 +278,9 @@ In this step, we are generating a universal bash shell script to generate SNP ta
 ### STEP 9: Generate SNP tables for the popgen (thinned) and finerad (non-thinned) datasets.
 In this step, we are generating SNP tables for the popgen (thinned) and finerad (non-thinned) datasets to compute allele and genotype frequencies for all SNPs across individuals. Specifically, we are computing heterozygosity at all SNPs to identify those with excess heterozygosity (greater than 0.45 across samples). 
 
-#### 9a: Copy and paste the code below in the shell file generated in Step 8a above, which will generate a .txt file with allele counts for all SNPs:
+#### 9a: Generate SNP table for POPGEN dataset 
+
+##### 9a.1. Copy and paste the code below in the shell file generated in Step 8a above, which will generate a .txt file with allele counts for all SNPs:
 
 ##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script and run: `sbatch gatk.sh`
 ```{bash}
@@ -295,17 +297,17 @@ In this step, we are generating SNP tables for the popgen (thinned) and finerad 
       #  -F NO-CALL \
        # -F VAR \
       #  -F NCALLED \
-      #  -O ../../data/filtering_data/A_02_popgen_snps.txt```
+      #  -O ../../data/filtering_data/A_02_popgen_snps.txt
 ```
 
 This code generates the file: `data/filtering_data/A_02_popgen_snps.txt`. This file should be used to compute genotype frequencies and generate a separate list of SNP IDs with excess heterozygosity.
 
-#### 3b: Compute genotype frequencies and generate a list of SNP IDs for SNPs with excess heterozygosity
+#### 9a.2. Compute genotype frequencies and generate a list of SNP IDs for SNPs with excess heterozygosity for POPGEN dataset.
 
-##### Generate list of sample IDs: `A_02_popgen_het.txt`
+##### Generate list of sample IDs: `data/filtering_data/smb_genomics_popgen_het45.txt`
 ```{r}
 ## read in .txt file
-popgen_snps <- read_tsv("data/filtering_data/A_01_popgen_snps.txt")
+popgen_snps <- read_tsv("data/filtering_data/A_02_popgen_snps.txt")
 
 ## Convert to data frame and mutate individual to factor
 popgen_snps <-popgen_snps %>%
@@ -315,15 +317,59 @@ popgen_snps <-popgen_snps %>%
 popgen_excess_het <- popgen_snps %>%
   filter(snp_het >= 0.45)
 
-popgen_excess_het <- popgen_excess_het %>%
-  arrange((snp_het))
-
 # Select the first column and convert to data frame
-smb_genomics_badsamples <- data.frame(smb_genomics_badsamples[,c(1)])
+popgen_excess_het <- data.frame(popgen_excess_het[,c(1)])
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(smb_genomics_badsamples, file = "data/filtering_data/smb_genomics_badsamples.txt", col_names = FALSE)
+write_tsv(popgen_excess_het, file = "data/filtering_data/smb_genomics_popgen_het45.txt", col_names = FALSE)
 ```
+
+#### 9b: Generate SNP table for FINERAD dataset 
+
+##### 9b.1. Copy and paste the code below in the shell file generated in Step 8a above, which will generate a .txt file with allele counts for all SNPs:
+
+##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script and run: `sbatch gatk.sh`
+```{bash}
+#gatk VariantsToTable \
+    #    -V ../../data/processed_vcf/B_01_finerad_filter_mac.vcf \
+    #    -F CHROM \
+     #   -F POS \
+    #    -F ID \
+     #   -F QUAL \
+    #    -F AC \
+     #   -F HET \
+    #    -F HOM-REF \
+     #   -F HOM-VAR \
+    #    -F NO-CALL \
+     #   -F VAR \
+    #    -F NCALLED \
+     #   -O ../../data/filtering_data/B_01_finerad_snps.txt
+```
+
+This code generates the file: `data/filtering_data/B_01_finerad_snps.txt`. This file should be used to compute genotype frequencies and generate a separate list of SNP IDs with excess heterozygosity.
+
+#### 9a.2. Compute genotype frequencies and generate a list of SNP IDs for SNPs with excess heterozygosity for FINERAD dataset.
+
+##### Generate list of sample IDs: `data/filtering_data/smb_genomics_popgen_het45.txt`
+```{r}
+## read in .txt file
+finerad_snps <- read_tsv("data/filtering_data/B_01_finerad_snps.txt")
+
+## Convert to data frame and mutate individual to factor
+finerad_snps <-finerad_snps %>%
+  mutate(snp_het = HET/NCALLED)
+
+## Generate list of samples above missing genotype threshold
+finerad_excess_het <- finerad_snps %>%
+  filter(snp_het >= 0.45)
+
+# Select the first column and convert to data frame
+finerad_excess_het <- data.frame(finerad_excess_het[,c(1)])
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(finerad_excess_het, file = "data/filtering_data/smb_genomics_finerad_het45.txt", col_names = FALSE)
+```
+
 
 
 
