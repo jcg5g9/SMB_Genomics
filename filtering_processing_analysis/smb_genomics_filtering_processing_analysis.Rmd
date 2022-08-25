@@ -318,7 +318,7 @@ popgen_excess_het <- popgen_snps %>%
   filter(snp_het >= 0.45)
 
 # Select the first column and convert to data frame
-popgen_excess_het <- data.frame(popgen_excess_het[,c(1)])
+popgen_excess_het <- data.frame(popgen_excess_het[,c(1:2)])
 
 # Save the list of bad samples as a .txt file without column names
 write_tsv(popgen_excess_het, file = "data/filtering_data/smb_genomics_popgen_het45.txt", col_names = FALSE)
@@ -364,7 +364,7 @@ finerad_excess_het <- finerad_snps %>%
   filter(snp_het >= 0.45)
 
 # Select the first column and convert to data frame
-finerad_excess_het <- data.frame(finerad_excess_het[,c(1)])
+finerad_excess_het <- data.frame(finerad_excess_het[,c(1:2)])
 
 # Save the list of bad samples as a .txt file without column names
 write_tsv(finerad_excess_het, file = "data/filtering_data/smb_genomics_finerad_het45.txt", col_names = FALSE)
@@ -373,22 +373,35 @@ write_tsv(finerad_excess_het, file = "data/filtering_data/smb_genomics_finerad_h
 ### STEP 10: Filter out SNPs with greater than 45% heterozygosity across samples.
 In this step, we are removing the SNPs with greater than 45% heterozygosity identified in Steps 9a.2 (for the thinned popgen dataset) and 9b.2 (for the non-thinned finerad dataset) above. 
 
-#### 10a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate the SNPs with excess heterozygosity identified in Steps 9a.2 and 9b.2. above:
+#### 10a: Filter excess heterozygosity SNPs from POPGEN dataset
+
+##### 10a.1. Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate the SNPs with excess heterozygosity identified in Steps 9a.2 and 9b.2. above:
 
 ##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
 ```{bash}
-#vcftools --vcf ../../../raw_data/smb_genomics_edited.vcf --remove ../../data/filtering_data/smb_genomics_badsamples.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_badsamples
+#vcftools --vcf ../../data/processed_vcf/A_02_popgen_filter_mac.vcf --exclude-positions ../../data/filtering_data/smb_genomics_popgen_het45.txt --recode --recode-INFO-all --out ../../data/processed_vcf/A_03_popgen_filter_het45
 ```
 
-This code generates the file: `data/processed_vcf/01_filter_badsamples.vcf`. This file serves as input for the next filtering step.
+This code generates the file: `A_03_popgen_filter_het45.vcf`. This file should be used as input in the next filtering step.
 
-<b>Filtering results</b>: <br><br>
-<b>Number of individuals filtered out</b> = 3 <br>
-<b>Individuals filtered</b>: BFORK32 (Neosho), GRSPB34 (Spotted), ER05 (Neosho) <br>
-<b>Individuals remaining</b> = 92 <br>
+<b>Filtering results for POPGEN (thinned) dataset </b>: <br><br>
+<b>SNPs filtered out</b> = 934 <br>
+<b>SNPs retained </b> = 50,828 <br>
 
+#### 10b: Filter excess heterozygosity SNPs from FINERAD dataset
 
+##### 10b.1. Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate the SNPs with excess heterozygosity identified in Steps 9a.2 and 9b.2. above:
 
+##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+#vcftools --vcf ../../data/processed_vcf/B_01_finerad_filter_mac.vcf --exclude-positions ../../data/filtering_data/smb_genomics_finerad_het45.txt --recode --recode-INFO-all --out ../../data/processed_vcf/A_03_finerad_filter_het45
+```
+
+This code generates the file: `B_02_finerad_filter_het45.vcf`. This file should be used as input in the next filtering step.
+
+<b>Filtering results for POPGEN (thinned) dataset </b>: <br><br>
+<b>SNPs filtered out</b> = 3,273 <br>
+<b>SNPs retained </b> = 98,659 <br>
 
 ##### 7a.3. From the POPGEN dataset, filter out SNPs with heterozygosity greater than 45%.
 
