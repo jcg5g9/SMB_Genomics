@@ -14,5 +14,9 @@ In this analysis, we generated easily readible maps displaying the native distri
 ### Analysis 2: SNP Filtering, Data Processing, and Preliminary Calculations
 In this analysis, we performed further quality filtering on the processed and genotyped SNPs generated at Floragenex, Inc. for Smallmouth Bass and Neosho Bass. Specifically, we screened the processed data for SNPs with greater than 15X read depth; fish samples with less than 20% genotype calls across all SNPs ("badsamples"); SNPs with a phred quality score less than 20 ("qual"); and SNPs with greater than 20% missing genotype calls across fish individuals ('missing').
 
-
 #### Run the code: `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd`
+
+### Analysis 3: Admixture and phylogenomics
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess population genomic structure of Spotted Bass, Smallmouth Bass, and Neosho Bass in the CIH. Specifically, we conducted an initial screen of hybridization and gene flow by running maximum likelihood clustering on the full, filtered dataset and identified any individuals of interspecific origin between Spotted Bass and all other Interior Highlands fish (Smallmouth Bass and Neosho Bass) and individuals of interspecific origin between Smallmouth Bass and Neosho Bass. After removing hybrids, we conducted a separate admixture analysis and complementary phylogenomic analysis on the "pure" genomic samples to estimate genomic divergence between species.
+
+#### Run the code: `filtering_processing_analysis/smb_genomics_admixture_analysis.Rmd`

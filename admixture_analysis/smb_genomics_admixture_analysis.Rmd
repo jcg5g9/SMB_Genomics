@@ -1,11 +1,20 @@
 ---
-title: "SMB_GENOMICS_ADMIXTURE"
+title: "Analysis 3: Admixture and Phylogenomics"
 author: "Joe Gunn"
 date: "10/30/2019"
 output: html_document
 ---
 
-# SMB ADMIXTURE Analysis 
+# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## Specific Aim: Admixture and phylogenomics analysis 
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess population genomic structure of Spotted Bass, Smallmouth Bass, and Neosho Bass in the CIH. Specifically, we conducted an initial screen of hybridization and gene flow by running maximum likelihood clustering on the full, filtered dataset and identified any individuals of interspecific origin between Spotted Bass and all other Interior Highlands fish (Smallmouth Bass and Neosho Bass) and individuals of interspecific origin between Smallmouth Bass and Neosho Bass. After removing hybrids, we conducted a separate admixture analysis and complementary phylogenomic analysis on the "pure" genomic samples to estimate genomic divergence between species.
+
+## Phases of analysis:
+### Phase 1: Data preparation
+### Phase 2: Admixture analysis
+### Phase 3: Phylogenomic analysis
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
@@ -17,17 +26,149 @@ library(pophelper)
 library(gitcreds)
 ```
 
-## Genomics Metadata
+## PHASE 1: Metadata preparation
+In this phase of the analysis, we reading in a metadata file that was prepared in excel prior to analysis (`metadata.xlsx`), which gives the sample ID, species designation (by native range or morphology in the case of Spotted Bass), and stream from which it was capture.
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+PLINK v.1.90p (high-contig build; Change et al. 2015) <br>
+
+<b>Citation</b>:<br>
+
+Chang, C. C., Chow, C. C., Tellier, L. C. A. M., Vattikuti, S., Purcell, S. M., & Lee, J. J. (2015). Second-generation PLINK: Rising to the challenge of larger and richer datasets. GigaScience, 4, 1–16. doi:10.1186/s13742-015-0047-8
+
+### STEP 1: Prepare raw metadata for use in downstream analyses and summarize sample size data across streams.
+In this step, we are reading in, cleaning, and filtering the raw metadata to prepare for downstream analyses.
+
+#### 1a: Read in and clean metadata; run the Rmd chunk below:
+
+##### Read in and clean metadata
 ```{r METADATA}
-#Read in filtered SMB Genomics metadata. This file should include 92 individuals that passed filters for low genotype calls
-genomics_metadata <- read_excel("../../metadata/sample_metadata/genomics_metadata_filtered.xlsx")
+## Read in metadata
+metadata <- read_excel("data/metadata/metadata.xlsx")
 
-#Clean metadata
+## Convert characters to factors
+metadata <- metadata %>%
+  mutate(sample_id = factor(sample_id),
+         species = factor(species),
+         stream = factor(stream))
 
-##All sample data
-genomics_metadata <- as.data.frame(genomics_metadata)
-genomics_metadata <- column_to_rownames(genomics_metadata, "na")
-genomics_metadata <- mutate_all(genomics_metadata, as.character)
+## Omit samples removed from filtering steps in Analysis 2
+metadata <- metadata %>%
+  filter(sample_id != "GRSPB34") %>%
+  filter(sample_id != "BFORK32") %>%
+  filter(sample_id != "ER05")
+```
+
+#### 1b: Summarize sample sizes by species and stream; run the Rmd chunk below:
+
+#### Summarize metadata
+```{r}
+## Get sample sizes by species
+species_sample_sizes <- metadata %>%
+  group_by(species) %>%
+  count()
+
+## Get sample sizes by stream
+species_sample_sizes <- metadata %>%
+  group_by(stream) %>%
+  count()
+```
+
+These tables were used as the basis for maintext Table 1 in the manuscript (in the manuscript version of this table, we also include in the total sample sizes the samples filtered due to low genotype call rates).
+
+### ----------------------- END OF PHASE 1: METADATA PREPARATION  ----------------------- ###
+
+## PHASE 2: ADMIXTURE ANALYSIS
+In this phase, we are reading in the previously filtered VCF data (`data/processed_vcf/popgen.vcf`), converting the data to input files necessary for the program ADMIXTURE, and running the following analyses: 1) a screen of the full dataset for interspecific hybrids between Spotted Bass and either Smallmouth Bass or Neosho Bass and a for interspecific hybrids between Smallmouth Bass and Neosho Bass; and 2) population genomic structure analysis of the genetically "pure" samples only, which will be combined with subsequent phylogenomic analysis of pure samples. <br>
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+ADMIXTURE v.1.3 (Alexander et al. 2009) <br>
+
+Alexander, D. H., Novembre, J., & Lange, K. (2009). Fast model-based estimation of ancestry in unrelated individuals. Genome Research, 19, 1655–1664. doi:10.1101/gr.094052.109
+
+
+### STEP 1: Generate a general bash shell script header for all PLINK commands
+In this step, we are generating a universal bash shell script to run all file type conversions in PLINK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "plink.sh".
+
+##### 1a: Generate the header for a general bash shell script to run PLINK:
+
+##### Generate plink bash shell script: `code/shell_scripts/plink.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J plink_conversion # give the job a custom name
+#SBATCH -o get_plink_bed-%j.out  # give the job output a custom name
+#SBATCH -t 0-01:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+# Modules to load
+
+## module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
+```
+
+### STEP 2: Screen for hybridization population genomic admixture analysis on the FULL dataset
+In this step, we are running a population genomic analysis of the full, filtered VCF dataset to run a screen for interspecific hybridization, both between Spotted Bass and all other samples (Smallmouth Bass and Neosho Bass), as well as between Smallmouth Bass and Neosho Bass.
+
+#### 2a: Convert VCF data into .bed format for admixture analysis in the software program ADMIXURE.
+
+##### 2a.1. Copy and paste the code below in the shell file generated in Step 1a above, which will generate a .bed, along with .bim, .fam, .log, and .nosex files:
+
+<b>We use the following flags in the code</b>: <br>
+--allow-extra-chr: this flag is necessary due to the data being in the format of contigs rather than chromosomes
+--vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
+--make-bed: this specifies output format of .bed
+
+##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
+```{bash}
+#plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../processed_bed/popgen_all
+```
+
+This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
+
+### STEP 3: Generate a general bash shell script header for all ADMIXTURE commands
+In this step, we are generating a universal bash shell script to run all population genomic analyses in ADMIXTURE. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each analysis and the associated lines of code in Rmd chunks. The shell script for running all ADMIXTURE code is called "admixture.sh".
+
+##### 3a: Generate the header for a general bash shell script to run ADMXITURE:
+
+##### Generate plink bash shell script: `code/shell_scripts/admixture.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH --account=biosci
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J admix # give the job a custom name
+#SBATCH -o admix_results-%j.out  # give the job output a custom name
+#SBATCH -t 0-03:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 7  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+# Modules to load
+
+## module load admixture_linux/admixture_linux-1.3.0 (UNCOMMENT THIS LINE TO RUN THE CODE)
+```
+
+
+
+
+
+
+
+
+
 
 ##Only samples that were pure by original admixture analysis (this analysis is conducted below, but I create the metadata set here for consistency in the R workflow)
 genomics_metadata_pure <- genomics_metadata %>%
