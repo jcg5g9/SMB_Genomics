@@ -92,7 +92,6 @@ ADMIXTURE v.1.3 (Alexander et al. 2009) <br>
 
 Alexander, D. H., Novembre, J., & Lange, K. (2009). Fast model-based estimation of ancestry in unrelated individuals. Genome Research, 19, 1655–1664. doi:10.1101/gr.094052.109
 
-
 ### STEP 1: Generate a general bash shell script header for all PLINK commands
 In this step, we are generating a universal bash shell script to run all file type conversions in PLINK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "plink.sh".
 
@@ -125,9 +124,9 @@ In this step, we are running a population genomic analysis of the full, filtered
 ##### 2a.1. Copy and paste the code below in the shell file generated in Step 1a above, which will generate a .bed, along with .bim, .fam, .log, and .nosex files:
 
 <b>We use the following flags in the code</b>: <br>
---allow-extra-chr: this flag is necessary due to the data being in the format of contigs rather than chromosomes
---vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
---make-bed: this specifies output format of .bed
+    --allow-extra-chr: this flag is necessary due to the data being in the format of contigs rather than chromosomes
+    --vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
+    --make-bed: this specifies output format of .bed
 
 ##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
 ```{bash}
@@ -136,10 +135,34 @@ In this step, we are running a population genomic analysis of the full, filtered
 
 This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
 
-### STEP 3: Generate a general bash shell script header for all ADMIXTURE commands
-In this step, we are generating a universal bash shell script to run all population genomic analyses in ADMIXTURE. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each analysis and the associated lines of code in Rmd chunks. The shell script for running all ADMIXTURE code is called "admixture.sh".
+### STEP 3: Screen full, filtered dataset for interspecific hybrids by conducting population genomic analysis in ADMIXTURE.
 
-##### 3a: Generate the header for a general bash shell script to run ADMXITURE:
+#### 3a: Generate a batch list file for running ADMIXTURE in parallel.
+In this step, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list  contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equalling the number of streams in our data set plus Spotted Bass. <br>
+
+##### Generate batch commands: `code/batch_cmd_lists/01_all_batch_cmd_list.txt`
+```{r}
+nk <- data.frame(c(1:20))
+
+cat("", file="code/batch_cmd_lists/01_all_batch_cmd_list.txt")
+
+# Run loop to create file for storing commands
+for(ii in 1:nrow(nk)) {
+    
+  admixture_call <- paste("admixture --seed=2324 --cv=10")
+
+  input <- paste("../../data/processed_bed/all_samples/01_all.bed")
+  
+  cat(paste(admixture_call, input, nk[ii,]), 
+      "\n", 
+      file=paste("code/batch_cmd_lists/01_all_batch_cmd_list.txt"), # name file to store list
+      append=TRUE)
+  }
+
+```
+
+##### 3b: Generate a shell script to run ADMXITURE:
+In this step, we are generating a universal bash shell script to run all population genomic analyses in ADMIXTURE. The shell script for running all ADMIXTURE code is called "admixture.sh" and is adapted in the steps below to run the specified input files at each step. 
 
 ##### Generate plink bash shell script: `code/shell_scripts/admixture.sh`
 ```{bash}
@@ -156,17 +179,20 @@ In this step, we are generating a universal bash shell script to run all populat
 
 # Commands here run only on the first core
 
-# Modules to load
+## UNCOMMENT LINES STARTING HERE 
 
-## module load admixture_linux/admixture_linux-1.3.0 (UNCOMMENT THIS LINE TO RUN THE CODE)
+# echo "### Starting at: $(date) ###"
+
+
+## load packages (LEAVE THIS COMMENTED)
+# module load rss/rss-2020
+# module load admixture_linux/admixture_linux-1.3.
+
+# COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/01_all_batch_cmd_list.txt | tail -n 1`
+# eval $COMMANDA
+
+# echo "### Ending at: $(date) ###"
 ```
-
-
-
-
-
-
-
 
 
 
