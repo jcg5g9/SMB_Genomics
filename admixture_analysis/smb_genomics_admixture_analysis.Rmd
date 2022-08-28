@@ -1,11 +1,21 @@
 ---
-title: "SMB_GENOMICS_ADMIXTURE"
+title: "Analysis 3: Admixture and Phylogenomics"
 author: "Joe Gunn"
 date: "10/30/2019"
 output: html_document
 ---
 
-# SMB ADMIXTURE Analysis 
+# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## Specific Aim: Admixture and phylogenomics analysis 
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess population genomic structure of Spotted Bass, Smallmouth Bass, and Neosho Bass in the CIH. Specifically, we conducted an initial screen of hybridization and gene flow by running maximum likelihood clustering on the full, filtered dataset and identified any individuals of interspecific origin between Spotted Bass and all other Interior Highlands fish (Smallmouth Bass and Neosho Bass) and individuals of interspecific origin between Smallmouth Bass and Neosho Bass. After removing hybrids, we conducted a separate admixture analysis and complementary phylogenomic analysis on the "pure" genomic samples to estimate genomic divergence between species.
+
+## Phases of analysis:
+  ### Phase 1: Data preparation
+  ### Phase 2: Hybrid screen analysis
+  ### Phase 3: Admixture analysis
+  ### Phase 4: Phylogenomic analysis
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
@@ -17,17 +27,66 @@ library(pophelper)
 library(gitcreds)
 ```
 
-## Genomics Metadata
+## PHASE 1: Data preparation
+In this phase of the analysis, we reading in a metadata file that was prepared in excel prior to analysis (`metadata.xlsx`), which gives the sample ID, species designation (by native range or morphology in the case of Spotted Bass), and stream from which it was capture, and previously filtered VCF data (`data/processed_vcf/popgen.vcf`) for admixture and phylogenomic analysis. <br>
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+PLINK v.1.90p (high-contig build; Change et al. 2015) <br>
+
+<b>Citation</b>:<br>
+
+Chang, C. C., Chow, C. C., Tellier, L. C. A. M., Vattikuti, S., Purcell, S. M., & Lee, J. J. (2015). Second-generation PLINK: Rising to the challenge of larger and richer datasets. GigaScience, 4, 1–16. doi:10.1186/s13742-015-0047-8
+
+### STEP 1: Prepare raw metadata for use in downstream analyses and summarize sample size data across streams.
+In this step, we are reading in, cleaning, and filtering the raw metadata to prepare for downstream analyses.
+
+#### 1a: Read in and clean metadata; run the Rmd chunk below:
+
+##### Read in and clean metadata
 ```{r METADATA}
-#Read in filtered SMB Genomics metadata. This file should include 92 individuals that passed filters for low genotype calls
-genomics_metadata <- read_excel("../../metadata/sample_metadata/genomics_metadata_filtered.xlsx")
+## Read in metadata
+metadata <- read_excel("data/metadata/metadata.xlsx")
 
-#Clean metadata
+## Convert characters to factors
+metadata <- metadata %>%
+  mutate(sample_id = factor(sample_id),
+         species = factor(species),
+         stream = factor(stream))
 
-##All sample data
-genomics_metadata <- as.data.frame(genomics_metadata)
-genomics_metadata <- column_to_rownames(genomics_metadata, "na")
-genomics_metadata <- mutate_all(genomics_metadata, as.character)
+## Omit samples removed from filtering steps in Analysis 2
+metadata <- metadata %>%
+  filter(sample_id != "GRSPB34") %>%
+  filter(sample_id != "BFORK32") %>%
+  filter(sample_id != "ER05")
+```
+
+#### 1b: Summarize sample sizes by species and stream; run the Rmd chunk below:
+
+#### Summarize metadata
+```{r}
+## Get sample sizes by species
+species_sample_sizes <- metadata %>%
+  group_by(species) %>%
+  count()
+
+## Get sample sizes by stream
+species_sample_sizes <- metadata %>%
+  group_by(stream) %>%
+  count()
+```
+
+These tables were used as the basis for maintext Table 1 in the manuscript (in the manuscript version of this table, we also include in the total sample sizes the samples filtered due to low genotype call rates).
+
+### STEP 2: Convert VCF data into .bed format for admixture analysis in the software program ADMIXURE.
+In this step, we are preparing the full, filtered VCF data for population genomic structure analysis to be run in the software program ADMIXTURE, which requires .bed files and accompanying .bim and .fam files. We are using the software program PLINK to perform these conversions on the full dataset.
+
+#### 2a: 
+
+
+
 
 ##Only samples that were pure by original admixture analysis (this analysis is conducted below, but I create the metadata set here for consistency in the R workflow)
 genomics_metadata_pure <- genomics_metadata %>%
