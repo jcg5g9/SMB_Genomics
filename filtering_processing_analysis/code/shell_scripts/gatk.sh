@@ -15,17 +15,34 @@ module load gatk/gatk-4.0.1.1
 
 # Commands with srun will run on all cores in the allocation
 
+## snp table generation: generate a snp	table for the popgen dataset (dataset A)
+#gatk VariantsToTable \
+#	-V ../../data/processed_vcf/A_02_popgen_filter_mac.vcf \
+#	-F CHROM \
+#	-F POS \
+#	-F ID \
+#	-F QUAL \
+#	-F AC \
+#	-F HET \
+#	-F HOM-REF \
+#	-F HOM-VAR \
+#	-F NO-CALL \
+#	-F VAR \
+#	-F NCALLED \
+#	-O ../../data/filtering_data/A_02_popgen_snps.txt
+
+## snp table generation: generate a snp table for the finerad dataset (dataset B)
 gatk VariantsToTable \
-	-V smb_genomics_test_qual.vcf \
-	-F CHROM \
-	-F POS \
-	-F ID \
-	-F QUAL \
-	-F AC \
-	-F HET \
-	-F HOM-REF \
-	-F HOM-VAR \
-	-F NO-CALL \
-	-F VAR \
-	-F NCALLED \
-	-O smb_genomics_test_qual.txt
+        -V ../../data/processed_vcf/B_01_finerad_filter_mac.vcf \
+        -F CHROM \
+        -F POS \
+        -F ID \
+        -F QUAL \
+        -F AC \
+        -F HET \
+        -F HOM-REF \
+        -F HOM-VAR \
+        -F NO-CALL \
+        -F VAR \
+        -F NCALLED \
+        -O ../../data/filtering_data/B_01_finerad_snps.txt

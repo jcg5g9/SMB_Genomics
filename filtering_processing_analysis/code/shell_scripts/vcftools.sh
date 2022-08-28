@@ -16,7 +16,7 @@ module load vcftools/vcftools-v0.1.14
 # Commands with srun will run on all cores in the allocation
 
 ## missing file generation: generate a file of missing genotype call rates for all samples
-#vcftools --vcf ../../../raw_data/smb_genomics_edited.vcf --missing-indv --out ../../data/filtering_data/smb_genomics_missing
+#vcftools --vcf ../../../raw_data/smb_genomics.vcf --missing-indv --out ../../data/filtering_data/smb_genomics_missing
 
 ## filter 01: omit poor quality individuals from dataset (BFORK32, GRSPB34, ER05)
 #vcftools --vcf ../../../raw_data/smb_genomics_edited.vcf --remove ../../data/filtering_data/smb_genomics_badsamples.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_badsamples
@@ -35,13 +35,21 @@ module load vcftools/vcftools-v0.1.14
 ### 1) Dataset A: popgen: the full, thinned dataset, keeping only one SNP per RAD tag (to avoid tight linkage) to be used for population genomic analysis, and 
 ### 2) Dataset B: finerad: the full, non-thinned dataset, to be used for haplotype inference in fineradstructure
 
-## filter A_01: filter to retain only one SNP per RAD tag in the pop gen dataset (dataset A)
+## popgen dataset (dataset A)
+
+## filter A_01: filter to retain only one SNP per RAD tag in the popgen dataset (dataset A)
 #vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --thin 100 --recode --recode-INFO-all --out ../../data/processed_vcf/A_01_popgen_filter_thin
 
 ## filter A_02: filter pop gen dataset (dataset A) to omit SNPs with minor allele count less than or equal to 2
 #vcftools --vcf ../../data/processed_vcf/A_01_popgen_filter_thin.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/A_02_popgen_filter_mac
 
+## filter A_03: omit SNPs with excess heterozygosity from the popgen dataset (dataset A)
+vcftools --vcf ../../data/processed_vcf/A_02_popgen_filter_mac.vcf --exclude-positions ../../data/filtering_data/smb_genomics_popgen_het45.txt --recode --recode-INFO-all --out ../../data/processed_vcf/A_03_popgen_filter_het45
+
+## finerad dataset (dataset B)
+
 ## filter B_01:	filter out SNPs with minor allele count less than or equal to 2 (minor allele frequency ~ 0.011) in the finerad dataset (dataset B)
 #vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/B_01_finerad_filter_mac
 
-
+## filter B_02: omit SNPs with excess heterozygosity from the finrad dataset (dataset B)
+vcftools --vcf ../../data/processed_vcf/B_01_finerad_filter_mac.vcf --exclude-positions ../../data/filtering_data/smb_genomics_finerad_het45.txt --recode --recode-INFO-all --out ../../data/processed_vcf/B_02_finerad_filter_het45
