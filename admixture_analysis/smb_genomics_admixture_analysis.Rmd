@@ -51,9 +51,9 @@ metadata <- read_excel("data/metadata/metadata.xlsx")
 
 ## Omit samples removed from filtering steps in Analysis 2
 metadata <- metadata %>%
-  filter(sample_id != "GRSPB34") %>%
-  filter(sample_id != "BFORK32") %>%
-  filter(sample_id != "ER05")
+  filter(sample_id != "GRSPB34_1") %>%
+  filter(sample_id != "BFORK32_1") %>%
+  filter(sample_id != "ER05_1")
 ```
 
 #### 1b: Summarize sample sizes by species and stream; run the Rmd chunk below:
@@ -246,7 +246,7 @@ plotQ(hybrid_screen_K4,
       grplab = metadata,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("SPRMO49","GRSPB52","GRSPB51","GLVR11","STOCK03","STOCK04","STOCK05","STOCK06","BP01","BP02","BP07","BP10","BP17","TBLR01","TBLR02","TBLR03","TBLR04","GRSPB35","GRSPB36","GRSPB37","GRSPB39","GRSPB41","GRSPB50","SKIA03","SKIA04","SKIA05","SKIA06","SKIA09","BC01","BC07","BC08","BC09","BC12","BC14","SC06","SC37","MI419","MI420","MI421","MI422","MI423","MI425","ER17","ER20","ER30","ER33","ER35","ER44","HC38","HC40","HC41","HC42","HC43","HC44","SPVW11","SPVW02","SPVW05","SPVW07","SPVW12","SPVW14","NOIS07","NOIS08","NOIS12","NOIS18","GLVR4","SPRMO11","SPRMO19","BFORK02","BFORK23","BFORK24","BFORK30","BFORK49","GRSPB02","GRSPB03","GRSPB69","CANEY15","CANEY16","BFC02","BFC06","BFC10","BFC49","AR16","AR18","AR19","AR21","AR29","AR30","AT02","AT05","AT08","AT09","AT12"),
+      subsetgrp =  c("SPRMO49_1","GRSPB52_1","GRSPB51_1","GLVR11_1","STOCK03_1","STOCK04_1","STOCK05_1","STOCK06_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","TBLR01_1","TBLR02_1","TBLR03_1","TBLR04_1","GRSPB35_1","GRSPB36_1","GRSPB37_1","GRSPB39_1","GRSPB41_1","GRSPB50_1","SKIA03_1","SKIA04_1","SKIA05_1","SKIA06_1","SKIA09_1","BC01_1","BC07_1","BC08_1","BC09_1","BC12_1","BC14_1","SC06_1","SC37_1","MI419_1","MI420_1","MI421_1","MI422_1","MI423_1","MI425_1","ER17_1","ER20_1","ER30_1","ER33_1","ER35_1","ER44_1","HC38_1","HC40_1","HC41_1","HC42_1","HC43_1","HC44_1","SPVW11_1","SPVW02_1","SPVW05_1","SPVW07_1","SPVW12_1","SPVW14_1","NOIS07_1","NOIS08_1","NOIS12_1","NOIS18_1","GLVR4_1","SPRMO11_1","SPRMO19_1","BFORK02_1","BFORK23_1","BFORK24_1","BFORK30_1","BFORK49_1","GRSPB02_1","GRSPB03_1","GRSPB69_1","CANEY15_1","CANEY16_1","BFC02_1","BFC06_1","BFC10_1","BFC49_1","AR16_1","AR18_1","AR19_1","AR21_1","AR29_1","AR30_1","AT02_1","AT05_1","AT08_1","AT09_1","AT12_1"),
       clustercol = c("forestgreen","goldenrod3","deepskyblue","deeppink2"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -278,7 +278,7 @@ plotQ(hybrid_screen_K3,
       grplab = metadata,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("SPRMO49","GRSPB52","GRSPB51","GLVR11","STOCK03","STOCK04","STOCK05","STOCK06","BP01","BP02","BP07","BP10","BP17","TBLR01","TBLR02","TBLR03","TBLR04","GRSPB35","GRSPB36","GRSPB37","GRSPB39","GRSPB41","GRSPB50","SKIA03","SKIA04","SKIA05","SKIA06","SKIA09","BC01","BC07","BC08","BC09","BC12","BC14","SC06","SC37","MI419","MI420","MI421","MI422","MI423","MI425","ER17","ER20","ER30","ER33","ER35","ER44","HC38","HC40","HC41","HC42","HC43","HC44","SPVW11","SPVW02","SPVW05","SPVW07","SPVW12","SPVW14","NOIS07","NOIS08","NOIS12","NOIS18","GLVR4","SPRMO11","SPRMO19","BFORK02","BFORK23","BFORK24","BFORK30","BFORK49","GRSPB02","GRSPB03","GRSPB69","CANEY15","CANEY16","BFC02","BFC06","BFC10","BFC49","AR16","AR18","AR19","AR21","AR29","AR30","AT02","AT05","AT08","AT09","AT12"),
+      subsetgrp =  c("SPRMO49_1","GRSPB52_1","GRSPB51_1","GLVR11_1","STOCK03_1","STOCK04_1","STOCK05_1","STOCK06_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","TBLR01_1","TBLR02_1","TBLR03_1","TBLR04_1","GRSPB35_1","GRSPB36_1","GRSPB37_1","GRSPB39_1","GRSPB41_1","GRSPB50_1","SKIA03_1","SKIA04_1","SKIA05_1","SKIA06_1","SKIA09_1","BC01_1","BC07_1","BC08_1","BC09_1","BC12_1","BC14_1","SC06_1","SC37_1","MI419_1","MI420_1","MI421_1","MI422_1","MI423_1","MI425_1","ER17_1","ER20_1","ER30_1","ER33_1","ER35_1","ER44_1","HC38_1","HC40_1","HC41_1","HC42_1","HC43_1","HC44_1","SPVW11_1","SPVW02_1","SPVW05_1","SPVW07_1","SPVW12_1","SPVW14_1","NOIS07_1","NOIS08_1","NOIS12_1","NOIS18_1","GLVR4_1","SPRMO11_1","SPRMO19_1","BFORK02_1","BFORK23_1","BFORK24_1","BFORK30_1","BFORK49_1","GRSPB02_1","GRSPB03_1","GRSPB69_1","CANEY15_1","CANEY16_1","BFC02_1","BFC06_1","BFC10_1","BFC49_1","AR16_1","AR18_1","AR19_1","AR21_1","AR29_1","AR30_1","AT02_1","AT05_1","AT08_1","AT09_1","AT12_1"),
       clustercol = c("goldenrod3","deepskyblue","deeppink2"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -324,7 +324,7 @@ all_Q <- cbind(metadata, hybrid_screen_K4)
 
 ## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
 BCF10 <- all_Q %>%
-  filter(sample_id == "BFC10")
+  filter(sample_id == "BFC10_1")
 
 # Select the first column and convert to data frame
 BCF10 <- data.frame(BCF10[,c(1)]) 
@@ -334,7 +334,7 @@ write_tsv(BCF10, file = "data/filtering_data/bfc10.txt", col_names = FALSE)
 
 ## Filter out BCF10 (Spotted Bass X Smallmouth Bass hybrid)
 all_Q <- all_Q %>%
-  filter(sample_id != "BFC10")
+  filter(sample_id != "BFC10_1")
 
 ## Change column names on dataset
 colnames(all_Q) <- c("sample_id", "species", "stream", "north_ark", "spotted_bass", "midark", "smallmouth_bass")
