@@ -449,8 +449,8 @@ In this step, we are generating another bash shell script to run all individual 
 ```
 
 <b>Filtering results</b>: <br><br>
-<b>Samples omitted </b> = 1 <br>
-<b>Samples retained </b> = 91 <br>
+<b>Samples omitted </b> = 40 <br>
+<b>Samples retained </b> = 51 <br>
 <b>SNPs retained </b> = 50,828 <br>
 
 
