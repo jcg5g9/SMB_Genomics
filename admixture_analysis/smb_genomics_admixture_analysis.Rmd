@@ -390,14 +390,14 @@ write_tsv(admixed_indivs, file = "data/filtering_data/admixed_individuals.txt", 
 ```
 
 ### STEP 3: Run ADMIXTURE for pure samples only.
-In this step, we are rerunning ADMIXTURE on only the individuals inferred to be genetically pure from the full hybrid screen analysis in Step 3. We are performing this step to assess population genetic structure without the influence of admixed individuals, and the results from this analysis will be compared to a phylogenomic analysis in Phase 3 of the analysis.
+In this step, we are rerunning ADMIXTURE on only the individuals inferred to be genetically pure from the full hybrid screen analysis in Step 2. We are performing this step to assess population genetic structure without the influence of admixed individuals, and the results from this analysis will be compared to a phylogenomic analysis in Phase 3 of the analysis.
 
 #### 3a: Generate a general bash shell script header for data filtering in VCFTools
 In this step, we are generating another bash shell script to run all individual sample filtering VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
 ##### 3a.1. Generate the header for a general bash shell script to run VCFTools:
 
-##### Generate plink bash shell script: `code/shell_scripts/vcftools.sh`
+##### Generate VCFTools bash shell script: `code/shell_scripts/vcftools.sh`
 ```{bash}
 #! /bin/bash
 
@@ -440,7 +440,7 @@ In this step, we are generating another bash shell script to run all individual 
 
 ##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
 ```{bash}
-## filter 02: omit all interspecific hybrids (BFC10) 
+## filter 02: omit interspecific hybrids between Smallmouth Bass and Neosho Bass
 #vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_pure
 ```
 
@@ -460,14 +460,14 @@ In this step, we are generating another bash shell script to run all individual 
 
 ##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
 ```{bash}
-## filter 02: omit all interspecific hybrids (BFC10) 
+## Conversion 02: Convert full vcf data (02_popgen_pure.vcf) to .bed format
 #plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/pure_samples/02_pure
 ```
 
 This code generates the file: `data/processed_bed/all_samples/02_pure.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
 
 #### 2b: Generate a batch list file for running ADMIXTURE in parallel.
-Here, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list  contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
+Here, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
 
 ##### 2b.1. Generate a batch list of commands to run in ADMIXTURE; run the Rmd chunk below:
 
@@ -475,18 +475,18 @@ Here, we are creating a batch list of command line code to run ADMIXTURE analyse
 ```{r}
 nk <- data.frame(c(1:20))
 
-cat("", file="code/batch_cmd_lists/01_all_batch_cmd_list.txt")
+cat("", file="code/batch_cmd_lists/02_pure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
 for(ii in 1:nrow(nk)) {
     
   admixture_call <- paste("admixture --seed=2324 --cv=10")
 
-  input <- paste("../../data/processed_bed/all_samples/01_all.bed")
+  input <- paste("../../data/processed_bed/pure_samples/02_pure.bed")
   
   cat(paste(admixture_call, input, nk[ii,]), 
       "\n", 
-      file=paste("code/batch_cmd_lists/01_all_batch_cmd_list.txt"), # name file to store list
+      file=paste("code/batch_cmd_lists/02_pure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
 

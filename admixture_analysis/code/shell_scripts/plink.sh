@@ -19,5 +19,5 @@ module load plink/plink-high-contig-1.90p
 ## Conversion 01: Convert full vcf data (popgen.vcf) to .bed format
 plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/all_samples/01_all
 
-## Conversion 02: onvert full vcf data (02_popgen_pure.vcf) to .bed format
+## Conversion 02: Convert full vcf data (02_popgen_pure.vcf) to .bed format
 plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/pure_samples/02_pure
