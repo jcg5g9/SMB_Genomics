@@ -138,6 +138,8 @@ dev.off()
 
 Note: we did not include a scalebar in the United States map as we were only interested in plotting ranges qualitatively for visual reference. The generated map is not necessarily drawn to exact scale.
 
+This figure was used as the basis for Figure 1a in the manuscript. We overlayed artistic renderings of our study organism as well as other map features for easy interpretation.
+
 #### 2b: Generate a close-up map of the CIH, including states of the United States, rivers in the CIH, the Smallmouth Bass native range, and the Neosho Bass native range. 
 
 ### IMPORTANT NOTE: Order of plotting data layers matters for our analysis.
@@ -201,6 +203,8 @@ scalebar(transform = T,
 
 dev.off()
 ```
+
+This figure was used as the basis for Figure 1d in the manuscript. See below for more details on final ms map making.
 
 ### STEP 3: Edit maps for publication-ready figure.
 After generating these outline maps, colored-in shapes and other map details were superimposed on the figures manually in PowerPoint to approximate GPS coordinates (not accurate or to scale).
