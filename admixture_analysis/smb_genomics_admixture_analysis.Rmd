@@ -126,6 +126,8 @@ In this step, we are running a population genomic analysis of the full, filtered
 #plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/all_samples/01_all
 ```
 
+Run: `sbatch plink.sh`
+
 This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
 
 #### 2b: Generate a batch list file for running ADMIXTURE in parallel.
@@ -473,6 +475,8 @@ In this step, we are generating another bash shell script to run all individual 
 #vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_pure
 ```
 
+Run: `sbatch vcftools.sh`
+
 <b>Filtering results</b>: <br><br>
 <b>Samples omitted </b> = 40 <br>
 <b>Samples retained </b> = 51 <br>
@@ -508,6 +512,8 @@ save(metadata_pure, file = "data/metadata/metadata_pure.Rda")
 ## Conversion 02: Convert full vcf data (02_popgen_pure.vcf) to .bed format
 #plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/pure_samples/02_pure
 ```
+
+Run: `sbatch plink.sh`
 
 This code generates the file: `data/processed_bed/all_samples/02_pure.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the pure dataset.
 
@@ -718,4 +724,73 @@ plotQ(pure_K5,
 ```
 
 These figures were used as the basis for Figure 1b in the manuscript (we used PowerPoint to remove unwanted labels and include clean versions of the labels).
+
+## PHASE 3: PHYLOGENOMIC ANALYSIS
+In this phase, we are reading in the pure popgen VCF dataset and conducting phylogenomic inference with the software program SNPHYLO, which uses maximum likelihood estimation, to understand the genomic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass <br>
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+SNPHYLO v.2016-02-04-python-2.7.14-tk (Edgar, 2004; Felsenstein, 1989; Lee, Guo, Wang, Kim, & Paterson, 2014; Schliep, 2011; Zheng et al., 2012) <br>
+
+<b>Citation</b>:<br>
+
+Edgar, R. C. (2004). MUSCLE: Multiple sequence alignment with high accuracy and high throughput. Nucleic Acids Research, 32, 1792–1797. doi:10.1093/nar/gkh340
+
+Felsenstein, J. (1989). PHYLIP-Phylogeny Inference Package (Version 3.2). Cladistics, 5, 164–166.
+
+Lee, T. H., Guo, H., Wang, X., Kim, C., & Paterson, A. H. (2014). SNPhylo: A pipeline to construct a phylogenetic tree from huge SNP data. BMC Genomics, 15, 1–6. doi:10.1186/1471-2164-15-162
+
+Schliep, K. P. (2011). phangorn: Phylogenetic analysis in R. Bioinformatics, 27, 592–593. doi:10.1093/bioinformatics/btq706
+
+Zheng, X., Levine, D., Shen, J., Gogarten, S. M., Laurie, C., & Weir, B. S. (2012). A high-performance computing toolset for relatedness and principal component analysis of SNP data. Bioinformatics, 28, 3326–3328. doi:10.1093/bioinformatics/bts606
+
+### STEP 1: Generate a general bash shell script header for all SNPHYLO commands
+In this step, we are generating a universal bash shell script to run phylogenomic analysis in SNPHYLO Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each analysis and the associated lines of code in Rmd chunks. The shell script for running all SNPHYLO code is called "snphylo.sh".
+
+##### 1a: Generate the header for a general bash shell script to run SNPHYLO:
+
+##### Generate PLINK bash shell script: `code/shell_scripts/snphylo.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J snphylo  # give the job a custom name
+#SBATCH -o snphylo_pure.out  # give the job output a custom name
+#SBATCH -t 0-24:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 14  # number of cores (AKA tasks)
+#SBATCH --mem=80000
+
+## UNCOMMENT STARTING HERE:
+
+## Commands here run only on the first core
+# module load rss/rss-2020
+# module load snphylo/snphylo-2016-02-04-python-2.7.14-tk
+```
+
+### STEP 2: Conduct phylogenomic analysis on pure dataset.
+In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('02_popgen_pure.vcf') to assess genomic divergence and monophyly among the Spotted Bass, Smallmouth Bass, and Neosho Bass.
+
+##### 2a: Copy and paste the code below in the shell file generated in Step 1a above, which will generate all snphylo output files:
+    
+<b>We use the following flags in the code</b>: <br>
+    -r: skip removal of low quality data (increases computation time since we've already filtered the data)
+    -a: gives the ID for the final SNP in VCF
+    -b: perform bootstrapping
+    -B: number of bootstrap replicates
+    -o GLVR11_1
+    
+##### Command line code for running SNPHYLO. UNCOMMENT this code in the shell script and run: `sbatch snphylo.sh`
+```{r}
+# snphylo.sh -v ../vcfdata/all_pure.vcf -r -a 288336 -b -B 1000 -o GLVR11_1
+```
+
+#### 2b. Run SNPHYLO analysis. Navigate to `code/shell_scripts/snphylo.sh` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
+
+Run: `sbatch snphylo.sh`
+
+#### 2c: SNPHYLO output files are generated and stored in the `/shell_scripts` directory; manually move these output files here: `data/snphylo_data/`.
 
