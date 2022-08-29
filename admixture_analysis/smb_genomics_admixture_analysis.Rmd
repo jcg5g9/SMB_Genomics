@@ -1,5 +1,5 @@
 ---
-title: "Analysis 3: Admixture and Phylogenomics"
+title: 'Analysis 3: Admixture and Phylogenomics'
 author: "Joe Gunn"
 date: "10/30/2019"
 output: html_document
@@ -23,7 +23,6 @@ library(tidyverse)
 library(cowplot)
 library(devtools)
 library(pophelper)
-library(gitcreds)
 ```
 
 ## PHASE 1: Metadata preparation
@@ -725,6 +724,9 @@ plotQ(pure_K5,
 
 These figures were used as the basis for Figure 1b in the manuscript (we used PowerPoint to remove unwanted labels and include clean versions of the labels).
 
+### ----------------------- END OF PHASE 2: ADMIXTURE ANALYSIS  ----------------------- ###
+
+
 ## PHASE 3: PHYLOGENOMIC ANALYSIS
 In this phase, we are reading in the pure popgen VCF dataset and conducting phylogenomic inference with the software program SNPHYLO, which uses maximum likelihood estimation, to understand the genomic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass <br>
 
@@ -781,8 +783,10 @@ In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('
     -a: gives the ID for the final SNP in VCF
     -b: perform bootstrapping
     -B: number of bootstrap replicates
-    -o GLVR11_1
-    
+    -o GLVR11_1 (outgroup; Spotted Bass)
+  
+We run 1,000 bootstrap replicates and set a Spotted Bass sample (GLVR11_1) as an outgroup to root the tree (this is based on our knowledge of the phylogenetic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass)
+
 ##### Command line code for running SNPHYLO. UNCOMMENT this code in the shell script and run: `sbatch snphylo.sh`
 ```{r}
 # snphylo.sh -v ../vcfdata/all_pure.vcf -r -a 288336 -b -B 1000 -o GLVR11_1
@@ -794,3 +798,7 @@ Run: `sbatch snphylo.sh`
 
 #### 2c: SNPHYLO output files are generated and stored in the `/shell_scripts` directory; manually move these output files here: `data/snphylo_data/`.
 
+#### 2d: Visualize SNPHYLO output.
+We read the snphylo out 'snphylo.output.bs.tree' into the software program FIGTREE to visualize and generate our phylogenetic tree, which is the basis for Figure 1b in the manuscript.
+
+### ----------------------- END OF PHASE 3: PHYLOGENOMIC ANALYSIS  ----------------------- ###
