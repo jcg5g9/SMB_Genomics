@@ -120,7 +120,7 @@ In this step, we are running a population genomic analysis of the full, filtered
 
 ##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
 ```{bash}
-#plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/01_all
+#plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/all_samples/01_all
 ```
 
 This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
@@ -460,7 +460,8 @@ In this step, we are generating another bash shell script to run all individual 
 
 ##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
 ```{bash}
-#plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/02_pure
+## filter 02: omit all interspecific hybrids (BFC10) 
+#plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/pure_samples/02_pure
 ```
 
 This code generates the file: `data/processed_bed/all_samples/02_pure.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
