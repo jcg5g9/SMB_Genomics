@@ -375,12 +375,12 @@ write_tsv(pure_indivs, file = "data/filtering_data/pure_individuals.txt", col_na
 ## Get admixed Midark samples (cluster within Neosho range) 
 admixed_midark <- all_Q %>%
   filter(midark < 0.95) %>%
-  filter(midark > 0.06)
+  filter(midark > 0.06) # This is to account for the one sample with mixed ancestry among neosho clusters
 
 ## Get admixed Northern Arkansas samples (cluster within Neosho range) 
 admixed_ark <- all_Q %>%
   filter(north_ark < 0.94) %>%
-  filter(north_ark > 0.05)
+  filter(north_ark > 0.05) # This is to account for the one sample with mixed ancestry among neosho clusters
 
 ## Put all pure individuals together 
 admixed_indivs <- rbind(admixed_midark, 
