@@ -113,8 +113,7 @@ smb_genomics_missing <- read_tsv("data/filtering_data/smb_genomics_missing.imiss
 
 ## Convert to data frame and mutate individual to factor
 smb_genomics_missing <- as.data.frame(smb_genomics_missing) %>%
-  mutate(INDV = factor(INDV))  %>%
-  separate(col = INDV, into = c("INDV", NA), sep = "_1")
+  mutate(INDV = factor(INDV))
 
 ## Generate list of samples above missing genotype threshold
 smb_genomics_badsamples <- smb_genomics_missing %>%
@@ -131,6 +130,16 @@ write_tsv(smb_genomics_badsamples, file = "data/filtering_data/smb_genomics_bads
 
 ##### Generate bar plot for badsamples: `figures/filtering_processing_figures/badsamples.pdf`
 ```{r}
+## Remove the "_1" string from each sample name
+smb_genomics_missing <- as.data.frame(smb_genomics_missing) %>%
+  mutate(INDV = factor(INDV))  %>%
+  separate(col = INDV, into = c("INDV", NA), sep = "_1")
+
+# Get only columns 1 and 2
+smb_genomics_missing <- smb_genomics_missing %>%
+  select(INDV, F_MISS)
+
+## Plot figure
 pdf("figures/filtering_processing_figures/badsamples.pdf", width=7, height=25)
 
 ggplot(smb_genomics_missing, aes(x = INDV, y = F_MISS)) + 
