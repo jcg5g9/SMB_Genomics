@@ -1,4 +1,3 @@
-
 #! /bin/bash
 
 #SBATCH --account=biosci
@@ -12,11 +11,13 @@
 
 # Commands here run only on the first core
 
-# Modules to load
+echo "### Starting at: $(date) ###"
 
+## load packages (LEAVE THIS COMMENTED)
+module load rss/rss-2020
 module load admixture_linux/admixture_linux-1.3.
 
-## Commands with srun will run on neo cores in the neoocation
+COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/01_all_batch_cmd_list.txt | tail -n 1`
+eval $COMMANDA
 
-admixture --seed=2324 --cv=10 ../../data/processed_bed/all_samples/01_all.bed 1
-
+echo "### Ending at: $(date) ###"
