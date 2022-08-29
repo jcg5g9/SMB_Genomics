@@ -419,10 +419,9 @@ In this step, we are generating another bash shell script to run all individual 
 
 # module load rss/rss-2020
 # module load vcftools/vcftools-v0.1.14
-
 ```
 
-
+##### Important Note: the generated file will have an additional extension (.recode), which is not necessary for downstream analyses. Every time a new VCF file was filtered, we manually removed this piece of the extension by copying the file to a new name (see below) and deleting the .recode.vcf file.
 
 
 
