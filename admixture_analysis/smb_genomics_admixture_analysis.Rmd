@@ -399,7 +399,7 @@ In this step, we are rerunning ADMIXTURE on only the individuals inferred to be 
 #### 4a: Generate a general bash shell script header for data filtering in VCFTools
 In this step, we are generating another bash shell script to run all individual sample filtering VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
-##### 1a: Generate the header for a general bash shell script to run VCFTools:
+##### 4a.1. Generate the header for a general bash shell script to run VCFTools:
 
 ##### Generate plink bash shell script: `code/shell_scripts/vcftools.sh`
 ```{bash}
@@ -423,12 +423,35 @@ In this step, we are generating another bash shell script to run all individual 
 
 ##### Important Note: the generated file will have an additional extension (.recode), which is not necessary for downstream analyses. Every time a new VCF file was filtered, we manually removed this piece of the extension by copying the file to a new name (see below) and deleting the .recode.vcf file.
 
+#### 4b: Omit Spotted Bass X Smallmouth Bass hybrid (BFC10).
 
+##### 4b.1. Copy and paste the code below in the shell file generated in Step 4a above, which will generate a filtered VCF file without BFC10:
 
+##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+## filter 01: omit Spotted Bass X Neosho Bass hybrid (BFC10) 
+#vcftools --vcf ../../data/processed_vcf/popgen.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_popgen_spb_hybrid
+```
 
+<b>Filtering results</b>: <br><br>
+<b>Samples omitted </b> = 1 <br>
+<b>Samples retained </b> = 91 <br>
+<b>SNPs retained </b> = 50,828 <br>
 
+#### 4c: Generate datasest with only genetically pure individuals by removing individuals in the 'admixed_individuals' list above (Smallmouth Bass X Neosho Bass hybrids).
 
+##### 4c.1. Copy and paste the code below in the shell file generated in Step 4a above, which will generate a filtered VCF file without admixed individuals:
 
+##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+```{bash}
+## filter 02: omit all interspecific hybrids (BFC10) 
+#vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_pure
+```
+
+<b>Filtering results</b>: <br><br>
+<b>Samples omitted </b> = 1 <br>
+<b>Samples retained </b> = 91 <br>
+<b>SNPs retained </b> = 50,828 <br>
 
 
 
