@@ -326,6 +326,9 @@ all_Q <- cbind(metadata, hybrid_screen_K4)
 BCF10 <- all_Q %>%
   filter(sample_id == "BFC10")
 
+# Select the first column and convert to data frame
+BCF10 <- data.frame(BCF10[,c(1)]) 
+
 # Save the list of bad samples as a .txt file without column names
 write_tsv(BCF10, file = "data/filtering_data/bfc10.txt", col_names = FALSE)
 
@@ -403,18 +406,20 @@ In this step, we are generating another bash shell script to run all individual 
 #! /bin/bash
 
 #SBATCH -p Lewis  # use the Lewis partition
-#SBATCH -J plink_conversion # give the job a custom name
-#SBATCH -o get_plink_bed-%j.out  # give the job output a custom name
-#SBATCH -t 0-01:00  # two hour time limit
+#SBATCH -J filter_admixed  # give the job a custom name
+#SBATCH -o filtering_missing.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
 
 #SBATCH -N 1  # number of nodes
 #SBATCH -n 1  # number of cores (AKA tasks)
 
-# Commands here run only on the first core
+## Load VCFtools module
 
-# Modules to load
+## UNCOMMENT LINES STARTING HERE 
 
-## module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
+# module load rss/rss-2020
+# module load vcftools/vcftools-v0.1.14
+
 ```
 
 
