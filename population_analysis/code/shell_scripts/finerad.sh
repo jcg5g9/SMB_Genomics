@@ -13,7 +13,8 @@ module load fineradstructure/fineradstructure-0.3.2
 
 # Commands with srun will run on all cores in the allocation
 
-# RADpainter hapsFromVCF ../vcfdata/vcf_pass2_badsamples_qual_missing_mac2_het45_admixed.vcf > ../fineradstructure/hap_withfilters_admixed.txt
+## file conversion 01: convert VCF into haplotype chunks for all Smallmouth Bass and Neosho Bass
+RADpainter hapsFromVCF ../../vcfdata/vcf_pass2_badsamples_qual_missing_mac2_het45_admixed.vcf > ../fineradstructure/hap_withfilters_admixed.txt
 # RADpainter paint ../fineradstructure/hap_withfilters_admixed.txt
 # finestructure -x 100000 -y 100000 -z 1000 ../fineradstructure/hap_withfilters_admixed_chunks.out ../fineradstructure/hap_withfilters_admixed_chunks.mcmc.xml
 # finestructure -m T -x 10000 ../fineradstructure/hap_withfilters_admixed_chunks.out ../fineradstructure/hap_withfilters_admixed_chunks.mcmc.xml hap_withfilters_admixed_chunks.mcmcTree.xml
