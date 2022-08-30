@@ -25,7 +25,7 @@ library(devtools)
 library(vcfR)
 library(XML)
 library(RColorBrewer)
-source("../fineradstructure_analysis/FinestructureLibrary.R") #Fine-structure R source code
+source("code/source_code/FinestructureLibrary.R") #Fine-structure R source code
 ```
 
 ## PHASE 1: DATA PREPARATION
@@ -113,15 +113,10 @@ Run: `sbatch vcftools.sh`
 <b>Samples retained </b> = 91 <br>
 <b>SNPs retained </b> = 50,828 <br>
 
-
-
-##### 3b.2. Read in metadata and generate a list of only Spotted Bass to be used for filtering in subsequent steps:
+##### 1b.3. Generate a list of only Spotted Bass to be used for filtering in subsequent steps:
 
 ##### Read in metadata and generate Spotted Bass list: `data/filtering_data/spotted_bass.txt`
 ```{r}
-# load in pure metadata, which was created in the smb_genomics_admixture_analysis.Rmd analysis
-load("../raw_data/metadata.Rda")
-
 spotted_bass <- metadata %>%
   filter(species == "Spotted_Bass")
 
@@ -135,12 +130,12 @@ write_tsv(spotted_bass,
           col_names = FALSE)
 ```
 
-##### 3b.2. Copy and paste the code below in the shell file generated in Step 3a above, which will generate a filtered VCF file without Spotted Bass:
+##### 1b.2. Copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate a filtered VCF file without Spotted Bass:
 
 ##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
 ```{bash}
-## filter 01: omit Spotted Bass
-#vcftools --vcf ../../data/processed_vcf/popgen.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_popgen_spb_hybrid
+## filter 02: omit Spotted Bass
+#vcftools --vcf ../../data/processed_vcf/01_finerad_spb_hybrid.vcf --remove ../../data/filtering_data/spotted_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_finerad_spb
 ```
 
 <b>Filtering results</b>: <br><br>
