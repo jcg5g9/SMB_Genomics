@@ -12,9 +12,9 @@ We investigated the extent of genomic divergence, local directional selection, a
 In this analysis, we used the finerad.vcf data generated in Analysis 2 (SNP Filtering...) to assess fine-scale coancestry between Smallmouth Bass, and Neosho Bass in the CIH using haplotype inference (excluding Spotted Bass). Specifically, we estimated coancestry in 1) the full dataset, with all pure and admixed individuals, excluding the Spotted Bass X Smallmouth Bass hybrid (BFC10) inferred from population genomic analysis in Analysis 3, 2) the pure dataset, with only pure individuals of Smallmouth Bass and Neosho Bass, and 3) the admixed dataset, with only admixed individuals of Neosho Bass (no admixed Smallmouth Bass were detected).
 
 ## Phases of analysis:
-### Phase 1: Data preparation
-### Phase 2: Admixture analysis
-### Phase 3: Phylogenomic analysis
+### Phase 1: Data preparation 
+### Phase 2: Coancestry analysis
+### Phase 3: Plotting
 
 ## Libraries needed for analysis
 ```{r libraries, echo = FALSE}
@@ -27,5 +27,43 @@ library(vcfR)
 library(XML)
 library(RColorBrewer)
 source("../fineradstructure_analysis/FinestructureLibrary.R") #Fine-structure R source code
+```
+
+## PHASE 1: DATA PREPARATION
+In this phase of the analysis, we are reading in the fully filtered, non-thinned VCF dataset (`finerad.vcf`) and generating haplotype mapping files (hapmap) files to be used for coancestry analysis with the software program FINERADSTRUCTURE. We are interested in delimiting populations of tight coancestry within the Smallmouth Bass and Neosho Bass, so we exclude Spotted Bass from the dataset before preceding with coancestry analyses for 1) all Smallmouth Bass and Neosho Bass samples; 2) pure samples only, and 3) admixed samples only.
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+FINERADSTRUCTURE v.0.3.2 (Malinsky, Trucchi, Lawson, & Falush, 2018) <br>
+
+<b>Citation</b>:<br>
+
+Malinsky, M., Trucchi, E., Lawson, D. J., & Falush, D. (2018). RADpainter and fineRADstructure: Population inference from RADseq data. Molecular Biology and Evolution, 35, 1284–1290. doi:10.1093/molbev/msy023
+
+### STEP 1: Generate a general bash shell script header for all FINERADSTRUCTURE commands
+In this step, we are generating a universal bash shell script to run all input file conversions and subsequent coancestry analyses in FINERADSTRUCTURE. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion or analysis and the associated lines of code in Rmd chunks. The shell script for running all FINERADSTRUCTURE code is called "finerad.sh".
+
+##### 1a: Generate the header for a general bash shell script to run FINERADSTRUCTURE:
+
+##### Generate FINERADSTRUCTURE bash shell script: `code/shell_scripts/finerad.sh`
+```{bash}
+
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J finerad  # give the job a custom name
+#SBATCH -o finerad.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+# module load rss/rss-2020
+# module load fineradstructure/fineradstructure-0.3.2
+
 ```
 

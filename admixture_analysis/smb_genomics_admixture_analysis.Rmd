@@ -26,7 +26,7 @@ library(pophelper)
 ```
 
 ## PHASE 1: Metadata preparation
-In this phase of the analysis, we reading in a metadata file that was prepared in excel prior to analysis (`metadata.xlsx`), which gives the sample ID, species designation (by native range or morphology in the case of Spotted Bass), and stream from which it was capture.
+In this phase of the analysis, we are reading in a metadata file that was prepared in excel prior to analysis (`metadata.xlsx`), which gives the sample ID, species designation (by native range or morphology in the case of Spotted Bass), and stream from which it was capture.
 
 ### STEP 1: Prepare raw metadata for use in downstream analyses and summarize sample size data across streams.
 In this step, we are reading in, cleaning, and filtering the raw metadata to prepare for downstream analyses.
@@ -101,11 +101,12 @@ In this step, we are generating a universal bash shell script to run all file ty
 #SBATCH -N 1  # number of nodes
 #SBATCH -n 1  # number of cores (AKA tasks)
 
-# Commands here run only on the first core
+## Commands here run only on the first core
 
-# Modules to load
+## Modules to load
 
-## module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
+# module load rss/rss-2020
+# module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
 ```
 
 ### STEP 2: Screen for hybridization population genomic admixture analysis on the FULL dataset
