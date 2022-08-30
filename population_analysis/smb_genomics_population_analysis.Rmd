@@ -22,7 +22,6 @@ library(readxl)
 library(tidyverse)
 library(cowplot)
 library(devtools)
-library(SNPRelate)
 library(vcfR)
 library(XML)
 library(RColorBrewer)
@@ -42,37 +41,13 @@ FINERADSTRUCTURE v.0.3.2 (Malinsky, Trucchi, Lawson, & Falush, 2018) <br>
 
 Malinsky, M., Trucchi, E., Lawson, D. J., & Falush, D. (2018). RADpainter and fineRADstructure: Population inference from RADseq data. Molecular Biology and Evolution, 35, 1284–1290. doi:10.1093/molbev/msy023
 
-### STEP 1: Generate a general bash shell script header for all FINERADSTRUCTURE commands
-In this step, we are generating a universal bash shell script to run all input file conversions and subsequent coancestry analyses in FINERADSTRUCTURE. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion or analysis and the associated lines of code in Rmd chunks. The shell script for running all FINERADSTRUCTURE code is called "finerad.sh".
-
-##### 1a: Generate the header for a general bash shell script to run FINERADSTRUCTURE:
-
-##### Generate FINERADSTRUCTURE bash shell script: `code/shell_scripts/finerad.sh`
-```{bash}
-
-#! /bin/bash
-
-#SBATCH -p Lewis  # use the Lewis partition
-#SBATCH -J finerad  # give the job a custom name
-#SBATCH -o finerad.out  # give the job output a custom name
-#SBATCH -t 0-02:00  # two hour time limit
-
-#SBATCH -N 1  # number of nodes
-#SBATCH -n 1  # number of cores (AKA tasks)
-
-# Commands here run only on the first core
-
-# module load rss/rss-2020
-# module load fineradstructure/fineradstructure-0.3.2
-```
-
-### STEP 2: Filter out Spotted Bass individuals and generate pure sample and admixed sample datasets for the full, non-thinned VCF.
+### STEP 1: Filter out Spotted Bass individuals and generate pure sample and admixed sample datasets for the full, non-thinned VCF.
 In this step, we are filtering out Spotted Bass from the full, non-thinned dataset, since we are interested in assessing coancestry among Smallmouth Bass and Neosho Bass in this analysis. Additionally, we are again creating datasets for 1) only pure samples and 2) only admixed samples, but for the non-thinned dataset.
 
-#### 2a: Generate a general bash shell script header for data filtering in VCFTools
+#### 1a: Generate a general bash shell script header for data filtering in VCFTools
 In this step, we are generating another bash shell script to run individual sample filtering in VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
-#### 2a: Generate the header for a general bash shell script to run VCFTools:
+##### 1a.1: Copy and paste the code below in a new shell script file: 
 
 ##### Generate VCFTools bash shell script: `code/shell_scripts/vcftools.sh`
 ```{bash}
@@ -94,18 +69,58 @@ In this step, we are generating another bash shell script to run individual samp
 
 ##### Important Note: the generated file will have an additional extension (.recode), which is not necessary for downstream analyses. Every time a new VCF file was filtered, we manually removed this piece of the extension by copying the file to a new name (see below) and deleting the .recode.vcf file.
 
-#### 3b: Filter the full, non-thinned VCF to remove Spotted Bass and Spotted Bass hybrid (BFC10).
+#### 1b: Filter the full, non-thinned VCF to remove Spotted Bass hybrid (BFC10) and Spotted Bass individuals.
 
-##### 3b.1. Read in metadata and generate a list of only Spotted Bass to be used for filtering in subsequent steps:
+##### 1b.1. Read in metadata and generate a list of only the Spotted Bass hybrid; run the Rmd chunk below, which is borrowed from `smb_genomics_admixture_analysis.Rmd`, lines 321-341:
+
+##### Generate list of Spotted Bass hybrid: `data/filtering_data/bfc10.txt` 
+```{r}
+# Load in the metadata .Rda file
+load("../raw_data/metadata.Rda")
+
+## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
+BFC10 <- metadata %>%
+  filter(sample_id == "BFC10_1")
+
+# Select the first column and convert to data frame
+BFC10 <- data.frame(BFC10) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(BFC10, 
+          file = "data/filtering_data/bfc10.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+BFC10 <- as.vector(BFC10$sample_id)
+
+# Save the list of bad samples as a .Rda file without column names
+save(BFC10, file = "data/filtering_data/bcf10.Rda")
+```
+
+#### 1b.2. Copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate a filtered VCF file without BFC10:
+
+##### Command line code for filtering. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 01: omit Spotted Bass X Neosho Bass hybrid (BFC10) 
+#vcftools --vcf ../../data/processed_vcf/finerad.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_finerad_spb_hybrid
+```
+
+Run: `sbatch vcftools.sh`
+
+<b>Filtering results</b>: <br><br>
+<b>Samples omitted </b> = 1 <br>
+<b>Samples retained </b> = 91 <br>
+<b>SNPs retained </b> = 50,828 <br>
+
+
+
+##### 3b.2. Read in metadata and generate a list of only Spotted Bass to be used for filtering in subsequent steps:
 
 ##### Read in metadata and generate Spotted Bass list: `data/filtering_data/spotted_bass.txt`
 ```{r}
 # load in pure metadata, which was created in the smb_genomics_admixture_analysis.Rmd analysis
 load("../raw_data/metadata.Rda")
-
-# Filter out Spotted Bass hybrid (BCF10)
-metadata <- metadata %>%
-  filter(sample_id != "BFC10_1")
 
 spotted_bass <- metadata %>%
   filter(species == "Spotted_Bass")
@@ -134,6 +149,29 @@ write_tsv(spotted_bass,
 <b>SNPs retained </b> = 50,828 <br>
 
 
+### STEP 1: Generate a general bash shell script header for all FINERADSTRUCTURE commands
+In this step, we are generating a universal bash shell script to run all input file conversions and subsequent coancestry analyses in FINERADSTRUCTURE. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion or analysis and the associated lines of code in Rmd chunks. The shell script for running all FINERADSTRUCTURE code is called "finerad.sh".
+
+##### 1a: Generate the header for a general bash shell script to run FINERADSTRUCTURE:
+
+##### Generate FINERADSTRUCTURE bash shell script: `code/shell_scripts/finerad.sh`
+```{bash}
+
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J finerad  # give the job a custom name
+#SBATCH -o finerad.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+# module load rss/rss-2020
+# module load fineradstructure/fineradstructure-0.3.2
+```
 
 
 
@@ -145,20 +183,3 @@ write_tsv(spotted_bass,
 ### STEP 2: Generate painted hap map input files for coancestry analysis
 In this step, we are converting VCF files for 1) 
 
-#### 2a: Convert VCF data into .bed format for admixture analysis in the software program ADMIXURE.
-
-##### 2a.1. Copy and paste the code below in the shell file generated in Step 1a above, which will generate a .bed, along with .bim, .fam, .log, and .nosex files:
-
-<b>We use the following flags in the code</b>: <br>
-    --allow-extra-chr: this flag is necessary due to the data being in the format of contigs rather than chromosomes
-    --vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
-    --make-bed: this specifies output format of .bed
-
-##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
-```{bash}
-#plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/all_samples/01_all
-```
-
-Run: `sbatch plink.sh`
-
-This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.

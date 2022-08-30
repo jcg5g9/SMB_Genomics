@@ -73,7 +73,7 @@ In this step, we are copying the raw VCF file containing SNPs called with string
 ### STEP 2: Generate a general bash shell script header for all VCF commands with which to run all VCF commands
 In this step, we are generating a universal bash shell script to run all SNP and individual filtering on the full VCF file with the program VCFTools. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each filtering decision and the associated lines of code in Rmd chunks. The shell script for running all VCFTools is called "vcftools.sh".
 
-#### 2a: Generate the header for a general bash shell script to run VCFTOOLS:
+#### 2a: Copy and paste the code below in a new shell script file:
 
 ##### Generate vcftools bash shell script: `code/shell_scripts/vcftools.sh`
 ```{bash}
@@ -298,7 +298,7 @@ The next step of the filtering process entails omitting SNPs with heterozygosity
 ### STEP 8: Generate a general bash shell script header for all GATK commands with which to run all GATK commands
 In this step, we are generating a universal bash shell script to generate SNP tables with the program GATK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each line of code in the Rmd chunks. The shell script for running all GATK commands is called "gatk.sh".
 
-#### 8a: Generate the header for a general bash shell script to run GATK:
+#### 8a: Copy and paste the code below in a new shell script file:
 
 ##### Generate vcftools bash shell script: `code/shell_scripts/gatk.sh`
 ```{bash}

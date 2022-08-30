@@ -87,7 +87,7 @@ Alexander, D. H., Novembre, J., & Lange, K. (2009). Fast model-based estimation 
 ### STEP 1: Generate a general bash shell script header for all PLINK commands
 In this step, we are generating a universal bash shell script to run all file type conversions in PLINK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "plink.sh".
 
-##### 1a: Generate the header for a general bash shell script to run PLINK:
+##### 1a:Copy and paste the code below in a new shell script file:
 
 ##### Generate PLINK bash shell script: `code/shell_scripts/plink.sh`
 ```{bash}
@@ -320,11 +320,8 @@ We considered an individual to be genetically "pure" if it possessed greater tha
 
 ##### Generate list of Spotted Bass hybrids: `data/filtering_data/bfc10.txt` 
 ```{r}
-## Read in Q value data for all individuals at K=4
-all_Q <- cbind(metadata, hybrid_screen_K4)
-
 ## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
-BFC10 <- all_Q %>%
+BFC10 <- metadata %>%
   filter(sample_id == "BFC10_1")
 
 # Select the first column and convert to data frame
@@ -347,6 +344,9 @@ save(BFC10, file = "data/filtering_data/bcf10.Rda")
 
 ##### Generate list of pure individuals: `data/filtering_data/pure_individuals.txt`
 ```{r}
+## Read in Q value data for all individuals at K=4
+all_Q <- cbind(metadata, hybrid_screen_K4)
+
 ## Filter out BCF10 (Spotted Bass X Smallmouth Bass hybrid)
 all_Q <- all_Q %>%
   filter(sample_id != "BFC10_1")
@@ -432,7 +432,7 @@ In this step, we are rerunning ADMIXTURE on only the individuals inferred to be 
 #### 3a: Generate a general bash shell script header for data filtering in VCFTools
 In this step, we are generating another bash shell script to run all individual sample filtering in VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
-##### 3a.1. Generate the header for a general bash shell script to run VCFTools:
+##### 3a.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate VCFTools bash shell script: `code/shell_scripts/vcftools.sh`
 ```{bash}
@@ -760,7 +760,7 @@ Zheng, X., Levine, D., Shen, J., Gogarten, S. M., Laurie, C., & Weir, B. S. (201
 ### STEP 1: Generate a general bash shell script header for all SNPHYLO commands
 In this step, we are generating a universal bash shell script to run phylogenomic analysis in SNPHYLO Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each analysis and the associated lines of code in Rmd chunks. The shell script for running all SNPHYLO code is called "snphylo.sh".
 
-##### 1a: Generate the header for a general bash shell script to run SNPHYLO:
+#### 1a: Copy and paste the code below in a new shell script file:
 
 ##### Generate PLINK bash shell script: `code/shell_scripts/snphylo.sh`
 ```{bash}
@@ -785,7 +785,7 @@ In this step, we are generating a universal bash shell script to run phylogenomi
 ### STEP 2: Conduct phylogenomic analysis on pure dataset.
 In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('02_popgen_pure.vcf') to assess genomic divergence and monophyly among the Spotted Bass, Smallmouth Bass, and Neosho Bass.
 
-##### 2a: Copy and paste the code below in the shell file generated in Step 1a above, which will generate all snphylo output files:
+#### 2a: Copy and paste the code below in the shell file generated in Step 1a above, which will generate all snphylo output files:
     
 <b>We use the following flags in the code</b>: <br>
     -r: skip removal of low quality data (increases computation time since we've already filtered the data)
