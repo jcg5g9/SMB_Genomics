@@ -97,10 +97,12 @@ In this step, we are filtering the dataset to omit any individual samples that d
 
 #### 3a: Copy and paste the code below in the shell file generated in Step 2a above, which will generate a file with missing genotype call rate information for all samples:
 
-##### Command line code for obtaining missing genotype call rate information. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for obtaining missing genotype call rate information. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../../raw_data/smb_genomics.vcf --missing-indv --out ../../data/filtering_data/smb_missing
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/filtering_data/smb_missing.imiss`. This file should be used to generate a separate list of sample IDs with missing genotype call rates greater than 20%, which will subsequently be used to omit these samples from the full VCF.
 
@@ -123,7 +125,9 @@ smb_genomics_badsamples <- smb_genomics_missing %>%
 smb_genomics_badsamples <- data.frame(smb_genomics_badsamples[,c(1)]) 
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(smb_genomics_badsamples, file = "data/filtering_data/smb_genomics_badsamples.txt", col_names = FALSE)
+write_tsv(smb_genomics_badsamples, 
+          file = "data/filtering_data/smb_genomics_badsamples.txt", 
+          col_names = FALSE)
 ```
 
 #### 3c: Generate a bar plot showing the missing genotype proportions of all samples; run the Rmd chunk below:
@@ -161,10 +165,12 @@ This plot corresponds to Supplementary Figure S1 in the manuscript.
 
 #### 3d: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate the poor quality samples discovered in Steps 3a - 3c above:
 
-##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../../raw_data/smb_genomics_edited.vcf --remove ../../data/filtering_data/smb_genomics_badsamples.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_filter_badsamples
 ```
+
+Run: `sbatch vcftools.sh`
 
 ##### Important Note: the generated file will have an additional extension (.recode), which is not necessary for downstream analyses. Every time a new VCF file was filtered, we manually removed this piece of the extension by copying the file to a new name (see below) and deleting the .recode.vcf file.
 
@@ -180,10 +186,12 @@ In this step, we are filtering the dataset generated in Step 3d above to retain 
 
 #### 4a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with depth of coverage less than 15X:
 
-##### Command line code for omitting low depth SNPs. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for omitting low depth SNPs. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/01_filter_badsamples.vcf --minDP 15 --recode --recode-INFO-all --out ../../data/processed_vcf/02_filter_depth
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/02_filter_depth.vcf`. This file serves as input for the next filtering step.
 
@@ -196,10 +204,12 @@ In this step, we are filtering the dataset generated in Step 4a above to retain 
 
 #### 5a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with phred quality score less than 20.
 
-##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/02_filter_depth.vcf --minQ 20 --recode --recode-INFO-all --out ../../data/processed_vcf/03_filter_qual
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/03_filter_qual.vcf`. This file serves as input for the next filtering step.
 
@@ -212,10 +222,12 @@ In this step, we are filtering the dataset generated in Step 5a above to retain 
 
 #### 6a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with genotype call rates across individuals less than 80%.
 
-##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/03_filter_qual.vcf --minQ 20 --recode --recode-INFO-all --out ../../data/processed_vcf/04_filter_genotype
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/04_filter_genotype.vcf`. This file serves as input for the next filtering step.
 
@@ -232,10 +244,12 @@ In this step, we split the dataset filtered in Step 6a into two distinct dataset
 
 ###### 7a.1.1. Copy and paste the code below in the shell file generated in Step 2a above, which will retain only one SNP per RAD kmer in a thinning procedure (thin 100 used since RAD tags are each 95 base pairs long)
 
-##### Command line code for one SNP per RAD tag. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for one SNP per RAD tag. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --thin 100 --recode --recode-INFO-all --out ../../data/processed_vcf/A_01_popgen_filter_thin
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/A_01_popgen_filter_thin.vcf`. This file serves as input for the next filtering step for the POPGEN (thinned) dataset.
 
@@ -247,10 +261,12 @@ This code generates the file: `data/processed_vcf/A_01_popgen_filter_thin.vcf`. 
 
 ##### 7a.2.1. Copy and paste the code below in the shell file generated in Step 2a above, which will filter out any SNPs with minor allele count less than or equal to 2 (this is equivalent to a minor allele frequency of ~0.011).
 
-#### Command line code for minor allele count filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+#### Command line code for minor allele count filtering. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/A_01_popgen_filter_thin.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/A_02_popgen_filter_mac
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/A_02_popgen_filter_mac.vcf`. This file serves as input for the next filtering step for the POPGEN (thinned) dataset.
 
@@ -264,10 +280,12 @@ This code generates the file: `data/processed_vcf/A_02_popgen_filter_mac.vcf`. T
 
 ###### 7b.1.1. Copy and paste the code below in the shell file generated in Step 2a above, which will filter out any SNPs with minor allele count less than or equal to 2 (this is equivalent to a minor allele frequency of ~0.011).
 
-#### Command line code for minor allele count filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+#### Command line code for minor allele count filtering. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/04_filter_genotype.vcf --mac 2 --recode --recode-INFO-all --out ../../data/processed_vcf/B_01_finerad_filter_mac
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/B_01_finerad_filter_mac.vcf`. This file serves as input for the next filtering step for the FINERAD (non-thinned) dataset
 
@@ -309,7 +327,7 @@ In this step, we are generating SNP tables for the popgen (thinned) and finerad 
 
 ##### 9a.1. Copy and paste the code below in the shell file generated in Step 8a above, which will generate a .txt file with allele counts for all SNPs:
 
-##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script and run: `sbatch gatk.sh`
+##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script:
 ```{bash}
 #gatk VariantsToTable \
        # -V ../../data/processed_vcf/A_02_popgen_filter_mac.vcf \
@@ -326,6 +344,8 @@ In this step, we are generating SNP tables for the popgen (thinned) and finerad 
       #  -F NCALLED \
       #  -O ../../data/filtering_data/A_02_popgen_snps.txt
 ```
+
+Run: `sbatch gatk.sh`
 
 This code generates the file: `data/filtering_data/A_02_popgen_snps.txt`. This file should be used to compute genotype frequencies and generate a separate list of SNP IDs with excess heterozygosity.
 
@@ -348,14 +368,16 @@ popgen_excess_het <- popgen_snps %>%
 popgen_excess_het <- data.frame(popgen_excess_het[,c(1:2)])
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(popgen_excess_het, file = "data/filtering_data/smb_genomics_popgen_het45.txt", col_names = FALSE)
+write_tsv(popgen_excess_het, 
+          file = "data/filtering_data/smb_genomics_popgen_het45.txt", 
+          col_names = FALSE)
 ```
 
 #### 9b: Generate SNP table for FINERAD dataset 
 
 ##### 9b.1. Copy and paste the code below in the shell file generated in Step 8a above, which will generate a .txt file with allele counts for all SNPs:
 
-##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script and run: `sbatch gatk.sh`
+##### Command line code for obtaining SNP allele and genotype frequency information. UNCOMMENT this code in the shell script:
 ```{bash}
 #gatk VariantsToTable \
     #    -V ../../data/processed_vcf/B_01_finerad_filter_mac.vcf \
@@ -372,6 +394,8 @@ write_tsv(popgen_excess_het, file = "data/filtering_data/smb_genomics_popgen_het
     #    -F NCALLED \
      #   -O ../../data/filtering_data/B_01_finerad_snps.txt
 ```
+
+Run: `sbatch gatk.sh`
 
 This code generates the file: `data/filtering_data/B_01_finerad_snps.txt`. This file should be used to compute genotype frequencies and generate a separate list of SNP IDs with excess heterozygosity.
 
@@ -394,7 +418,9 @@ finerad_excess_het <- finerad_snps %>%
 finerad_excess_het <- data.frame(finerad_excess_het[,c(1:2)])
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(finerad_excess_het, file = "data/filtering_data/smb_genomics_finerad_het45.txt", col_names = FALSE)
+write_tsv(finerad_excess_het, 
+          file = "data/filtering_data/smb_genomics_finerad_het45.txt", 
+          col_names = FALSE)
 ```
 
 ### STEP 10: Filter out SNPs with greater than 45% heterozygosity across samples.
@@ -404,10 +430,12 @@ In this step, we are removing the SNPs with greater than 45% heterozygosity iden
 
 ##### 10a.1. Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate the SNPs with excess heterozygosity identified in Steps 9a.2 and 9b.2. above:
 
-##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/A_02_popgen_filter_mac.vcf --exclude-positions ../../data/filtering_data/smb_genomics_popgen_het45.txt --recode --recode-INFO-all --out ../../data/processed_vcf/A_03_popgen_filter_het45
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/A_03_popgen_filter_het45.vcf`. This file should be used as input in the next filtering step.
 
@@ -419,10 +447,12 @@ This code generates the file: `data/processed_vcf/A_03_popgen_filter_het45.vcf`.
 
 ##### 10b.1. Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate the SNPs with excess heterozygosity identified in Steps 9a.2 and 9b.2. above:
 
-##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for omitting bad samples. UNCOMMENT this code in the shell script:
 ```{bash}
 #vcftools --vcf ../../data/processed_vcf/B_01_finerad_filter_mac.vcf --exclude-positions ../../data/filtering_data/smb_genomics_finerad_het45.txt --recode --recode-INFO-all --out ../../data/processed_vcf/A_03_finerad_filter_het45
 ```
+
+Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/B_02_finerad_filter_het45.vcf`. This file should be used as input in the next filtering step.
 
@@ -444,4 +474,4 @@ At this point, the popgen (thinned) and finerad (non-thinned) datasets are fully
 #cp B_02_finerad_filter_het45 ../analysis_data/finerad.vcf
 ```
 
-### ----------------------- END OF PHASE 1: FILTERING ----------------------- ###
+### ----------------------- END OF PHASE 1: FILTER RAW VCF FILE ----------------------- ###

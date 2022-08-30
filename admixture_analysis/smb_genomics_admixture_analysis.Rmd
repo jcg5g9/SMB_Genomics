@@ -36,7 +36,7 @@ In this step, we are reading in, cleaning, and filtering the raw metadata to pre
 ##### Read in and clean metadata
 ```{r METADATA}
 ## Read in metadata
-metadata <- read_excel("data/metadata/metadata.xlsx")
+metadata <- read_excel("../raw_data/metadata.xlsx")
 
 ## Omit samples removed from filtering steps in Analysis 2
 metadata <- metadata %>%
@@ -45,7 +45,7 @@ metadata <- metadata %>%
   filter(sample_id != "ER05_1")
 
 ## Save metadata for use in future analyses
-save(metadata, file = "data/metadata/metadata.Rda")
+save(metadata, file = "../raw_data/metadata.Rda")
 ```
 
 #### 1b: Summarize sample sizes by species and stream; run the Rmd chunk below:
@@ -121,7 +121,7 @@ In this step, we are running a population genomic analysis of the full, filtered
     --vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
     --make-bed: this specifies output format of .bed
 
-##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
+##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script:
 ```{bash}
 #plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/all_samples/01_all
 ```
@@ -332,7 +332,9 @@ BFC10 <- data.frame(BFC10) %>%
   select(sample_id)
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(BFC10, file = "data/filtering_data/bfc10.txt", col_names = FALSE)
+write_tsv(BFC10, 
+          file = "data/filtering_data/bfc10.txt", 
+          col_names = FALSE)
 
 # Turn column into vector without column name to save as un-headered list for downstream filtering
 BFC10 <- as.vector(BFC10$sample_id)
@@ -379,7 +381,9 @@ pure_individuals <- data.frame(pure_individuals) %>%
   select(sample_id)
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(pure_indivs, file = "data/filtering_data/pure_individuals.txt", col_names = FALSE)
+write_tsv(pure_indivs, 
+          file = "data/filtering_data/pure_individuals.txt", 
+          col_names = FALSE)
 
 # Turn column into vector without column name to save as un-headered list for downstream filtering
 pure_individuals <- as.vector(pure_individuals$sample_id)
@@ -411,7 +415,9 @@ admixed_individuals <- data.frame(admixed_individuals) %>%
   select(sample_id)
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(admixed_individuals, file = "data/filtering_data/admixed_individuals.txt", col_names = FALSE)
+write_tsv(admixed_individuals, 
+          file = "data/filtering_data/admixed_individuals.txt", 
+          col_names = FALSE)
 
 # Turn column into vector without column name to save as un-headered list for downstream filtering
 admixed_individuals <- as.vector(admixed_individuals$sample_id)
@@ -424,7 +430,7 @@ save(admixed_individuals, file = "data/filtering_data/admixed_individuals.Rda")
 In this step, we are rerunning ADMIXTURE on only the individuals inferred to be genetically pure from the full hybrid screen analysis in Step 2. We are performing this step to assess population genetic structure without the influence of admixed individuals, and the results from this analysis will be compared to a phylogenomic analysis in Phase 3 of the analysis.
 
 #### 3a: Generate a general bash shell script header for data filtering in VCFTools
-In this step, we are generating another bash shell script to run all individual sample filtering VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
+In this step, we are generating another bash shell script to run all individual sample filtering in VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
 ##### 3a.1. Generate the header for a general bash shell script to run VCFTools:
 
@@ -454,11 +460,13 @@ In this step, we are generating another bash shell script to run all individual 
 
 ##### 3b.1. Copy and paste the code below in the shell file generated in Step 3a above, which will generate a filtered VCF file without BFC10:
 
-##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for filtering. UNCOMMENT this code in the shell script:
 ```{bash}
 ## filter 01: omit Spotted Bass X Neosho Bass hybrid (BFC10) 
 #vcftools --vcf ../../data/processed_vcf/popgen.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_popgen_spb_hybrid
 ```
+
+Run: `sbatch vcftools.sh`
 
 <b>Filtering results</b>: <br><br>
 <b>Samples omitted </b> = 1 <br>
@@ -469,7 +477,7 @@ In this step, we are generating another bash shell script to run all individual 
 
 ##### 3c.1. Copy and paste the code below in the shell file generated in Step 4a above, which will generate a filtered VCF file without individuals in the 'admixed_individuals' list above (Smallmouth Bass X Neosho Bass hybrids).:
 
-##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for filtering. UNCOMMENT this code in the shell script.
 ```{bash}
 ## filter 02: omit interspecific hybrids between Smallmouth Bass and Neosho Bass
 #vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_pure
@@ -507,7 +515,7 @@ save(metadata_pure, file = "data/metadata/metadata_pure.Rda")
     --vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
     --make-bed: this specifies output format of .bed
 
-##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script and run: `sbatch plink.sh`
+##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script:
 ```{bash}
 ## Conversion 02: Convert full vcf data (02_popgen_pure.vcf) to .bed format
 #plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/pure_samples/02_pure
@@ -788,7 +796,7 @@ In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('
   
 We run 1,000 bootstrap replicates and set a Spotted Bass sample (GLVR11_1) as an outgroup to root the tree (this is based on our knowledge of the phylogenetic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass)
 
-##### Command line code for running SNPHYLO. UNCOMMENT this code in the shell script and run: `sbatch snphylo.sh`
+##### Command line code for running SNPHYLO. UNCOMMENT this code in the shell script:
 ```{r}
 # snphylo.sh -v ../vcfdata/all_pure.vcf -r -a 288336 -b -B 1000 -o GLVR11_1
 ```
