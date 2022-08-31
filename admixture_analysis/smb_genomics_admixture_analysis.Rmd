@@ -810,4 +810,4 @@ Run: `sbatch snphylo.sh`
 #### 2d: Visualize SNPHYLO output.
 We read the snphylo out 'snphylo.output.bs.tree' into the software program FIGTREE to visualize and generate our phylogenetic tree, which is the basis for Figure 1b in the manuscript.
 
-### ----------------------- END OF PHASE 3: PHYLOGENOMIC ANALYSIS  ----------------------- ###
+### ----------------------- END OF PHASE 3: PHYLOGENOMIC ANALYSIS ----------------------- ###
