@@ -229,7 +229,6 @@ In this step, we are generating a universal bash shell script to run all input f
 
 ##### Generate FINERADSTRUCTURE bash shell script: `code/shell_scripts/finerad.sh`
 ```{bash}
-
 #! /bin/bash
 
 #SBATCH -p Lewis  # use the Lewis partition
@@ -246,8 +245,42 @@ In this step, we are generating a universal bash shell script to run all input f
 # module load fineradstructure/fineradstructure-0.3.2
 ```
 
+#### 1b: Generate painted hap map input files for coancestry analysis
+In this step, we are converting VCF files to hap map files, which are input for the FINERADSTRUCTURE program, for 1) all Smallmouth Bass and Neosho Bass samples, 2) all pure samples only, and 3) all admixed samples.
 
+##### 1b.1 Copy and paste the code below in the shell file generated in Step 1a above, which will generate hap map files for all three groups of interest (all individuals excluding Spotted Bass, pure individuals, and admixed individuals):
 
-### STEP 2: Generate painted hap map input files for coancestry analysis
-In this step, we are converting VCF files for 1) 
+##### Generate hap map files. UNCOMMENT this code in the shell script:
+```{bash}
+## file conversion 01: convert VCF into haplotype chunks for all Smallmouth Bass and Neosho Bass
+#RADpainter hapsFromVCF ../../data/processed_vcf/finerad.vcf > ../../datal/hap_maps/smb_neosho.txt
+#RADpainter paint ../../data/hap_maps/smb_neosho.txt
+
+## file conversion 02: convert VCF into haplotype chunks for all pure samples
+#RADpainter hapsFromVCF ../../data/processed_vcf/A_03_finerad_pure.vcf > ../../datal/hap_maps/pure.txt
+#RADpainter paint ../../data/hap_maps/pure.txt
+
+## file conversion 03: convert VCF into haplotype chunks for all admixed samples
+#RADpainter hapsFromVCF ../../data/processed_vcf/B_03_finerad_admixed.vcf > ../../datal/hap_maps/admixed.txt
+#RADpainter paint ../../data/hap_maps/admixed.txt
+```
+
+#### 1c: Calculate coancestry matrices and build phylogenetic trees based on haplotype inference from hap map files
+
+##### Copy and paste the code below in the shell file generated in Step 1a above, which will generate coancestry matrices and accompanying phylogenetic tree files for all three groups of interest (all individuals excluding Spotted Bass, pure individuals, and admixed individuals):
+
+##### Calculate coancestry and generate phylogenies: 
+```{bash}
+## Coancestry 01: Smallmouth Bass and Neosho Bass
+#finestructure -x 100000 -y 100000 -z 1000 ../../hap_maps/01_smb_neosho_chunks.out ../../mcmc_files/01_smb_neosho_chunks.mcmc.xml
+#finestructure -m T -x 10000 ../../hap_maps/01_smb_neosho_chunks.out ../../mcmc_files/01_smb_neosho_chunks.mcmc.xml 01_smb_neosho_chunks.mcmcTree.xml
+
+## Coancestry 02: Pure samples
+#finestructure -x 100000 -y 100000 -z 1000 ../../hap_maps/02_pure_chunks.out ../../mcmc_files/02_pure_chunks.mcmc.xml
+#finestructure -m T -x 10000 ../../hap_maps/02_pure_chunks.out ../../mcmc_files/02_pure_chunks.mcmc.xml 02_pure_chunks.mcmcTree.xml
+
+## Coancestry 03:  Smallmouth Bass and Neosho Bass
+#finestructure -x 100000 -y 100000 -z 1000 ../../hap_maps/03_admixed_chunks.out ../../mcmc_files/03_admixed_chunks.mcmc.xml
+#finestructure -m T -x 10000 ../../hap_maps/03_admixed_chunks.out ../../mcmc_files/03_admixed_chunks.mcmc.xml 03_admixed_chunks.mcmcTree.xml
+```
 
