@@ -253,20 +253,36 @@ In this step, we are converting VCF files to hap map files, which are input for 
 ##### Generate hap map files. UNCOMMENT this code in the shell script:
 ```{bash}
 ## file conversion 01: convert VCF into haplotype chunks for all Smallmouth Bass and Neosho Bass
-#RADpainter hapsFromVCF ../../data/processed_vcf/finerad.vcf > ../../datal/hap_maps/smb_neosho.txt
-#RADpainter paint ../../data/hap_maps/smb_neosho.txt
+#RADpainter hapsFromVCF ../../data/processed_vcf/finerad.vcf > ../../datal/hap_maps/01_smb_neosho.txt
+#RADpainter paint ../../data/hap_maps/01_smb_neosho.txt
 
 ## file conversion 02: convert VCF into haplotype chunks for all pure samples
-#RADpainter hapsFromVCF ../../data/processed_vcf/A_03_finerad_pure.vcf > ../../datal/hap_maps/pure.txt
-#RADpainter paint ../../data/hap_maps/pure.txt
+#RADpainter hapsFromVCF ../../data/processed_vcf/A_03_finerad_pure.vcf > ../../datal/hap_maps/02_pure.txt
+#RADpainter paint ../../data/hap_maps/02_pure.txt
 
 ## file conversion 03: convert VCF into haplotype chunks for all admixed samples
-#RADpainter hapsFromVCF ../../data/processed_vcf/B_03_finerad_admixed.vcf > ../../datal/hap_maps/admixed.txt
-#RADpainter paint ../../data/hap_maps/admixed.txt
+#RADpainter hapsFromVCF ../../data/processed_vcf/B_03_finerad_admixed.vcf > ../../datal/hap_maps/03_admixed.txt
+#RADpainter paint ../../data/hap_maps/03_admixed.txt
 ```
 
-#### 1c: Calculate coancestry matrices and build phylogenetic trees based on haplotype inference from hap map files
+This code generates 6 files: <br>
+  1) `data/hap_maps/01_smb_neosho.txt`: this is a haplotype map file for Smallmouth Bass and Neosho Bass
+  2) `data/hap_maps/02_pure.txt`: this is a haplotype map file for pure individuals
+  3) `data/hap_maps/03_admixed.txt`: this is a haplotype map file for admixed individuals
+  4) `data/hap_maps/01_smb_neosho_chunks.out`: this is a haplotype chunks file for Smallmouth Bass and Neosho Bass
+  5) `data/hap_maps/02_pure_chunks.out`: this is a haplotype chunks file for pure individuals
+  6) `data/hap_maps/01_admixed_chunks.out`: this is a haplotype chunks file for admixed individuals
 
+Each of the "chunks" files is then used as input in the FINERADSTRUCTURE coancestry matrix algorithm.
+
+#### 1c: Calculate coancestry matrices and build phylogenetic trees based on haplotype inference from hap map files
+<b>We use the following flags in the code</b>: <br>
+    -x: Number of burn-in steps (100,000)
+    -y: Number of MCMC iterations (100,000)
+    -z: Number of thinning steps (1,000)
+    -T: Initialization procedure (don't set to anything, leave blank)
+    -x: Number of tries for making best population state (10,000)
+    
 ##### Copy and paste the code below in the shell file generated in Step 1a above, which will generate coancestry matrices and accompanying phylogenetic tree files for all three groups of interest (all individuals excluding Spotted Bass, pure individuals, and admixed individuals):
 
 ##### Calculate coancestry and generate phylogenies: 
@@ -283,4 +299,20 @@ In this step, we are converting VCF files to hap map files, which are input for 
 #finestructure -x 100000 -y 100000 -z 1000 ../../hap_maps/03_admixed_chunks.out ../../mcmc_files/03_admixed_chunks.mcmc.xml
 #finestructure -m T -x 10000 ../../hap_maps/03_admixed_chunks.out ../../mcmc_files/03_admixed_chunks.mcmc.xml 03_admixed_chunks.mcmcTree.xml
 ```
+
+This code generates 6 files: <br>
+  1) `data/mcmc_files/01_smb_neosho_chunks.mcmc.xml`: this is a coancestry matrix file Smallmouth Bass and Neosho Bass
+  2) `data/mcmc_files/02_pure_chunks.mcmc.xml`: this is a coancestry matrix file file for pure individuals
+  3) `data/mcmc_files/03_admixed_chunks.mcmc.xml`: this is a coancestry matrix file file for admixed individuals
+  4) `data/tree_files/01_smb_neosho_chunks.mcmcTree.xml`: this is a phylogenetic tree file for Smallmouth Bass and Neosho Bass
+  5) `data/tree_files/02_pure_chunks.mcmcTree.xml`: this is a phylogenetic tree file for pure individuals
+  6) `data/tree_files/03_admixed_chunks.mcmcTree.xml`: this is a phylogenetic tree file for admixed individuals
+
+Each of the output files were used to generate publication figures in the PHASE 3 (below).
+
+### ----------------------- END OF PHASE 2: COANCESTRY ANALYSIS ----------------------- ###
+
+## PHASE 3: PLOTTING
+In this phase, we are using previously documented source code (`code/source_code/FinestructureLibrary.R`) to build publication-ready figures of coancestry matrices and corresponding phylogenies for each group of interest (Smallmouth Bass and Neosho Bass, pure samples, and admixed samples). 
+
 

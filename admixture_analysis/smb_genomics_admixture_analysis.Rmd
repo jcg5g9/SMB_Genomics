@@ -786,13 +786,12 @@ In this step, we are generating a universal bash shell script to run phylogenomi
 In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('02_popgen_pure.vcf') to assess genomic divergence and monophyly among the Spotted Bass, Smallmouth Bass, and Neosho Bass.
 
 #### 2a: Copy and paste the code below in the shell file generated in Step 1a above, which will generate all snphylo output files:
-    
 <b>We use the following flags in the code</b>: <br>
     -r: skip removal of low quality data (increases computation time since we've already filtered the data)
     -a: gives the ID for the final SNP in VCF
     -b: perform bootstrapping
     -B: number of bootstrap replicates
-    -o GLVR11_1 (outgroup; Spotted Bass)
+    -o: GLVR11_1 (outgroup; Spotted Bass)
   
 We run 1,000 bootstrap replicates and set a Spotted Bass sample (GLVR11_1) as an outgroup to root the tree (this is based on our knowledge of the phylogenetic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass)
 
