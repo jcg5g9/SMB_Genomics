@@ -18,4 +18,10 @@ module load vcftools/vcftools-v0.1.14
 #vcftools --vcf ../../data/processed_vcf/finerad.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_finerad_spb_hybrid
 
 ## filter 02: omit Spotted Bass
-vcftools --vcf ../../data/processed_vcf/01_finerad_spb_hybrid.vcf --remove ../../data/filtering_data/spotted_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_finerad_spb
+#vcftools --vcf ../../data/processed_vcf/01_finerad_spb_hybrid.vcf --remove ../../data/filtering_data/spotted_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_finerad_spb
+
+## filter A_03: Generate finerad dataset with only pure individuals
+vcftools --vcf ../../data/processed_vcf/02_finerad_spb.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/A_03_finerad_pure
+
+## filter B_03: Generate finerad dataset with only pure individuals
+vcftools --vcf ../../data/processed_vcf/02_finerad_spb.vcf --remove ../../data/filtering_data/pure_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/B_03_finerad_admixed
