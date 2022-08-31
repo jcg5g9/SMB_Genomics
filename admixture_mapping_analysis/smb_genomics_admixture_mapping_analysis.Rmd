@@ -24,3 +24,29 @@ library(cowplot)
 library(devtools)
 ```
 
+### PHASE 1: DATA PREPARATION
+In this phase, we are converting the fully filtered, thinned dataset (`popgen.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+MIXMAPPER v.2.0 (Lipson et al., 2013, 2014) <br>
+
+<b>Citation</b>:<br>
+
+Lipson, M., Loh, P. R., Levin, A., Reich, D., Patterson, N., & Berger, B. (2013). Efficient moment-based inference of admixture parameters and sources of gene flow. Molecular Biology and Evolution, 30, 1788–1802. doi:10.1093/molbev/mst099
+
+Lipson, M., Loh, P. R., Patterson, N., Moorjani, P., Ko, Y. C., Stoneking, M., … Reich, D. (2014). Reconstructing Austronesian population history in Island Southeast Asia. Nature Communications, 5, 1–7. doi:10.1038/ncomms5689
+
+
+EIGENSOFT v.7.2.1 (Patterson, Price, & Reich, 2006; Price et al., 2006) <br>
+
+<b>Citation</b>:<br>
+
+Patterson, N., Price, A. L., & Reich, D. (2006). Population structure and eigenanalysis. PLoS Genetics, 2, 2074–2093. doi:10.1371/journal.pgen.0020190
+
+Price, A. L., Patterson, N. J., Plenge, R. M., Weinblatt, M. E., Shadick, N. A., & Reich, D. (2006). Principal components analysis corrects for stratification in genome-wide association studies. Nature Genetics, 38, 904–909. doi:10.1038/ng1847
+
+### STEP 1:
+
