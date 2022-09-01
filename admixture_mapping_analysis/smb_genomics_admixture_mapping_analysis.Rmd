@@ -67,6 +67,6 @@ In this step, we are downloading and installing the source code and MCR distribu
 
 ###### 1b.2.2. Unzip the .tar file for the MCR distribution package: `tar -xvf MixMapperMCRdistrib_v1.02.tar`
 
-
+At this point, there should be two folders within 
 
 
