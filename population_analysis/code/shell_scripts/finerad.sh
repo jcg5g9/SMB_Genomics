@@ -10,6 +10,7 @@
 
 # Commands here run only on the first core
 module load rss/rss-2020
+module load gsl/2.5
 module load fineradstructure/fineradstructure-0.3.2
 
 # Commands with srun will run on all cores in the allocation
