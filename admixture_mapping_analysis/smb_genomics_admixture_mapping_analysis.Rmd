@@ -88,4 +88,4 @@ Note: in the 'instructions.txt' file provided in the MixMapperMCRdistrib folder,
 
 ##### 2a.3. Decompress the .zip file: `unzip https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
 
-##### 2a.4.
+##### 2a.4. 
