@@ -48,5 +48,25 @@ Patterson, N., Price, A. L., & Reich, D. (2006). Population structure and eigena
 
 Price, A. L., Patterson, N. J., Plenge, R. M., Weinblatt, M. E., Shadick, N. A., & Reich, D. (2006). Principal components analysis corrects for stratification in genome-wide association studies. Nature Genetics, 38, 904–909. doi:10.1038/ng1847
 
-### STEP 1:
+### STEP 1: Download the MIXMAPPER source code and the MIXMAPPER MCR distribution package.
+In this step, we are downloading and installing the source code and MCR distribution package for the software program MIXMAPPER, which is written in C++ and MatLab. 
+
+#### 1a: Navigate to the MIXMAPPER source code website: `http://cb.csail.mit.edu/cb/mixmapper/`. 
+
+#### 1b: Navigate to the directory where you want to store the MIXMAPPER software: 
+
+##### 1b.1. Download the source code (MixMapper_v2.0): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapper_v2.0.tar.gz`
+
+###### 1b.1.1. Unzip the .gz file for the source code: `gunzip MixMapper_v2.0.tar.gz`
+
+###### 1b.1.2. Unzip the .tar file for the source code: `tar -xvf MixMapper_v2.0.tar`
+
+##### 1b.2: Download the MCR distribution package (MixMapperMCRdistrib_v1.02): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapperMCRdistrib_v1.02.tar.gz`
+
+###### 1b.2.1. Unzip the .gz file for the MCR distribution package: `gunzip MixMapperMCRdistrib_v1.02.tar.gz`
+
+###### 1b.2.2. Unzip the .tar file for the MCR distribution package: `tar -xvf MixMapperMCRdistrib_v1.02.tar`
+
+
+
 
