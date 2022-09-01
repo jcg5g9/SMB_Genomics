@@ -75,4 +75,17 @@ There are two should be two folders within the `source_code` directory: `MixMapp
 
 ###### 1c.2.3. Move both folders into a separate subdirectory called: `mixmapper_code`
 
+### STEP 2: Install MCR runtime compiler (for running MATLAB if it is not installed on your local computer) and compile wrapper functions in MIXMAPPER software.
+In this step, we are installing and compiling all necessary software and wrapper functions for MIXMAPPER
 
+#### 2a: Install the MCR runtime compiler; navigate into the `MixMapperMCRdistrib` directory.
+
+##### 2a.1. Create a sub-directory: `mkdir MCR`. Navigate into this directory.
+
+##### 2a.2. Inside the `MCR` directory, download the 64-bit MCR runtime compiler for your machine (I run on a MAC): `wget https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
+
+Note: in the 'instructions.txt' file provided in the MixMapperMCRdistrib folder, the link address for the runtime compiler is deprecated and will not take you to the correct site. Use the link address given above in Step 2a.2. Verify that the .zip file is named the same as in the 'instructions.txt' file ('MCR_R2012a_glnxa64_installer.zip)
+
+##### 2a.3. Decompress the .zip file: `unzip https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
+
+##### 2a.4.
