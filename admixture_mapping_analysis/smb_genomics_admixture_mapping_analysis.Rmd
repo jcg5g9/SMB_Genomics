@@ -97,6 +97,14 @@ Installing the runtime compiler will generate a new subdirectory within the `MCR
 ### STEP 3: Compile necessary wrapper functions for MIXMAPPER.
 In this step, we are compiling two source files, which will be converted to executable code for running MIXMAPPER. These source files are: 'compute_moment_stats.cpp' and 'compute_most_additive_trees.cpp'
 
-##### 3a. Navigate to the `MixMapper_v2.0` directory;
+#### 3a. Navigate to the `MixMapper_v2.0` directory; make sure the two files needing compilation are in the folder (see STEP 3 description above)
+
+##### 3a.1. Compile 'compute_moment_stats.cpp'; in the command line, start an interaction session and run the bash command: `srun g++ --02 compute_moment_stats.cpp -o compute_moment_stats`
+Running this command will generate an executable for compute_moment_stats
+
+##### 3a.2. Compile 'compute_most_additive_trees.cpp'; in the command line, start an interaction session and run the bash command: `srun g++ --02 compute_most_additive_trees.cpp -o compute_most_additive_trees`
+Running this command will generate an executable for compute_most_additive trees.
+
+### STEP 4:
 
 
