@@ -51,22 +51,28 @@ Price, A. L., Patterson, N. J., Plenge, R. M., Weinblatt, M. E., Shadick, N. A.,
 ### STEP 1: Download the MIXMAPPER source code and the MIXMAPPER MCR distribution package.
 In this step, we are downloading and installing the source code and MCR distribution package for the software program MIXMAPPER, which is written in C++ and MatLab. 
 
-#### 1a: Navigate to the MIXMAPPER source code website: `http://cb.csail.mit.edu/cb/mixmapper/`. 
+We have included the downloaded source code, installed software, and compiled wrapper functions in this repository, so you do not need to re-download or re-install these items. In this case, you can skip Steps 1-2 in this script. However, if you need to re-download or re-install any of the software, follow Steps 1-2 below:
 
-#### 1b: Navigate to the directory where you want to store the MIXMAPPER software: 
+#### 1a: Navigate to the /code subdirectory and create a directory to hold the MIXMAPPER source code: `mkdir source_code`. Navigate inside this directory.
 
-##### 1b.1. Download the source code (MixMapper_v2.0): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapper_v2.0.tar.gz`
+#### 1b: Go to the MIXMAPPER source code website: `http://cb.csail.mit.edu/cb/mixmapper/`. 
 
-###### 1b.1.1. Unzip the .gz file for the source code: `gunzip MixMapper_v2.0.tar.gz`
+#### 1c: Navigate to the `source_code` directory: 
 
-###### 1b.1.2. Unzip the .tar file for the source code: `tar -xvf MixMapper_v2.0.tar`
+##### 1c.1. Download the source code (MixMapper_v2.0): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapper_v2.0.tar.gz`
 
-##### 1b.2: Download the MCR distribution package (MixMapperMCRdistrib_v1.02): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapperMCRdistrib_v1.02.tar.gz`
+###### 1c.1.1. Unzip the .gz file for the source code: `gunzip MixMapper_v2.0.tar.gz`
 
-###### 1b.2.1. Unzip the .gz file for the MCR distribution package: `gunzip MixMapperMCRdistrib_v1.02.tar.gz`
+###### 1c.1.2. Unzip the .tar file for the source code: `tar -xvf MixMapper_v2.0.tar`
 
-###### 1b.2.2. Unzip the .tar file for the MCR distribution package: `tar -xvf MixMapperMCRdistrib_v1.02.tar`
+##### 1c.2: Download the MCR distribution package (MixMapperMCRdistrib_v1.02): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapperMCRdistrib_v1.02.tar.gz`
 
-At this point, there should be two folders within 
+###### 1c.2.1. Unzip the .gz file for the MCR distribution package: `gunzip MixMapperMCRdistrib_v1.02.tar.gz`
+
+###### 1c.2.2. Unzip the .tar file for the MCR distribution package: `tar -xvf MixMapperMCRdistrib_v1.02.tar`
+
+There are two should be two folders within the `source_code` directory: `MixMapperMCRdistrib` and `MixMapper_v2.0`. 
+
+###### 1c.2.3. Move both folders into a separate subdirectory called: `mixmapper_code`
 
 
