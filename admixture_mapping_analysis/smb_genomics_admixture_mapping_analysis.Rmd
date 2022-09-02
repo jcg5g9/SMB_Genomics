@@ -225,6 +225,10 @@ write_tsv(map_file,
           col_names = FALSE)
 ```
 
+The modified popgen.map file is saved as `data/processed_ped/popgen_mod.map` to distinguish it from the original file name. 
+
+##### 4b.1.2. Generate copies of each of the other necessary input file type (.ped) to `popgen_mod.ped` to correspond.
+
 ##### 4b.2. Generate par.PED.EIGENSTRAT file as input for EIGENSOFT
 In this step, we are creating a specialized file type ('par.PED.EIGENSTRAT'), which is used as input for the -p flag with the convertf command in EIGENSOFT. This file reads .ped, .map, and .ind files as input and generates .eigenstratgeno, .snp, and .ind files as output
 
@@ -243,9 +247,9 @@ In this step, we are creating a specialized file type ('par.PED.EIGENSTRAT'), wh
 ```
 
 ##### 4b.3. Generate a general bash shell script header for all EIGENSOFT commands
-In this step, we are generating a universal bash shell script to run all file type conversions in EIGENSOFT Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "eigensoft.sh".
+In this step, we are generating a universal bash shell script to run all file type conversions in EIGENSOFT. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all EIGENSOFT code is called "eigensoft.sh".
 
-###### 4b.1.1: Copy and paste the code below in a new shell script file:
+###### 4b.3.1: Copy and paste the code below in a new shell script file:
 
 ##### Generate EIGENSOFT bash shell script: `code/shell_scripts/eigensoft.sh`
 ```{bash}
@@ -267,20 +271,20 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load eigensoft/eigensoft-7.2.1
 ```
 
+##### 4b.4. Convert PED files to EIGENSTRAT format.
 
+###### 4b.4.1. Copy and paste the code below in the shell file generated in Step 4b.1.1 above, which will generate .eigenstratgeno, .snp, and .ind files for the full dataset:
 
-##### 4b.4. Copy and paste the code below in the shell file generated in Step 4b.1.1 above, which will generate .eigenstratgeno, .snp, and .ind files for the full dataset:
-
-##### Command line code for geenrating .eigenstrat. UNCOMMENT this code in the shell script:
+##### Command line code for generating .eigenstrat. UNCOMMENT this code in the shell script:
 ```{bash}
 # convertf -p ../batch_cmd_lists/par.PED.EIGENSTRAT
 ```
 
 Run: `sbatch eigensoft.sh`
 
-This code generates the file: `data/processed_bed/all_samples/popgen.ped`, along with three other accompanying files, which should be used in subsquent file converstion steps:
+This code generates three files here: `data/processed_eigensfot/`; these files include:
 
 <b>Files</b>: <br><br>
-1) popgen.log
-2) popgen.map
-3) popgen.nosex
+1) popgen.ind
+2) popgen.snp
+3) popgen.eigenstratgeno
