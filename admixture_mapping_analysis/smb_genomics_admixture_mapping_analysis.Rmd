@@ -51,7 +51,7 @@ Price, A. L., Patterson, N. J., Plenge, R. M., Weinblatt, M. E., Shadick, N. A.,
 ### STEP 1: Download the MIXMAPPER source code and the MIXMAPPER MCR distribution package.
 In this step, we are downloading and installing the source code and MCR distribution package for the software program MIXMAPPER, which is written in C++ and MatLab. 
 
-We have included the downloaded source code, installed software, and compiled wrapper functions in this repository, so you do not need to re-download or re-install these items. In this case, you can skip Steps 1-2 in this script. However, if you need to re-download or re-install any of the software, follow Steps 1-2 below:
+We have <i>NOT</i> included the downloaded source code, installed software, and compiled wrapper functions in this repository, so you will need to re-download and re-install these items. Follow Steps 1-2 below:
 
 #### 1a: Navigate to the /code subdirectory and create a directory to hold the MIXMAPPER source code: `mkdir source_code`. Navigate inside this directory.
 
@@ -105,6 +105,6 @@ Running this command will generate an executable for compute_moment_stats
 ##### 3a.2. Compile 'compute_most_additive_trees.cpp'; in the command line, start an interaction session and run the bash command: `srun g++ --02 compute_most_additive_trees.cpp -o compute_most_additive_trees`
 Running this command will generate an executable for compute_most_additive trees.
 
-### STEP 4:
+### STEP 4: 
 
 
