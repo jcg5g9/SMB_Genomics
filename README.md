@@ -1,8 +1,32 @@
-# Reproduce analyses for Gunn et al. (DATE)
-<font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for Gunn et al. (DATE). Each step below gives a summary of the analysis and directs you to a general code file which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts. Each analysis is contained within subdirectories of the same name in the main R project directory.</font>
+# Reproduce analyses for Gunn et al. (<i>in revision</i>)
+<font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for Gunn et al. (<i>in revision</i>). Each step below gives a summary of the analysis and directs you to a general code file which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts. Each analysis is contained within subdirectories of the same name in the main R project directory.</font>
 
-# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+## Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
 We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## General information on repository structure
+This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage ing GitHub) for Gunn et al. (in revision). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and 7 different "analysis" files, each of which corresponds with a specific  analysis conducted in our study:
+
+1) map_analysis
+2) filtering_processing_analysis
+3) admixture_phylogenomics_analysis
+4) population_analysis
+5) admixture_mapping_analysis
+6) outlier_fst_analysis
+7) demographic_analysis
+
+Within each analysis directory, you will find an R markdown script (.Rmd) with the name of the analysis, which contains all of the code needed to run the full analysis. Additionally, you will find three sub-directories:
+
+1) code
+2) data
+3) figures
+
+The code directory will store all source code, shell scripts, lists of bash commands, and software packages needed for analysis. The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up to read all data and scripts and generate figures seamlessly.
+
+## Data
+Raw .fastq sequence files from ddRADseq and accompanying metadata are available on ZENODO (LINK TO DATA HERE). You will not need any of the raw .fastq files for these analyses; all bioinformatic processing, i.e., alignment, assembly, etc., was completed at Floragenex, Inc. For these analyses, you will only need the full VCF file for the stringent filtering protocol: `AR21_Aligned_Genotypes_stringent.vcf`. When you download these data, place the the .vcf file and metadata together in a directory within the home directory (same level as the seven analysis directories) called "raw_data". You should be good to start analyzing.
+
+If you have any questions or issues with data and/or code, please don't hesitate to contact me: jcgunn@uvm.edu
 
 ## Analyses
 
@@ -19,9 +43,14 @@ In this analysis, we performed further quality filtering on the processed and ge
 ### Analysis 3: Admixture and phylogenomics
 In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess population genomic structure of Spotted Bass, Smallmouth Bass, and Neosho Bass in the CIH. Specifically, we conducted an initial screen of hybridization and gene flow by running maximum likelihood clustering on the full, filtered dataset and identified any individuals of interspecific origin between Spotted Bass and all other Interior Highlands fish (Smallmouth Bass and Neosho Bass) and individuals of interspecific origin between Smallmouth Bass and Neosho Bass. After removing hybrids, we conducted a separate admixture analysis and complementary phylogenomic analysis on the "pure" genomic samples to estimate genomic divergence between species.
 
-#### Run the code: `filtering_processing_analysis/smb_genomics_admixture_analysis.Rmd`
+#### Run the code: `filtering_processing_analysis/smb_genomics_admixture_phylogenomics_analysis.Rmd`
 
 ### Analysis 4: Population Inference
 In this analysis, we used the finerad.vcf data generated in Analysis 2 (SNP Filtering...) to assess fine-scale coancestry between Smallmouth Bass, and Neosho Bass in the CIH using haplotype inference (excluding Spotted Bass). Specifically, we estimated coancestry in 1) the full dataset, with all pure and admixed individuals, excluding the Spotted Bass X Smallmouth Bass hybrid (BFC10) inferred from population genomic analysis in Analysis 3, 2) the pure dataset, with only pure individuals of Smallmouth Bass and Neosho Bass, and 3) the admixed dataset, with only admixed individuals of Neosho Bass (no admixed Smallmouth Bass were detected).
 
 #### Run the code: `population_analysis/smb_genomics_population_analysis.Rmd`
+
+### Analysis 5: Admixture Mapping
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i>) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
+
+#### Run the code: `population_analysis/smb_genomics_admixture_mapping_analysis.Rmd`
