@@ -2,7 +2,7 @@
 
 #SBATCH -p Lewis  # use the Lewis partition
 #SBATCH -J finerad  # give the job a custom name
-#SBATCH -t 0-02:00  # two hour time limit
+#SBATCH -t 0-24:00  # two hour time limit
 
 #SBATCH -N 1  # number of nodes
 #SBATCH -n 1  # number of cores (AKA tasks)
@@ -15,7 +15,7 @@ module load fineradstructure/fineradstructure-0.3.2
 # Commands with srun will run on all cores in the allocation
 
 ## file conversion 01: convert VCF into haplotype chunks for all Smallmouth Bass and Neosho Bass
-RADpainter hapsFromVCF ../../data/processed_vcf/finerad.vcf > ../../data/hap_maps/01_smb_neosho.txt
+#RADpainter hapsFromVCF ../../data/processed_vcf/finerad.vcf > ../../data/hap_maps/01_smb_neosho.txt
 #RADpainter paint ../../data/hap_maps/01_smb_neosho.txt
 
 ## file conversion 02: convert VCF into haplotype chunks for all pure samples

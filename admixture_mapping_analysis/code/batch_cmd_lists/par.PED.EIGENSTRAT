@@ -1,0 +1,8 @@
+genotypename: 	 ../../data/processed_ped/popgen_mod.ped
+snpname:         ../../data/processed_ped/popgen_mod.map 
+indivname:       ../../data/processed_ped/popgen_mod.ped
+outputformat:    EIGENSTRAT    
+genotypeoutname: ../../data/processed_eigensoft/popgen.eigenstratgeno
+snpoutname:      ../../data/processed_eigensoft/popgen.snp
+indivoutname:    ../../data/processed_eigensoft/popgen.ind
+familynames:     NO
