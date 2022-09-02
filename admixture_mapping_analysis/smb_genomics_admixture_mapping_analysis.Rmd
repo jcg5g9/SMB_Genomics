@@ -86,7 +86,7 @@ In this step, we are installing the MATLAB MCR runtime compiler.
 
 Note: in the 'instructions.txt' file provided in the MixMapperMCRdistrib folder, the link address for the runtime compiler is deprecated and will not take you to the correct site. Use the link address given above in Step 2a.2. Verify that the .zip file is named the same as in the 'instructions.txt' file ('MCR_R2012a_glnxa64_installer.zip)
 
-##### 2a.3. Decompress the .zip file: `unzip https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
+##### 2a.3. Decompress the .zip file: `unzip MCR_R2012a_glnxa64_installer.zip`
 Decompressing this .zip file will unpack several sub-folders, command line software executables, and instruction text files.
 
 ###### 2a.3.1. Navigate back out to the `MixMapperMCRdistrib` directory, and open the 'instructions.txt' file. Follow lines 13 - 21 exactly. Set the path for the installation to the `MCR` directory
