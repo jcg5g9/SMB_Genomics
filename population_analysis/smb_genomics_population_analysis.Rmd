@@ -70,12 +70,12 @@ In this step, we are generating another bash shell script to run individual samp
 
 #### 1b: Filter the full, non-thinned VCF to remove Spotted Bass hybrid (BFC10) and Spotted Bass individuals.
 
-##### 1b.1. Read in the .Rda file saved in `smb_genomics_admixture_analysis.Rmd`; run the Rmd chunk below:
+##### 1b.1. Read in the .Rda file saved in `smb_genomics_admixture_phylogenomics_analysis.Rmd`; run the Rmd chunk below:
 
 ##### Generate list of Spotted Bass hybrid: `data/filtering_data/bfc10.txt` 
 ```{r}
 # Load in the .Rda file generated in the admixture analysis
-load("../admixture_analysis/data/filtering_data/bcf10.Rda")
+load("../admixture_phylogenomics_analysis/data/filtering_data/bcf10.Rda")
 
 BFC10 <- as.data.frame(BFC10)
 
@@ -144,12 +144,12 @@ In this step, we are further filtering the finerad dataset to create datasets fo
 
 #### 2b: Filter the full, non-thinned VCF to generate a dataset with all pure individuals.
 
-##### 2b.1. Read in the .Rda file for admixed individuals saved in `smb_genomics_admixture_analysis.Rmd`; run the Rmd chunk below:
+##### 2b.1. Read in the .Rda file for admixed individuals saved in `smb_genomics_admixture_phylogenomics_analysis.Rmd`; run the Rmd chunk below:
 
 ##### Generate list of admixed individuals (to be removed from the dataset): `data/filtering_data/admixed_individuals.txt` 
 ```{r}
 # Load in the .Rda file generated in the admixture analysis
-load("../admixture_analysis/data/filtering_data/admixed_individuals.Rda")
+load("../admixture_phylogenomics_analysis/data/filtering_data/admixed_individuals.Rda")
 
 admixed_individuals <- as.data.frame(admixed_individuals)
 
@@ -181,12 +181,12 @@ This code generates the file: `data/processed_bed/all_samples/03_finerad_pure.vc
 
 #### 2c: Filter the full, non-thinned VCF to generate a dataset with all admixed individuals.
 
-##### 2c.1. Read in the .Rda file for pure individuals saved in `smb_genomics_admixture_analysis.Rmd`; run the Rmd chunk below:
+##### 2c.1. Read in the .Rda file for pure individuals saved in `smb_genomics_admixture_phylogenomics_analysis.Rmd`; run the Rmd chunk below:
 
 ##### Generate list of pure individuals (to be removed from the dataset): `data/filtering_data/pure_individuals.txt` 
 ```{r}
 # Load in the .Rda file generated in the admixture analysis
-load("../admixture_analysis/data/filtering_data/pure_individuals.Rda")
+load("../admixture_phylogenomics_analysis/data/filtering_data/pure_individuals.Rda")
 
 pure_individuals <- as.data.frame(pure_individuals)
 

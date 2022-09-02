@@ -1,0 +1,110 @@
+---
+title: 'Analysis 5: Admixture Mapping'
+author: "Joe Gunn"
+date: "2022-08-31"
+output: html_document
+---
+
+# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## Specific Aim: Admixture mapping analysis
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
+
+## Phases of analysis:
+### Phase 1: Data preparation
+### Phase 2: Admixture mapping analysis
+### Phase 3: ...
+
+## Libraries needed for analysis
+```{r setup, echo = FALSE, include=FALSE}
+library(readxl)
+library(tidyverse)
+library(cowplot)
+library(devtools)
+```
+
+### PHASE 1: DATA PREPARATION
+In this phase, we are converting the fully filtered, thinned dataset (`popgen.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+MIXMAPPER v.2.0 (Lipson et al., 2013, 2014) <br>
+
+<b>Citation</b>:<br>
+
+Lipson, M., Loh, P. R., Levin, A., Reich, D., Patterson, N., & Berger, B. (2013). Efficient moment-based inference of admixture parameters and sources of gene flow. Molecular Biology and Evolution, 30, 1788–1802. doi:10.1093/molbev/mst099
+
+Lipson, M., Loh, P. R., Patterson, N., Moorjani, P., Ko, Y. C., Stoneking, M., … Reich, D. (2014). Reconstructing Austronesian population history in Island Southeast Asia. Nature Communications, 5, 1–7. doi:10.1038/ncomms5689
+
+
+EIGENSOFT v.7.2.1 (Patterson, Price, & Reich, 2006; Price et al., 2006) <br>
+
+<b>Citation</b>:<br>
+
+Patterson, N., Price, A. L., & Reich, D. (2006). Population structure and eigenanalysis. PLoS Genetics, 2, 2074–2093. doi:10.1371/journal.pgen.0020190
+
+Price, A. L., Patterson, N. J., Plenge, R. M., Weinblatt, M. E., Shadick, N. A., & Reich, D. (2006). Principal components analysis corrects for stratification in genome-wide association studies. Nature Genetics, 38, 904–909. doi:10.1038/ng1847
+
+### STEP 1: Download the MIXMAPPER source code and the MIXMAPPER MCR distribution package.
+In this step, we are downloading and installing the source code and MCR distribution package for the software program MIXMAPPER, which is written in C++ and MatLab. 
+
+We have included the downloaded source code, installed software, and compiled wrapper functions in this repository, so you do not need to re-download or re-install these items. In this case, you can skip Steps 1-2 in this script. However, if you need to re-download or re-install any of the software, follow Steps 1-2 below:
+
+#### 1a: Navigate to the /code subdirectory and create a directory to hold the MIXMAPPER source code: `mkdir source_code`. Navigate inside this directory.
+
+#### 1b: Go to the MIXMAPPER source code website: `http://cb.csail.mit.edu/cb/mixmapper/`. 
+
+#### 1c: Navigate to the `source_code` directory: 
+
+##### 1c.1. Download the source code (MixMapper_v2.0): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapper_v2.0.tar.gz`
+
+###### 1c.1.1. Unzip the .gz file for the source code: `gunzip MixMapper_v2.0.tar.gz`
+
+###### 1c.1.2. Unzip the .tar file for the source code: `tar -xvf MixMapper_v2.0.tar`
+
+##### 1c.2: Download the MCR distribution package (MixMapperMCRdistrib_v1.02): `wget http://cb.csail.mit.edu/cb/mixmapper/MixMapperMCRdistrib_v1.02.tar.gz`
+
+###### 1c.2.1. Unzip the .gz file for the MCR distribution package: `gunzip MixMapperMCRdistrib_v1.02.tar.gz`
+
+###### 1c.2.2. Unzip the .tar file for the MCR distribution package: `tar -xvf MixMapperMCRdistrib_v1.02.tar`
+
+There are two should be two folders within the `source_code` directory: `MixMapperMCRdistrib` and `MixMapper_v2.0`. 
+
+###### 1c.2.3. Move both folders into a separate subdirectory called: `mixmapper_code`
+
+### STEP 2: Install MCR runtime compiler (for running MATLAB if it is not installed on your local computer)
+In this step, we are installing the MATLAB MCR runtime compiler.
+
+#### 2a: Install the MCR runtime compiler; navigate into the `MixMapperMCRdistrib` directory.
+
+##### 2a.1. Create a sub-directory: `mkdir MCR`. Navigate into this directory.
+
+##### 2a.2. Inside the `MCR` directory, download the 64-bit MCR runtime compiler for your machine (I run on a MAC): `wget https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
+
+Note: in the 'instructions.txt' file provided in the MixMapperMCRdistrib folder, the link address for the runtime compiler is deprecated and will not take you to the correct site. Use the link address given above in Step 2a.2. Verify that the .zip file is named the same as in the 'instructions.txt' file ('MCR_R2012a_glnxa64_installer.zip)
+
+##### 2a.3. Decompress the .zip file: `unzip https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
+Decompressing this .zip file will unpack several sub-folders, command line software executables, and instruction text files.
+
+###### 2a.3.1. Navigate back out to the `MixMapperMCRdistrib` directory, and open the 'instructions.txt' file. Follow lines 13 - 21 exactly. Set the path for the installation to the `MCR` directory
+
+###### 2a.4. Once all necessary lines of code have been uncommented (from 'instructions.txt', lines 13 - 21), install the MCR runtime compiler: `./install -inputFile installer_input_mod.txt`
+Installing the runtime compiler will generate a new subdirectory within the `MCR` directory called `v717`. This is where the runtime compiler is and where paths for MixMapper need to be set.
+
+### STEP 3: Compile necessary wrapper functions for MIXMAPPER.
+In this step, we are compiling two source files, which will be converted to executable code for running MIXMAPPER. These source files are: 'compute_moment_stats.cpp' and 'compute_most_additive_trees.cpp'
+
+#### 3a. Navigate to the `MixMapper_v2.0` directory; make sure the two files needing compilation are in the folder (see STEP 3 description above)
+
+##### 3a.1. Compile 'compute_moment_stats.cpp'; in the command line, start an interaction session and run the bash command: `srun g++ --02 compute_moment_stats.cpp -o compute_moment_stats`
+Running this command will generate an executable for compute_moment_stats
+
+##### 3a.2. Compile 'compute_most_additive_trees.cpp'; in the command line, start an interaction session and run the bash command: `srun g++ --02 compute_most_additive_trees.cpp -o compute_most_additive_trees`
+Running this command will generate an executable for compute_most_additive trees.
+
+### STEP 4:
+
+

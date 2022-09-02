@@ -1,0 +1,812 @@
+---
+title: 'Analysis 3: Admixture and Phylogenomics'
+author: "Joe Gunn"
+date: "10/30/2019"
+output: html_document
+---
+
+# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## Specific Aim: Admixture and phylogenomics analysis 
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess population genomic structure of Spotted Bass, Smallmouth Bass, and Neosho Bass in the CIH. Specifically, we conducted an initial screen of hybridization and gene flow by running maximum likelihood clustering on the full, filtered dataset and identified any individuals of interspecific origin between Spotted Bass and all other Interior Highlands fish (Smallmouth Bass and Neosho Bass) and individuals of interspecific origin between Smallmouth Bass and Neosho Bass. After removing hybrids, we conducted a separate admixture analysis and complementary phylogenomic analysis on the "pure" genomic samples to estimate genomic divergence between species.
+
+## Phases of analysis:
+### Phase 1: Data preparation
+### Phase 2: Admixture analysis
+### Phase 3: Phylogenomic analysis
+
+## Libraries needed for analysis
+```{r setup, echo = FALSE, include=FALSE}
+library(readxl)
+library(tidyverse)
+library(cowplot)
+library(devtools)
+library(pophelper)
+```
+
+## PHASE 1: Metadata preparation
+In this phase of the analysis, we are reading in a metadata file that was prepared in excel prior to analysis (`metadata.xlsx`), which gives the sample ID, species designation (by native range or morphology in the case of Spotted Bass), and stream from which it was capture.
+
+### STEP 1: Prepare raw metadata for use in downstream analyses and summarize sample size data across streams.
+In this step, we are reading in, cleaning, and filtering the raw metadata to prepare for downstream analyses.
+
+#### 1a: Read in and clean metadata; run the Rmd chunk below:
+
+##### Read in and clean metadata
+```{r METADATA}
+## Read in metadata
+metadata <- read_excel("../raw_data/metadata.xlsx")
+
+## Omit samples removed from filtering steps in Analysis 2
+metadata <- metadata %>%
+  filter(sample_id != "GRSPB34_1") %>%
+  filter(sample_id != "BFORK32_1") %>%
+  filter(sample_id != "ER05_1")
+
+## Save metadata for use in future analyses
+save(metadata, file = "../raw_data/metadata.Rda")
+```
+
+#### 1b: Summarize sample sizes by species and stream; run the Rmd chunk below:
+
+#### Summarize metadata
+```{r}
+## Get sample sizes by species
+species_sample_sizes <- metadata %>%
+  group_by(species) %>%
+  count()
+
+## Get sample sizes by stream
+species_sample_sizes <- metadata %>%
+  group_by(stream) %>%
+  count()
+```
+
+These tables were used as the basis for maintext Table 1 in the manuscript (in the manuscript version of this table, we also include in the total sample sizes the samples filtered due to low genotype call rates).
+
+### ----------------------- END OF PHASE 1: METADATA PREPARATION  ----------------------- ###
+
+## PHASE 2: ADMIXTURE ANALYSIS
+In this phase, we are reading in the previously filtered VCF data (`data/processed_vcf/popgen.vcf`), converting the data to input files necessary for the program ADMIXTURE, and running the following analyses: 1) a screen of the full dataset for interspecific hybrids between Spotted Bass and either Smallmouth Bass or Neosho Bass and a for interspecific hybrids between Smallmouth Bass and Neosho Bass; and 2) population genomic structure analysis of the genetically "pure" samples only, which will be combined with subsequent phylogenomic analysis of pure samples. <br>
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+PLINK v.1.90p (high-contig build; Change et al. 2015) <br>
+
+<b>Citation</b>:<br>
+
+Chang, C. C., Chow, C. C., Tellier, L. C. A. M., Vattikuti, S., Purcell, S. M., & Lee, J. J. (2015). Second-generation PLINK: Rising to the challenge of larger and richer datasets. GigaScience, 4, 1–16. doi:10.1186/s13742-015-0047-8
+
+ADMIXTURE v.1.3.0 (Alexander et al. 2009) <br>
+
+Alexander, D. H., Novembre, J., & Lange, K. (2009). Fast model-based estimation of ancestry in unrelated individuals. Genome Research, 19, 1655–1664. doi:10.1101/gr.094052.109
+
+### STEP 1: Generate a general bash shell script header for all PLINK commands
+In this step, we are generating a universal bash shell script to run all file type conversions in PLINK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "plink.sh".
+
+##### 1a:Copy and paste the code below in a new shell script file:
+
+##### Generate PLINK bash shell script: `code/shell_scripts/plink.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J plink_conversion # give the job a custom name
+#SBATCH -o get_plink_bed-%j.out  # give the job output a custom name
+#SBATCH -t 0-01:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+## Commands here run only on the first core
+
+## Modules to load
+
+# module load rss/rss-2020
+# module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
+```
+
+### STEP 2: Screen for hybridization population genomic admixture analysis on the FULL dataset
+In this step, we are running a population genomic analysis of the full, filtered VCF dataset to run a screen for interspecific hybridization, both between Spotted Bass and all other samples (Smallmouth Bass and Neosho Bass), as well as between Smallmouth Bass and Neosho Bass.
+
+#### 2a: Convert VCF data into .bed format for admixture analysis in the software program ADMIXURE.
+
+##### 2a.1. Copy and paste the code below in the shell file generated in Step 1a above, which will generate a .bed, along with .bim, .fam, .log, and .nosex files:
+
+<b>We use the following flags in the code</b>: <br>
+    --allow-extra-chr: this flag is necessary due to the data being in the format of contigs rather than chromosomes
+    --vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
+    --make-bed: this specifies output format of .bed
+
+##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script:
+```{bash}
+#plink --vcf ../../data/processed_vcf/popgen.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/all_samples/01_all
+```
+
+Run: `sbatch plink.sh`
+
+This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
+
+#### 2b: Generate a batch list file for running ADMIXTURE in parallel.
+Here, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list  contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
+
+##### 2b.1. Generate a batch list of commands to run in ADMIXTURE; run the Rmd chunk below:
+
+##### Generate batch commands: `code/batch_cmd_lists/01_all_batch_cmd_list.txt`
+```{r}
+nk <- data.frame(c(1:20))
+
+cat("", file="code/batch_cmd_lists/01_all_batch_cmd_list.txt")
+
+# Run loop to create file for storing commands
+for(ii in 1:nrow(nk)) {
+    
+  admixture_call <- paste("admixture --seed=2324 --cv=10")
+
+  input <- paste("../../data/processed_bed/all_samples/01_all.bed")
+  
+  cat(paste(admixture_call, input, nk[ii,]), 
+      "\n", 
+      file=paste("code/batch_cmd_lists/01_all_batch_cmd_list.txt"), # name file to store list
+      append=TRUE)
+  }
+
+```
+
+##### 2c: Generate a shell script to run ADMXITURE:
+In this step, we are generating a universal bash shell script to run population genomic analyses for all samples in ADMIXTURE. The shell script for running all ADMIXTURE code is called "admixture.sh" and is adapted in the steps below to run the specified input files at each step. 
+
+##### Generate ADMIXTURE bash shell script: `code/shell_scripts/admixture_all.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH --account=biosci
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J admix # give the job a custom name
+#SBATCH -o 01_all.out  # give the job output a custom name (CHANGE THIS OUTFILE NAME TO MATCH OUTPUT Q AND P FILES)
+#SBATCH -t 0-03:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 7  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+## UNCOMMENT LINES STARTING HERE 
+
+# echo "### Starting at: $(date) ###"
+
+
+## load packages (LEAVE THIS COMMENTED)
+# module load rss/rss-2020
+# module load admixture_linux/admixture_linux-1.3.0
+
+# COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/01_all_batch_cmd_list.txt | tail -n 1`
+# eval $COMMANDA
+
+# echo "### Ending at: $(date) ###"
+```
+
+#### 2d: Run ADMIXTURE analysis using the batch command list generated in Step 2b.1. Navigate to `code/shell_scripts/admixture_all.sh` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
+
+Run: `sbatch admixture_all.sh`
+
+#### 2e: ADMIXTURE output files (.P and .Q) are generated and stored in the `/shell_scripts` directory; manually move these output files here: `data/admixture_data/q_data/all_samples/`.
+
+#### 2f: ADMIXTURE cross-validation error data are generated and stored in the `/shell_scripts` directory; manually move this output file here: `data/admixture_data/cv_data/all_samples/01_all.out`.
+
+#### 2g: Visualize results of full data screen and infer hybrids between Spotted Bass and either Smallmouth Bass or Neosho Bass, and between Smallmouth Bass and Neosho Bass.
+
+##### 2g.1. Assess 10-fold cross-validation error to assess results for K = 1-20; Run the following in the terminal:
+
+`grep -h CV data/admixture_data/cv_data/all_samples/01_all.out`
+
+This command will extract the CV data for each value of K from the ADMIXTURE cross-validation output
+
+##### 2g.2. Copy and paste the CV results generated from the code in 2g.1 above into an excel file: `cv_all.xlsx`; Run the Rmd chunk below:
+
+##### Assess 10-fold cross-validation error and generate associated plot: `figures/admixture_figures/cv_figures/cv_all.pdf`
+```{r}
+cv_all <- read_excel("data/admixture_data/cv_data/all_samples/cv_all.xlsx")
+
+cv_all <- as.data.frame(cv_all)
+
+# Generate CV error plot for all samples
+pdf("figures/admixture_figures/cv_figures/cv_all.pdf", width = 10, height = 5) 
+
+ggplot(cv_all, aes(x = k, y = cv)) + 
+   geom_point(size = 3) + 
+   geom_path(stat = "identity", size = 1) + 
+   scale_x_continuous("K", labels = as.character(cv_all$k), breaks = cv_all$k) + 
+   labs(x = "K", y = "10-Fold CV Error") + 
+   theme_set(theme_cowplot()) + 
+   theme(axis.text = element_text(size = 20)) + 
+   theme(axis.title.x = element_text(face = "italic")) + 
+   theme(axis.title = element_text(size = 20))
+
+dev.off()
+```
+
+This figure was used as the basis for Supplementary Figure 3 in the manuscript (we used PowerPoint to remove unwanted labels and include clean versions of the labels).
+
+##### 2g.3. Generate a q-plot for all data; run the Rmd chunk below:
+
+##### Generate q-plots for all samples: 1) `figures/admixture_figures/q_plot_figures/01_all_k4.pdf` and 2) `figures/admixture_figures/q_plot_figures/01_all_k3.pdf`
+```{r}
+#Read-in ADMIXTURE q-value results for best K = 4
+hybrid_screen_K4 <- readQ("data/admixture_data/q_data/all_samples/01_all.4.Q")
+
+## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho Bass)
+plotQ(hybrid_screen_K4,
+      showindlab = F, 
+      useindlab=F,
+      indlabsize = 8,
+      indlabcol = "black",
+      grplab = metadata,
+      ordergrp = T,
+      selgrp = "sample_id",
+      subsetgrp =  c("SPRMO49_1","GRSPB52_1","GRSPB51_1","GLVR11_1","STOCK03_1","STOCK04_1","STOCK05_1","STOCK06_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","TBLR01_1","TBLR02_1","TBLR03_1","TBLR04_1","GRSPB35_1","GRSPB36_1","GRSPB37_1","GRSPB39_1","GRSPB41_1","GRSPB50_1","SKIA03_1","SKIA04_1","SKIA05_1","SKIA06_1","SKIA09_1","BC01_1","BC07_1","BC08_1","BC09_1","BC12_1","BC14_1","SC06_1","SC37_1","MI419_1","MI420_1","MI421_1","MI422_1","MI423_1","MI425_1","ER17_1","ER20_1","ER30_1","ER33_1","ER35_1","ER44_1","HC38_1","HC40_1","HC41_1","HC42_1","HC43_1","HC44_1","SPVW11_1","SPVW02_1","SPVW05_1","SPVW07_1","SPVW12_1","SPVW14_1","NOIS07_1","NOIS08_1","NOIS12_1","NOIS18_1","GLVR4_1","SPRMO11_1","SPRMO19_1","BFORK02_1","BFORK23_1","BFORK24_1","BFORK30_1","BFORK49_1","GRSPB02_1","GRSPB03_1","GRSPB69_1","CANEY15_1","CANEY16_1","BFC02_1","BFC06_1","BFC10_1","BFC49_1","AR16_1","AR18_1","AR19_1","AR21_1","AR29_1","AR30_1","AT02_1","AT05_1","AT08_1","AT09_1","AT12_1"),
+      clustercol = c("forestgreen","goldenrod3","deepskyblue","deeppink2"),
+      showlegend = F,
+      legendmargin = c(2,2,2,2),
+      showsp = F, 
+      showdiv = T, 
+      divsize = 0.5, 
+      divcol = "black",  
+      divtype = 1,
+      legendkeysize = 10, 
+      legendtextsize = 15, 
+      linesize = 0.5, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.2, 
+      imgtype = "pdf",
+      outputfilename = "01_all_k4.pdf",
+      exportpath = "figures/admixture_figures/q_plot_figures/",
+      height = 5, width = 30)
+
+#Read-in ADMIXTURE q-value results for best K = 3
+hybrid_screen_K3 <- readQ("data/admixture_data/q_data/all_samples/01_all.3.Q")
+
+## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho)
+plotQ(hybrid_screen_K3,
+      showindlab = F, 
+      useindlab=F,
+      indlabsize = 8,
+      indlabcol = "black",
+      grplab = metadata,
+      ordergrp = T,
+      selgrp = "sample_id",
+      subsetgrp =  c("SPRMO49_1","GRSPB52_1","GRSPB51_1","GLVR11_1","STOCK03_1","STOCK04_1","STOCK05_1","STOCK06_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","TBLR01_1","TBLR02_1","TBLR03_1","TBLR04_1","GRSPB35_1","GRSPB36_1","GRSPB37_1","GRSPB39_1","GRSPB41_1","GRSPB50_1","SKIA03_1","SKIA04_1","SKIA05_1","SKIA06_1","SKIA09_1","BC01_1","BC07_1","BC08_1","BC09_1","BC12_1","BC14_1","SC06_1","SC37_1","MI419_1","MI420_1","MI421_1","MI422_1","MI423_1","MI425_1","ER17_1","ER20_1","ER30_1","ER33_1","ER35_1","ER44_1","HC38_1","HC40_1","HC41_1","HC42_1","HC43_1","HC44_1","SPVW11_1","SPVW02_1","SPVW05_1","SPVW07_1","SPVW12_1","SPVW14_1","NOIS07_1","NOIS08_1","NOIS12_1","NOIS18_1","GLVR4_1","SPRMO11_1","SPRMO19_1","BFORK02_1","BFORK23_1","BFORK24_1","BFORK30_1","BFORK49_1","GRSPB02_1","GRSPB03_1","GRSPB69_1","CANEY15_1","CANEY16_1","BFC02_1","BFC06_1","BFC10_1","BFC49_1","AR16_1","AR18_1","AR19_1","AR21_1","AR29_1","AR30_1","AT02_1","AT05_1","AT08_1","AT09_1","AT12_1"),
+      clustercol = c("goldenrod3","deepskyblue","deeppink2"),
+      showlegend = F,
+      legendmargin = c(2,2,2,2),
+      showsp = F, 
+      showdiv = T, 
+      divsize = 0.5, 
+      divcol = "black",  
+      divtype = 1,
+      legendkeysize = 10, 
+      legendtextsize = 15, 
+      linesize = 0.5, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.2, 
+      imgtype = "pdf",
+      outputfilename = "01_all_k3.pdf",
+      exportpath = "figures/admixture_figures/q_plot_figures/",
+      height = 5, width = 30)
+```
+
+This figure was used as the basis for Supplementary Figure 4 in the manuscript (we used PowerPoint to remove unwanted labels and include clean versions of the labels. We also included a figure for <i>K</i> = 3 for comparison in the manuscript. We manually  added other labeling schemes as well as the q value data in this figure).
+
+<b>Hybrid screening results</b>: <br><br>
+<b>Spotted Bass X Smallmouth Bass hybrids </b> = 0 <br>
+<b>Spotted Bass X Neosho Bass hybrids </b> = 1 (BFC10, Lee Creek) <br>
+<b>Smallmouth Bass X Neosho Bass hybrids </b> = 40 (list generated below)
+<b>Pure samples </b> = 51 (list generated below)
+<b>Pure Spotted Bass samples </b> = 4 (list generated below)
+<b>Pure Smallmouth Bass samples </b> = 24 (list generated below)
+<b>Pure Neosho Bass samples </b> = 23 (list generated below)
+
+#### 2h: Generate lists of samples (hybrids and non-admixed ('pure') individuals) ascertained from ADMIXTURE analysis and vizualization in Step 3f.3.
+In this step, we are removing the one interspecific hybrid between Spotted Bass and Neosho Bass (BFC10) detected in the step above from all downstream analyses. We are then generating lists of both pure individuals and admixed individuals that will be used to filter the dataset for ADMIXTURE and phylogenomic analysis in future steps. <br>
+
+We considered an individual to be genetically "pure" if it possessed greater than a 0.95 coefficient of ancestry to any one cluster at <i>K</i>=4, which was found to be the optimal <i>K</i> value based on cross validation error. For any individual with mixed ancestry between the two clusters discovered within the Neosho range, we combined the total ancestry coefficients for the "Northern Arkansas" cluster (forest green in the figures generated above) and the "Midark" cluster.
+
+##### 2h.1. Get list of Spotted Bass X Smallmouth Bass or Neosho Bass hybirds; run the Rmd chunk below:
+
+##### Generate list of Spotted Bass hybrids: `data/filtering_data/bfc10.txt` 
+```{r}
+## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
+BFC10 <- metadata %>%
+  filter(sample_id == "BFC10_1")
+
+# Select the first column and convert to data frame
+BFC10 <- data.frame(BFC10) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(BFC10, 
+          file = "data/filtering_data/bfc10.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+BFC10 <- as.vector(BFC10$sample_id)
+
+# Save the list of bad samples as a .Rda file without column names
+save(BFC10, file = "data/filtering_data/bcf10.Rda")
+```
+
+##### 2h.2. Get list of pure individuals; run the Rmd chunk below to retain individuals with cluster membership to any one cluster > 0.95:
+
+##### Generate list of pure individuals: `data/filtering_data/pure_individuals.txt`
+```{r}
+## Read in Q value data for all individuals at K=4
+all_Q <- cbind(metadata, hybrid_screen_K4)
+
+## Filter out BCF10 (Spotted Bass X Smallmouth Bass hybrid)
+all_Q <- all_Q %>%
+  filter(sample_id != "BFC10_1")
+
+## Change column names on dataset
+colnames(all_Q) <- c("sample_id", "species", "stream", "north_ark", "spotted_bass", "midark", "smallmouth_bass")
+
+## Get pure Spotted Bass samples
+pure_spotted <- all_Q %>%
+  filter(spotted_bass > 0.95)
+
+## Get pure Midark samples (cluster within Neosho range) 
+pure_midark <- all_Q %>%
+  filter(midark > 0.95)
+
+## Get pure Northern Arkansas samples (cluster within Neosho range) 
+pure_ark <- all_Q %>%
+  filter(north_ark > 0.94)
+
+## Get pure Smallmouth Bass
+pure_smallmouth <- all_Q %>%
+  filter(smallmouth_bass > 0.95)
+
+## Put all pure individuals together 
+pure_individuals <- rbind(pure_spotted,
+                     pure_midark, 
+                     pure_ark, 
+                     pure_smallmouth)
+
+# Select the first column and convert to data frame
+pure_individuals <- data.frame(pure_individuals) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(pure_indivs, 
+          file = "data/filtering_data/pure_individuals.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+pure_individuals <- as.vector(pure_individuals$sample_id)
+
+# Save the list of pure samples as a .Rda file without column names
+save(pure_individuals, file = "data/filtering_data/pure_individuals.Rda")
+```
+
+##### 2h.3. Get list of admixed samples; run the Rmd chunk below:
+
+##### Generate list of pure individuals: `data/filtering_data/admixed_individuals.txt`
+```{r}
+## Get admixed Midark samples (cluster within Neosho range) 
+admixed_midark <- all_Q %>%
+  filter(midark < 0.95) %>%
+  filter(midark > 0.06) # This is to account for the one sample with mixed ancestry among neosho clusters
+
+## Get admixed Northern Arkansas samples (cluster within Neosho range) 
+admixed_ark <- all_Q %>%
+  filter(north_ark < 0.94) %>%
+  filter(north_ark > 0.05) # This is to account for the one sample with mixed ancestry among neosho clusters
+
+## Put all pure individuals together 
+admixed_individuals <- rbind(admixed_midark, 
+                        admixed_ark)
+
+# Select the first column and convert to data frame
+admixed_individuals <- data.frame(admixed_individuals) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(admixed_individuals, 
+          file = "data/filtering_data/admixed_individuals.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+admixed_individuals <- as.vector(admixed_individuals$sample_id)
+
+# Save the list of admixed samples as a .Rda file without column names
+save(admixed_individuals, file = "data/filtering_data/admixed_individuals.Rda")
+```
+
+### STEP 3: Run ADMIXTURE for pure samples only.
+In this step, we are rerunning ADMIXTURE on only the individuals inferred to be genetically pure from the full hybrid screen analysis in Step 2. We are performing this step to assess population genetic structure without the influence of admixed individuals, and the results from this analysis will be compared to a phylogenomic analysis in Phase 3 of the analysis.
+
+#### 3a: Generate a general bash shell script header for data filtering in VCFTools
+In this step, we are generating another bash shell script to run all individual sample filtering in VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
+
+##### 3a.1. Copy and paste the code below in a new shell script file:
+
+##### Generate VCFTools bash shell script: `code/shell_scripts/vcftools.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J filter_admixed  # give the job a custom name
+#SBATCH -o filtering_missing.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+## Load VCFtools module
+
+## UNCOMMENT LINES STARTING HERE 
+
+# module load rss/rss-2020
+# module load vcftools/vcftools-v0.1.14
+```
+
+##### Important Note: the generated file will have an additional extension (.recode), which is not necessary for downstream analyses. Every time a new VCF file was filtered, we manually removed this piece of the extension by copying the file to a new name (see below) and deleting the .recode.vcf file.
+
+#### 3b: Filter the full VCF to remove Spotted Bass X Smallmouth Bass hybrid (BFC10).
+
+##### 3b.1. Copy and paste the code below in the shell file generated in Step 3a above, which will generate a filtered VCF file without BFC10:
+
+##### Command line code for filtering. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 01: omit Spotted Bass X Neosho Bass hybrid (BFC10) 
+#vcftools --vcf ../../data/processed_vcf/popgen.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_popgen_spb_hybrid
+```
+
+Run: `sbatch vcftools.sh`
+
+<b>Filtering results</b>: <br><br>
+<b>Samples omitted </b> = 1 <br>
+<b>Samples retained </b> = 91 <br>
+<b>SNPs retained </b> = 50,828 <br>
+
+#### 3c: Filter the full dataset (minus Spotted Bass hybrid) to retain only pure individuals.
+
+##### 3c.1. Copy and paste the code below in the shell file generated in Step 4a above, which will generate a filtered VCF file without individuals in the 'admixed_individuals' list above (Smallmouth Bass X Neosho Bass hybrids).:
+
+##### Command line code for filtering. UNCOMMENT this code in the shell script.
+```{bash}
+## filter 02: omit interspecific hybrids between Smallmouth Bass and Neosho Bass
+#vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_pure
+```
+
+Run: `sbatch vcftools.sh`
+
+<b>Filtering results</b>: <br><br>
+<b>Samples omitted </b> = 40 <br>
+<b>Samples retained </b> = 51 <br>
+<b>SNPs retained </b> = 50,828 <br>
+
+#### 3d: Filter the metadata to include only pure individuals
+
+##### 3d.1. Omit all admixed individuals from the metadata file; run the Rmd chunk below:
+
+##### Filter out admixed individuals from metadata
+```{r}
+# Omit admixed individuals (Smallmouth Bass X Neosho Bass) from pure metadata
+metadata_pure <- metadata[ ! metadata$sample_id %in% admixed_individuals, ]
+
+# Omit Spotted Bass X Smallmouth Bass hybrid from pure metadata
+metadata_pure <- metadata_pure[ ! metadata_pure$sample_id %in% BFC10, ]
+
+## Save pure metadata for use in future analyses
+save(metadata_pure, file = "data/metadata/metadata_pure.Rda")
+```
+
+#### 3e: Convert VCF data into .bed format for admixture analysis in the software program ADMIXURE.
+
+##### 3e.1. Copy and paste the code below in the shell file generated in Step 1a above, which will generate a .bed, along with .bim, .fam, .log, and .nosex files:
+
+<b>We use the following flags in the code</b>: <br>
+    --allow-extra-chr: this flag is necessary due to the data being in the format of contigs rather than chromosomes
+    --vcf-half-call m: this flag treats any half genotype calls (e.g., '0/.' or './1') as missing data
+    --make-bed: this specifies output format of .bed
+
+##### Command line code for converting VCF to BED. UNCOMMENT this code in the shell script:
+```{bash}
+## Conversion 02: Convert full vcf data (02_popgen_pure.vcf) to .bed format
+#plink --vcf ../../data/processed_vcf/02_popgen_pure.vcf --allow-extra-chr --vcf-half-call m --make-bed --out ../../data/processed_bed/pure_samples/02_pure
+```
+
+Run: `sbatch plink.sh`
+
+This code generates the file: `data/processed_bed/all_samples/02_pure.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the pure dataset.
+
+#### 3f: Generate a batch list file for running ADMIXTURE in parallel.
+Here, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
+
+##### 3f.1. Generate a batch list of commands to run in ADMIXTURE; run the Rmd chunk below:
+
+##### Generate batch commands: `code/batch_cmd_lists/01_all_batch_cmd_list.txt`
+```{r}
+nk <- data.frame(c(1:20))
+
+cat("", file="code/batch_cmd_lists/02_pure_batch_cmd_list.txt")
+
+# Run loop to create file for storing commands
+for(ii in 1:nrow(nk)) {
+    
+  admixture_call <- paste("admixture --seed=2324 --cv=10")
+
+  input <- paste("../../data/processed_bed/pure_samples/02_pure.bed")
+  
+  cat(paste(admixture_call, input, nk[ii,]), 
+      "\n", 
+      file=paste("code/batch_cmd_lists/02_pure_batch_cmd_list.txt"), # name file to store list
+      append=TRUE)
+  }
+
+```
+
+##### 3g: Generate a shell script to run ADMXITURE:
+In this step, we are generating a universal bash shell script to run population genomic analyses for pure samples only in ADMIXTURE. The shell script for running all ADMIXTURE code is called "admixture.sh" and is adapted in the steps below to run the specified input files at each step. 
+
+##### Generate ADMIXTURE bash shell script: `code/shell_scripts/admixture_pure.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH --account=biosci
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J admix # give the job a custom name
+#SBATCH -o 01_all.out  # give the job output a custom name (CHANGE THIS OUTFILE NAME TO MATCH OUTPUT Q AND P FILES)
+#SBATCH -t 0-03:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 7  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+## UNCOMMENT LINES STARTING HERE 
+
+# echo "### Starting at: $(date) ###"
+
+
+## load packages (LEAVE THIS COMMENTED)
+# module load rss/rss-2020
+# module load admixture_linux/admixture_linux-1.3.0
+
+# COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/02_pure_batch_cmd_list.txt | tail -n 1`
+# eval $COMMANDA
+
+# echo "### Ending at: $(date) ###"
+```
+
+#### 3h: Run ADMIXTURE analysis using the batch command list generated in Step 3e.1. Navigate to `code/shell_scripts/admixture_pure.sh` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
+
+Run: `sbatch admixture_pure.sh`
+
+#### 3i: ADMIXTURE output files (.P and .Q) are generated and stored in the `/shell_scripts` directory; manually move these output files here: `data/admixture_data/q_data/pure_samples/`.
+
+#### 3j: ADMIXTURE cross-validation error data are generated and stored in the `/shell_scripts` directory; manually move this output file here: `data/admixture_data/cv_data/pure_samples/02_pure.out`.
+
+#### 3k: Visualize results of full data screen and infer hybrids between Spotted Bass and either Smallmouth Bass or Neosho Bass, and between Smallmouth Bass and Neosho Bass.
+
+##### 3k.1. Assess 10-fold cross-validation error to assess results for K = 1-20; Run the following in the terminal:
+
+`grep -h CV data/admixture_data/cv_data/pure_samples/02_pure.out`
+
+This command will extract the CV data for each value of K from the ADMIXTURE cross-validation output
+
+##### 3k.2. Copy and paste the CV results generated from the code in 2g.1 above into an excel file: `cv_pure.xlsx`; Run the Rmd chunk below:
+
+##### Assess 10-fold cross-validation error and generate associated plot: `figures/admixture_figures/cv_figures/cv_pure.pdf`
+```{r}
+cv_pure <- read_excel("data/admixture_data/cv_data/pure_samples/cv_pure.xlsx")
+
+cv_pure <- as.data.frame(cv_pure)
+
+# Generate CV error plot for pure samples
+pdf("figures/admixture_figures/cv_figures/cv_pure.pdf", width = 10, height = 5) 
+
+ggplot(cv_pure, aes(x = k, y = cv_error)) + 
+   geom_point(size = 3) + 
+   geom_path(stat = "identity", size = 1) + 
+   scale_x_continuous("K", labels = as.character(cv_pure$k), breaks = cv_pure$k) + 
+   labs(x = "K", y = "10-Fold CV Error") + 
+   theme_set(theme_cowplot()) + 
+   theme(axis.text = element_text(size = 20)) + 
+   theme(axis.title.x = element_text(face = "italic")) + 
+   theme(axis.title = element_text(size = 20))
+
+dev.off()
+```
+
+This figure was used as the basis for Figure 1c in the manuscript.
+
+##### 3k.3. Generate a q-plot for all data; run the Rmd chunk below:
+Given the very similar CV error values given for <i>K</i>=3, <i>K</i>=4, and <i>K</i>=5, even though 3 was the optimal number of clusters, we show results for each of these K values and produce figures for each.
+
+##### Generate q-plot for all samples: 1) `figures/admixture_figures/q_plot_figures/02_pure_k3.pdf`, 2) `figures/admixture_figures/q_plot_figures/02_pure_k4.pdf`, and 3) `figures/admixture_figures/q_plot_figures/02_pure_k5.pdf`
+```{r}
+#Read-in ADMIXTURE q-value results for best K = 3
+pure_K3 <- readQ("data/admixture_data/q_data/pure_samples/02_pure.3.Q")
+
+## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho Bass)
+plotQ(pure_K3,
+      showindlab = T, 
+      useindlab=T,
+      indlabsize = 8,
+      indlabcol = "black",
+      grplab = metadata_pure,
+      showgrplab = F,
+      ordergrp = T,
+      selgrp = "sample_id",
+      subsetgrp =  c("GRSPB51_1","GRSPB52_1","SPRMO49_1","GLVR11_1","TBLR02_1","TBLR04_1","TBLR01_1","TBLR03_1","GRSPB37_1","GRSPB41_1","GRSPB39_1","GRSPB50_1","GRSPB35_1","GRSPB36_1","STOCK04_1","STOCK03_1","STOCK06_1","STOCK05_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","SKIA04_1","SKIA09_1","SKIA03_1","SKIA06_1","SKIA05_1","SC37_1","SC06_1","HC43_1","HC40_1","HC38_1","HC41_1","HC44_1","HC42_1","BFORK23_1","CANEY16_1","GRSPB69_1","BFORK02_1","GRSPB02_1","GRSPB03_1","BFORK49_1","NOIS12_1","BFC06_1","BFC49_1","BFC02_1","AR18_1","AR19_1","AR21_1","AR16_1"),
+      clustercol = c("deeppink2","goldenrod3","deepskyblue"),
+      showlegend = F,
+      legendmargin = c(2,2,2,2),
+      showsp = F, 
+      showdiv = T, 
+      divsize = 0.5, 
+      divcol = "black",  
+      divtype = 1,
+      legendkeysize = 10, 
+      legendtextsize = 15, 
+      linesize = 0.5, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.2, 
+      imgtype = "pdf",
+      outputfilename = "02_pure_k3.pdf",
+      exportpath = "figures/admixture_figures/q_plot_figures/",
+      height = 5, width = 30)
+
+#Read-in ADMIXTURE q-value results for best K = 4
+pure_K4 <- readQ("data/admixture_data/q_data/pure_samples/02_pure.4.Q")
+
+## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho Bass)
+plotQ(pure_K4,
+      showindlab = T, 
+      useindlab=T,
+      indlabsize = 8,
+      indlabcol = "black",
+      grplab = metadata_pure,
+      showgrplab = F,
+      ordergrp = T,
+      selgrp = "sample_id",
+      subsetgrp =  c("GRSPB51_1","GRSPB52_1","SPRMO49_1","GLVR11_1","TBLR02_1","TBLR04_1","TBLR01_1","TBLR03_1","GRSPB37_1","GRSPB41_1","GRSPB39_1","GRSPB50_1","GRSPB35_1","GRSPB36_1","STOCK04_1","STOCK03_1","STOCK06_1","STOCK05_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","SKIA04_1","SKIA09_1","SKIA03_1","SKIA06_1","SKIA05_1","SC37_1","SC06_1","HC43_1","HC40_1","HC38_1","HC41_1","HC44_1","HC42_1","BFORK23_1","CANEY16_1","GRSPB69_1","BFORK02_1","GRSPB02_1","GRSPB03_1","BFORK49_1","NOIS12_1","BFC06_1","BFC49_1","BFC02_1","AR18_1","AR19_1","AR21_1","AR16_1"),
+      clustercol = c("goldenrod3","deeppink2","deepskyblue","navyblue"),
+      showlegend = F,
+      legendmargin = c(2,2,2,2),
+      showsp = F, 
+      showdiv = T, 
+      divsize = 0.5, 
+      divcol = "black",  
+      divtype = 1,
+      legendkeysize = 10, 
+      legendtextsize = 15, 
+      linesize = 0.5, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.2, 
+      imgtype = "pdf",
+      outputfilename = "02_pure_k4.pdf",
+      exportpath = "figures/admixture_figures/q_plot_figures/",
+      height = 5, width = 30)
+
+#Read-in ADMIXTURE q-value results for best K = 4
+pure_K5 <- readQ("data/admixture_data/q_data/pure_samples/02_pure.5.Q")
+
+## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho Bass)
+plotQ(pure_K5,
+      showindlab = T, 
+      useindlab=T,
+      indlabsize = 8,
+      indlabcol = "black",
+      grplab = metadata_pure,
+      showgrplab = F,
+      ordergrp = T,
+      selgrp = "sample_id",
+      subsetgrp =  c("GRSPB51_1","GRSPB52_1","SPRMO49_1","GLVR11_1","TBLR02_1","TBLR04_1","TBLR01_1","TBLR03_1","GRSPB37_1","GRSPB41_1","GRSPB39_1","GRSPB50_1","GRSPB35_1","GRSPB36_1","STOCK04_1","STOCK03_1","STOCK06_1","STOCK05_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","SKIA04_1","SKIA09_1","SKIA03_1","SKIA06_1","SKIA05_1","SC37_1","SC06_1","HC43_1","HC40_1","HC38_1","HC41_1","HC44_1","HC42_1","BFORK23_1","CANEY16_1","GRSPB69_1","BFORK02_1","GRSPB02_1","GRSPB03_1","BFORK49_1","NOIS12_1","BFC06_1","BFC49_1","BFC02_1","AR18_1","AR19_1","AR21_1","AR16_1"),
+      clustercol = c("deeppink2","goldenrod3","forestgreen","deepskyblue","navyblue"),
+      showlegend = F,
+      legendmargin = c(2,2,2,2),
+      showsp = F, 
+      showdiv = T, 
+      divsize = 0.5, 
+      divcol = "black",  
+      divtype = 1,
+      legendkeysize = 10, 
+      legendtextsize = 15, 
+      linesize = 0.5, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.2, 
+      imgtype = "pdf",
+      outputfilename = "02_pure_k5.pdf",
+      exportpath = "figures/admixture_figures/q_plot_figures/",
+      height = 5, width = 30)
+```
+
+These figures were used as the basis for Figure 1b in the manuscript (we used PowerPoint to remove unwanted labels and include clean versions of the labels).
+
+### ----------------------- END OF PHASE 2: ADMIXTURE ANALYSIS  ----------------------- ###
+
+
+## PHASE 3: PHYLOGENOMIC ANALYSIS
+In this phase, we are reading in the pure popgen VCF dataset and conducting phylogenomic inference with the software program SNPHYLO, which uses maximum likelihood estimation, to understand the genomic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass <br>
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+SNPHYLO v.2016-02-04-python-2.7.14-tk (Edgar, 2004; Felsenstein, 1989; Lee, Guo, Wang, Kim, & Paterson, 2014; Schliep, 2011; Zheng et al., 2012) <br>
+
+<b>Citation</b>:<br>
+
+Edgar, R. C. (2004). MUSCLE: Multiple sequence alignment with high accuracy and high throughput. Nucleic Acids Research, 32, 1792–1797. doi:10.1093/nar/gkh340
+
+Felsenstein, J. (1989). PHYLIP-Phylogeny Inference Package (Version 3.2). Cladistics, 5, 164–166.
+
+Lee, T. H., Guo, H., Wang, X., Kim, C., & Paterson, A. H. (2014). SNPhylo: A pipeline to construct a phylogenetic tree from huge SNP data. BMC Genomics, 15, 1–6. doi:10.1186/1471-2164-15-162
+
+Schliep, K. P. (2011). phangorn: Phylogenetic analysis in R. Bioinformatics, 27, 592–593. doi:10.1093/bioinformatics/btq706
+
+Zheng, X., Levine, D., Shen, J., Gogarten, S. M., Laurie, C., & Weir, B. S. (2012). A high-performance computing toolset for relatedness and principal component analysis of SNP data. Bioinformatics, 28, 3326–3328. doi:10.1093/bioinformatics/bts606
+
+### STEP 1: Generate a general bash shell script header for all SNPHYLO commands
+In this step, we are generating a universal bash shell script to run phylogenomic analysis in SNPHYLO Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each analysis and the associated lines of code in Rmd chunks. The shell script for running all SNPHYLO code is called "snphylo.sh".
+
+#### 1a: Copy and paste the code below in a new shell script file:
+
+##### Generate PLINK bash shell script: `code/shell_scripts/snphylo.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J snphylo  # give the job a custom name
+#SBATCH -o snphylo_pure.out  # give the job output a custom name
+#SBATCH -t 0-24:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 14  # number of cores (AKA tasks)
+#SBATCH --mem=80000
+
+## UNCOMMENT STARTING HERE:
+
+## Commands here run only on the first core
+# module load rss/rss-2020
+# module load snphylo/snphylo-2016-02-04-python-2.7.14-tk
+```
+
+### STEP 2: Conduct phylogenomic analysis on pure dataset.
+In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('02_popgen_pure.vcf') to assess genomic divergence and monophyly among the Spotted Bass, Smallmouth Bass, and Neosho Bass.
+
+#### 2a: Copy and paste the code below in the shell file generated in Step 1a above, which will generate all snphylo output files:
+<b>We use the following flags in the code</b>: <br>
+    -r: skip removal of low quality data (increases computation time since we've already filtered the data)
+    -a: gives the ID for the final SNP in VCF
+    -b: perform bootstrapping
+    -B: number of bootstrap replicates
+    -o: GLVR11_1 (outgroup; Spotted Bass)
+  
+We run 1,000 bootstrap replicates and set a Spotted Bass sample (GLVR11_1) as an outgroup to root the tree (this is based on our knowledge of the phylogenetic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass)
+
+##### Command line code for running SNPHYLO. UNCOMMENT this code in the shell script:
+```{r}
+# snphylo.sh -v ../vcfdata/all_pure.vcf -r -a 288336 -b -B 1000 -o GLVR11_1
+```
+
+#### 2b. Run SNPHYLO analysis. Navigate to `code/shell_scripts/snphylo.sh` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
+
+Run: `sbatch snphylo.sh`
+
+#### 2c: SNPHYLO output files are generated and stored in the `/shell_scripts` directory; manually move these output files here: `data/snphylo_data/`.
+
+#### 2d: Visualize SNPHYLO output.
+We read the snphylo out 'snphylo.output.bs.tree' into the software program FIGTREE to visualize and generate our phylogenetic tree, which is the basis for Figure 1b in the manuscript.
+
+### ----------------------- END OF PHASE 3: PHYLOGENOMIC ANALYSIS ----------------------- ###
