@@ -9,7 +9,7 @@ output: html_document
 We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
 
 ## Specific Aim: Admixture mapping analysis
-In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i>) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
 
 ## Phases of analysis:
 ### Phase 1: Data preparation
@@ -39,6 +39,11 @@ Lipson, M., Loh, P. R., Levin, A., Reich, D., Patterson, N., & Berger, B. (2013)
 
 Lipson, M., Loh, P. R., Patterson, N., Moorjani, P., Ko, Y. C., Stoneking, M., … Reich, D. (2014). Reconstructing Austronesian population history in Island Southeast Asia. Nature Communications, 5, 1–7. doi:10.1038/ncomms5689
 
+PLINK v.1.90p (high-contig build; Change et al. 2015) <br>
+
+<b>Citation</b>:<br>
+
+Chang, C. C., Chow, C. C., Tellier, L. C. A. M., Vattikuti, S., Purcell, S. M., & Lee, J. J. (2015). Second-generation PLINK: Rising to the challenge of larger and richer datasets. GigaScience, 4, 1–16. doi:10.1186/s13742-015-0047-8
 
 EIGENSOFT v.7.2.1 (Patterson, Price, & Reich, 2006; Price et al., 2006) <br>
 
@@ -51,7 +56,7 @@ Price, A. L., Patterson, N. J., Plenge, R. M., Weinblatt, M. E., Shadick, N. A.,
 ### STEP 1: Download the MIXMAPPER source code and the MIXMAPPER MCR distribution package.
 In this step, we are downloading and installing the source code and MCR distribution package for the software program MIXMAPPER, which is written in C++ and MatLab. 
 
-We have included the downloaded source code, installed software, and compiled wrapper functions in this repository, so you do not need to re-download or re-install these items. In this case, you can skip Steps 1-2 in this script. However, if you need to re-download or re-install any of the software, follow Steps 1-2 below:
+We have <i>NOT</i> included the downloaded source code, installed software, and compiled wrapper functions in this repository, so you will need to re-download and re-install these items. Follow Steps 1-2 below:
 
 #### 1a: Navigate to the /code subdirectory and create a directory to hold the MIXMAPPER source code: `mkdir source_code`. Navigate inside this directory.
 
@@ -86,12 +91,12 @@ In this step, we are installing the MATLAB MCR runtime compiler.
 
 Note: in the 'instructions.txt' file provided in the MixMapperMCRdistrib folder, the link address for the runtime compiler is deprecated and will not take you to the correct site. Use the link address given above in Step 2a.2. Verify that the .zip file is named the same as in the 'instructions.txt' file ('MCR_R2012a_glnxa64_installer.zip)
 
-##### 2a.3. Decompress the .zip file: `unzip https://ssd.mathworks.com/supportfiles/MCR_Runtime/R2012a/MCR_R2012a_glnxa64_installer.zip`
+##### 2a.3. Decompress the .zip file: `unzip MCR_R2012a_glnxa64_installer.zip`
 Decompressing this .zip file will unpack several sub-folders, command line software executables, and instruction text files.
 
 ###### 2a.3.1. Navigate back out to the `MixMapperMCRdistrib` directory, and open the 'instructions.txt' file. Follow lines 13 - 21 exactly. Set the path for the installation to the `MCR` directory
 
-###### 2a.4. Once all necessary lines of code have been uncommented (from 'instructions.txt', lines 13 - 21), install the MCR runtime compiler: `./install -inputFile installer_input_mod.txt`
+##### 2a.4. Once all necessary lines of code have been uncommented (from 'instructions.txt', lines 13 - 21), install the MCR runtime compiler: `./install -inputFile installer_input_mod.txt`
 Installing the runtime compiler will generate a new subdirectory within the `MCR` directory called `v717`. This is where the runtime compiler is and where paths for MixMapper need to be set.
 
 ### STEP 3: Compile necessary wrapper functions for MIXMAPPER.
@@ -105,6 +110,177 @@ Running this command will generate an executable for compute_moment_stats
 ##### 3a.2. Compile 'compute_most_additive_trees.cpp'; in the command line, start an interaction session and run the bash command: `srun g++ --02 compute_most_additive_trees.cpp -o compute_most_additive_trees`
 Running this command will generate an executable for compute_most_additive trees.
 
-### STEP 4:
+### STEP 4: Generate input files for MIXMAPPER.
+In this step, we are using the fully filtered, non-thinned VCF dataset `popgen.vcf` generated in Analysis 2 (SNP Filtering...) and generating input files for MIXMAPPER. 
+
+#### 4a: Convert the fully filtered, non-thinned VCF dataset into PED (pedigree) format.
+In this step, we are using the software program PLINK to convert the full dataset to .ped format, which will then be used in subsequent steps to convert to eigenstrat format.
+
+##### 4a.1. Generate a general bash shell script header for all PLINK commands
+In this step, we are generating a universal bash shell script to run all file type conversions in PLINK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "plink.sh".
+
+###### 4a.1.1: Copy and paste the code below in a new shell script file:
+
+##### Generate PLINK bash shell script: `code/shell_scripts/plink.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J get_ped # give the job a custom name
+#SBATCH -o plink.out  # give the job output a custom name
+#SBATCH -t 0-01:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+## Commands here run only on the first core
+
+## Modules to load
+
+# module load rss/rss-2020
+# module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
+```
+
+Make sure to copy the `popgen.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
+
+##### 4a.2. Copy and paste the code below in the shell file generated in Step 4a.1.1 above, which will generate a .ped file for the full dataset:
+
+##### Command line code for geenrating .ped. UNCOMMENT this code in the shell script:
+```{bash}
+#plink --vcf ../../data/processed_vcf/popgen.vcf --recode --recode-INFO-all --out ../../data/processed_ped/popgen
+```
+
+Run: `sbatch plink.sh`
+
+This code generates the file: `data/processed_bed/all_samples/popgen.ped`, along with three other accompanying files, which should be used in subsquent file converstion steps:
+
+<b>Files</b>: <br><br>
+1) popgen.log
+2) popgen.map
+3) popgen.nosex
+
+#### 4b: Convert the .ped file to EIGENSFOT format (.eigenstratgeno, .snp, .ind).
+In this step, we are using the software program EIGENSOFT to convert the .ped format file generated in step 4a above into .eigenstratgeno, .snp, and .ind files (collectively eigenstrat files) which will then be used as input in MIXMAPPER. 
+
+Specifically, we are using the `convertf` command to convert .ped to .eigenstrat
+
+##### 4b.1. Modify the `popgen.map` file generated in Step 4a above.
+In this step, we need to modify the `popgen.map` file generated in Step 4a above, because the software program EIGENSOFT expects to see chromsome and SNP designations in a particular format. The software was built to analyze data sequenced from humans and aligned to the human genome. Thus, the "chromosome" column (column 1) of the .map file will only recognize autosomal chrosomosome designations (1-22). Column 2 of the .map file contains SNP identifier information, and this can be in any format.
+
+Additionally, EIGENSOFT expects input in columns 3 and 4 (genetic and physical distance, respectively) that is not zero. These values are based on physical distances between each SNP along chromosomes and genetic distances in cM, information that we don't have for these data. The program MIXMAPPER requires this information to make inferences about the timinig of admixture, and as such it is required as input. However, this information is not needed for MIXMAPPER in principle to make inferences about significantly admixed populations vs. pure or incompletely sorted populations, which is our aim in this analysis. So, we generated arbitrary, equal numerical values for these data (d) based arbitrarily on values of x (the numerical value of the RAD kmer) and y (nucleotide position on RAD tags, which is given in our .vcf file), using the custom formula:
+
+d = (100x-y)/(100)
+
+This equation is applied below in Step 4b.1.1 to modify the popgen.map file.
+
+###### 4b.1.1. Read in and modify the `popgen.map` file; run the Rmd chunk below:
+
+##### Read in and modify file:
+```{r}
+# Read in the map file and designate a temporary header column
+map_file <- read_tsv("data/processed_ped/popgen.map", 
+                     col_names = c("chrom","snp","gen_dist","pos"))
+
+# Omit the empty second column
+map_file <- map_file[,-c(2)]
+
+# Rename "chrom" column as "snp"
+colnames(map_file) <- c("snp","gen_dist","pos")
+
+# Generate a column of "1" as a placeholder for chromosome designation, to add as the first column to the dataframe
+chrom <- c(rep("1",times = 50828))
+
+# combine "chrom" column and the rest of the data
+map_file <- cbind(chrom, map_file)
+
+# split each SNP name into component pieces to isolate the numerical value of the SNP
+map_file_str_split <- map_file %>%
+  separate(col = snp, into = c("rad","kmer","num"), sep = "_", remove = F)
+
+# Omit leading zeros from the SNP identifier number ("num")
+map_file_str_split$num <- sub("^0+", "", map_file_str_split$num) 
+
+# Make sure the "num" (number of the RAD kmer designation) is a numeric value
+map_file_str_split <- map_file_str_split %>%
+  mutate(num = as.numeric(num))
+
+# Run the equation to generate column genetic distance (gen_dist) 
+map_file_str_split <- map_file_str_split %>%
+  mutate(gen_dist = ((100*num) - pos)/100)
+
+# Round the genetic distance value to the nearest integer
+map_file_str_split <- map_file_str_split %>%
+  mutate(gen_dist = round(gen_dist, digits = 0))
+
+# Create an additional column for physical distance (phys_dist) and set equal to gen_dist
+map_file_str_split <- map_file_str_split %>%
+  mutate(phys_dist = gen_dist)
+
+map_file <- map_file_str_split %>%
+  select(chrom, snp, gen_dist, phys_dist)
+
+# Save the new .map file
+write_tsv(map_file, 
+          file = "data/processed_ped/popgen_mod.map", 
+          col_names = FALSE)
+```
+
+##### 4b.2. Generate par.PED.EIGENSTRAT file as input for EIGENSOFT
+In this step, we are creating a specialized file type ('par.PED.EIGENSTRAT'), which is used as input for the -p flag with the convertf command in EIGENSOFT. This file reads .ped, .map, and .ind files as input and generates .eigenstratgeno, .snp, and .ind files as output
+
+###### 4b.2.1. Navigate into the `data/batch_cmd_lists/` folder and copy and paste the code below in a new nano .txt file:
+
+##### Generate par.PED.EIGENSTRAT input file: `code/batch_cmd_lists/par.PED.EIGENSTRAT`. UNCOMMENT each line of this file.
+```{bash}
+#genotypename:    ../../data/processed_ped/popgen_mod.ped
+#snpname:         ../../data/processed_ped/popgen_mod.map
+#indivname:	 ../../data/processed_ped/popgen_mod.ped
+#outputformat:    EIGENSTRAT
+#genotypeoutname: ../../data/processed_eigensoft/popgen.eigenstratgeno
+#snpoutname:	 ../../data/processed_eigensoft/popgen.snp
+#indivoutname:    ../../data/processed_eigensoft/popgen.ind
+#familynames:     NO
+```
+
+##### 4b.3. Generate a general bash shell script header for all EIGENSOFT commands
+In this step, we are generating a universal bash shell script to run all file type conversions in EIGENSOFT Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "eigensoft.sh".
+
+###### 4b.1.1: Copy and paste the code below in a new shell script file:
+
+##### Generate EIGENSOFT bash shell script: `code/shell_scripts/eigensoft.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J eigensoft # give the job a custom name
+#SBATCH -o eigensoft.out  # give the job output a custom name
+#SBATCH -t 0-01:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# Commands here run only on the first core
+
+## Modules to load
+
+# module load rss/rss-2020
+# module load eigensoft/eigensoft-7.2.1
+```
 
 
+
+##### 4b.4. Copy and paste the code below in the shell file generated in Step 4b.1.1 above, which will generate .eigenstratgeno, .snp, and .ind files for the full dataset:
+
+##### Command line code for geenrating .eigenstrat. UNCOMMENT this code in the shell script:
+```{bash}
+# convertf -p ../batch_cmd_lists/par.PED.EIGENSTRAT
+```
+
+Run: `sbatch eigensoft.sh`
+
+This code generates the file: `data/processed_bed/all_samples/popgen.ped`, along with three other accompanying files, which should be used in subsquent file converstion steps:
+
+<b>Files</b>: <br><br>
+1) popgen.log
+2) popgen.map
+3) popgen.nosex

@@ -87,7 +87,7 @@ Alexander, D. H., Novembre, J., & Lange, K. (2009). Fast model-based estimation 
 ### STEP 1: Generate a general bash shell script header for all PLINK commands
 In this step, we are generating a universal bash shell script to run all file type conversions in PLINK. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PLINK code is called "plink.sh".
 
-##### 1a:Copy and paste the code below in a new shell script file:
+##### 1a: Copy and paste the code below in a new shell script file:
 
 ##### Generate PLINK bash shell script: `code/shell_scripts/plink.sh`
 ```{bash}
