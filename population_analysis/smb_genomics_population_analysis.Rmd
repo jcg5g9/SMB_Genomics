@@ -66,6 +66,8 @@ In this step, we are generating another bash shell script to run individual samp
 # module load vcftools/vcftools-v0.1.14
 ```
 
+Make sure to copy the `popgen.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
+
 ##### Important Note: the generated file will have an additional extension (.recode), which is not necessary for downstream analyses. Every time a new VCF file was filtered, we manually removed this piece of the extension by copying the file to a new name (see below) and deleting the .recode.vcf file.
 
 #### 1b: Filter the full, non-thinned VCF to remove Spotted Bass hybrid (BFC10) and Spotted Bass individuals.
@@ -124,7 +126,7 @@ write_tsv(spotted_bass,
 
 ##### 1b.2. Copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate a filtered VCF file without Spotted Bass:
 
-##### Command line code for filtering. UNCOMMENT this code in the shell script and run: `sbatch vcftools.sh`
+##### Command line code for filtering. UNCOMMENT this code in the shell script:
 ```{bash}
 ## filter 02: omit Spotted Bass
 #vcftools --vcf ../../data/processed_vcf/01_finerad_spb_hybrid.vcf --remove ../../data/filtering_data/spotted_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_finerad_spb
