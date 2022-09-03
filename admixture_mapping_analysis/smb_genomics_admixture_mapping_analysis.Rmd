@@ -147,7 +147,7 @@ Make sure to copy the `popgen_spb_hybrid.vcf` dataset generated in Analysis 2 in
 
 ##### Command line code for geenrating .ped. UNCOMMENT this code in the shell script:
 ```{bash}
-#plink --vcf ../../data/processed_vcf/popgen_spb_hybrid.vcf --recode --recode-INFO-all --out ../../data/processed_ped/popgen
+#plink --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --recode --recode-INFO-all --out ../../data/processed_ped/popgen
 ```
 
 Run: `sbatch plink.sh`

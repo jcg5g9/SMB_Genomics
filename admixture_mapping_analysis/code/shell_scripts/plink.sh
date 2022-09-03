@@ -16,4 +16,4 @@ module load plink/plink-high-contig-1.90p
 
 # Commands with srun will run on all cores in the allocation
 
-plink --vcf ../../data/processed_vcf/popgen_spb_hybrid.vcf --allow-extra-chr --vcf-half-call m --recode --out ../../data/processed_ped/popgen
+plink --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --allow-extra-chr --vcf-half-call m --recode --out ../../data/processed_ped/popgen
