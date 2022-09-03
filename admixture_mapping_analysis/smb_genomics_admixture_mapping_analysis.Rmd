@@ -14,7 +14,6 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 ## Phases of analysis:
 ### Phase 1: Data preparation
 ### Phase 2: Admixture mapping analysis
-### Phase 3: ...
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
@@ -25,7 +24,7 @@ library(devtools)
 ```
 
 ### PHASE 1: DATA PREPARATION
-In this phase, we are converting the fully filtered, thinned dataset (`popgen.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
+In this phase, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
 
 All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
 
@@ -141,7 +140,7 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
 ```
 
-Make sure to copy the `popgen_spb_hybrid.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
+Make sure to copy the `admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
 
 ##### 4a.2. Copy and paste the code below in the shell file generated in Step 4a.1.1 above, which will generate a .ped file for the full dataset:
 
@@ -332,6 +331,7 @@ write_tsv(ind_file,
           file = "data/processed_eigensoft/popgen_mod.ind",
           col_names = FALSE)
 ```
+
 ### ----------------------- END OF PHASE 1: DATA PREPARATION  ----------------------- ###
 
 ## PHASE 2: ADMIXTURE MAPPING ANALYSIS 
@@ -345,7 +345,7 @@ In this step, we are running preliminary analyses in MIXMAPPER to determine whic
 ##### 1a.1. Navigate to the `code/source_code/mixmapper_code/MixMapper_v2.0/` directory. Copy and paste the following code and run on the command line:
 We are running the command line code with the following specs: <br>
 
-n: no resampling of individuals <br>
+n: no re-sampling of individuals <br>
 1000 bootstrap replicates <br>
 bootstraping over 50 cM blocks <br>
 
@@ -361,13 +361,69 @@ The command line should update in real-time with progress of bootstrap replicati
 3) `popgen.h_boots.txt` <br>
 4) `popgen.neg_f3.txt` <br>
 5) `popgen.pops.txt` <br>
+
+#### 1a.2. Generate a list of inferred non-admixed populations; copy the `popgen.pops.txt` to a new file: `popgen_scaffold_pops.txt`. Remove admixed populations inferred in Step 1a above.
  
 #### 1b: Compute most additive trees
-##### 1a.1. Navigate to the `code/source_code/mixmapper_code/MixMapper_v2.0/` directory. Copy and paste the following code and run on the command line:
+
+##### 1b.1. Navigate to the `code/source_code/mixmapper_code/MixMapper_v2.0/` directory. Copy and paste the following code and run on the command line:
+We are running the command line code with the following specs: <br>
+
+10000 data subsets <br>
+selecting from pure populations detected by compute_moment_stats <br>
 
 ##### Command line code for computing most additive trees: UNCOMMENT this code.
 ```{bash}
-#./compute_moment_stats ../../../../data/processed_eigensoft/popgen_mod.ind ../../../../data/processed_eigensoft/popgen.snp ../../../../data/processed_eigensoft/popgen.eigenstratgeno ../../../../data/mixmapper_data/popgen n 1000 50
+#./compute_most_additive_trees ../../../../data/mixmapper_data/popgen.f2.tab 10000 ../../../../data/mixmapper_data/popgen_scaffold_pops.txt > popgen_trees.out
 ```
 
+### STEP 2: Admixture mapping: infer admixture origins and build admixture trees with MIXMAPPER.
+In this step, we are using the data generated from the `compute_moment_stats` and `compute_most_additive_trees` functions in Step 1 to place admixed populations (ELK, UPPARK, BAYOU, AND ILLI) on the scaffold tree. We are using the MCR runtime distribution; it is fifrst necessary to locate the `/v717` folder within the MCR runtime distributor to include as a path name in the MIXMAPPER wrapper function.
+
+#### 2a: Get path for `/v717/` folder in MCR runtime distributor; navigate to `/MixMapperMCRdistrib/MCR/v717/` and copy the path.
+
+#### 2b: Navigate to the top level of `/MixMapperMCRdistrib/`. nano into the `cmd.txt` folder, which is the editable input file for admixture fitting in MIXMAPPER.
+
+##### 2b.1. Modify the `cmd.txt` file; copy and paste the Rmd chunk below into the txt file.
+In the "pop_data_reps" field, we included a full path to all output data from compute_moment_stats, which is read by MIXMAPPER. In the "scaffold_pop_names = " field, we input the names of each of our non-admixed populations to use as a scaffold tree for placement of admixed populations. In the admixture fitting fields, we set 100 bootstrap replicates and specified the program to compute two-way admixtures. 
+
+##### Modify file: `cmd.txt`: UNCOMMENT 
+```{r}
+#% read input data generated by compute_moment_stats (C++ code)
+#% note '~' doesn't seem to work in path?
+#pop_data_reps = read_MixMapper_input('../../../../data/mixmapper_data/popgen');
+
+#% choose populations for scaffold tree
+#scaffold_pop_names = {'LMULB' 'MIDARK' 'MISS' 'SKIA' 'WHITE'};
+
+#% run bootstrap reps in parallel
+#% matlabpool open 4
+
+#options.branch_sets = 1;
+#% fit ELK as two-way admixture
+#[trees,fits] = MixMapper(pop_data_reps(1:100),scaffold_pop_names,'ELK','',options);
+
+#% fit ILLI as two-way admixture
+#[trees,fits] = MixMapper(pop_data_reps(1:100),scaffold_pop_names,'ILLI','',options);
+
+#% fit UPPARK as two-way admixture
+#[trees,fits] = MixMapper(pop_data_reps(1:100),scaffold_pop_names,'UPPARK','',options);
+
+#% fit BAYOU as two-way admixture
+#[trees,fits] = MixMapper(pop_data_reps(1:100),scaffold_pop_names,'BAYOU','',options);
+
+#% write tree from all-data run in Newick format
+#phytreewrite('tree1.tree',trees(1));
+```
+
+#### 2c: Run MIXMAPPER; copy and paste the code below and run on the command line within the directory containing the MCR distributor:
+
+##### Command line code for running MIXMAPPER: UNCOMMENT before running.
+```{r}
+# ./run_MixMapper_wrapper.sh MCR/v717 cmd.txt
+```
+
+This code will show real-time progress of running through each replicate. It will produce an output table of all admixture mappings (which is used as the basis for maintext Table 2 of our manuscript) as well as a phylogenetic tree .tree file (which was manipulated further in Excel and used as the basis for maintext Figure 4 of our manuscript).
+
+### ----------------------- END OF PHASE 2: ADMIXTURE MAPPING ANALYSIS  ----------------------- ###
 
