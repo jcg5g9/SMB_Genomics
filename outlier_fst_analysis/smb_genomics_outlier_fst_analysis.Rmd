@@ -1,0 +1,24 @@
+---
+title: 'Analysis 6: Directional Selection Analysis'
+author: "Joe Gunn"
+date: "2022-09-03"
+output: html_document
+---
+
+# Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+
+## Specific Aim: Directional selection analysis
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to scan for signatures of directional selection on SNP loci with outlier Fst (high outlier Fst: directional selection; low Fst: balancing selection). We used two software programs with different underlying statistical frameworks to detect outliers and then used any outliers commonly detected in both analyses as canditates for being under strong selection. Specifically, we used the software program BAYESCAN (based in Bayesian analysis) and the R package PCAdapt principal component analysis (based in multivariate principal component analysis). We then employed DAPC in R to map patterns of population differentiation at any shared outlier and neutral loci to detect populations that may be under differential selection pressures and to detect signatures of genetic drift, respectively.
+
+## Phases of analysis:
+### Phase 1: Data preparation
+### Phase 2: 
+
+## Libraries needed for analysis
+```{r setup, echo = FALSE, include=FALSE}
+library(readxl)
+library(tidyverse)
+library(cowplot)
+library(devtools)
+```
