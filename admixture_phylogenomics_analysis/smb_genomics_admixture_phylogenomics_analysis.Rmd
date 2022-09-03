@@ -474,8 +474,6 @@ Run: `sbatch vcftools.sh`
 <b>Samples retained </b> = 91 <br>
 <b>SNPs retained </b> = 50,828 <br>
 
-### IMPORTANT NOTE: We are using this dataset (fully filtered, thinned, excluding the Spotted Bass hybrid) for all further population genomic analyses. All subsequent analyses should begin by copying this vcf into the new directory: `admixture_phylogenomics_analysis/data/processed_vcf/popgen_spb_hybrid.vcf`
-
 #### 3c: Filter the full dataset (minus Spotted Bass hybrid) to retain only pure individuals.
 
 ##### 3c.1. Copy and paste the code below in the shell file generated in Step 4a above, which will generate a filtered VCF file without individuals in the 'admixed_individuals' list above (Smallmouth Bass X Neosho Bass hybrids).:
@@ -856,9 +854,11 @@ save(spotted_bass, file = "data/filtering_data/spotted_bass.Rda")
 Run: `sbatch vcftools.sh`
 
 <b>Filtering results</b>: <br><br>
-<b>Samples omitted </b> = 1 <br>
-<b>Samples retained </b> = 91 <br>
+<b>Samples omitted </b> = 4 <br>
+<b>Samples retained </b> = 87 <br>
 <b>SNPs retained </b> = 50,828 <br>
+
+### IMPORTANT NOTE: We are using this dataset (fully filtered, thinned, excluding the Spotted Bass hybrid AND Spotted Bass individuals) for all further population genomic analyses. All subsequent analyses should begin by copying this vcf into the new directory: `admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`
 
 ### ----------------------- END OF PHASE 4: SPOTTED BASS REMOVAL ----------------------- ###
 
