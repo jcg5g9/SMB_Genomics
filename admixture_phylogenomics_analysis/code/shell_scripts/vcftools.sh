@@ -20,3 +20,6 @@ vcftools --vcf ../../data/processed_vcf/popgen.vcf --remove ../../data/filtering
 
 ## filter 02: omit interspecific hybrids between Smallmouth Bass and Neosho Bass
 vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/admixed_individuals.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_pure
+
+## filter 03: omit Spotted Bass 
+vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/spotted_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/03_popgen_spb

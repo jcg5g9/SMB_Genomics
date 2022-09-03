@@ -15,6 +15,7 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 ### Phase 1: Data preparation
 ### Phase 2: Admixture analysis
 ### Phase 3: Phylogenomic analysis
+### Phase 4: Spotted Bass sample removal
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
@@ -812,3 +813,52 @@ Run: `sbatch snphylo.sh`
 We read the snphylo out 'snphylo.output.bs.tree' into the software program FIGTREE to visualize and generate our phylogenetic tree, which is the basis for Figure 1b in the manuscript.
 
 ### ----------------------- END OF PHASE 3: PHYLOGENOMIC ANALYSIS ----------------------- ###
+
+## PHASE 4: SPOTTED BASS REMOVAL
+In this phase of the analysis, we are omitting all Spotted Bass sample from the analysis, as we are not interested in further investigating population genetics of Spotted Bass for this project.
+
+### STEP 1: Generate list of Spotted Bass individuals
+
+#### 1a: Get list of Spotted Bass individuals; run the Rmd chunk below:
+
+##### Generate list of Spotted Bass individuals: `data/filtering_data/spotted_bass.txt` 
+```{r}
+## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
+spotted_bass <- metadata %>%
+  filter(species == "Spotted_Bass")
+
+# Select the first column and convert to data frame
+spotted_bass <- data.frame(spotted_bass) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(spotted_bass, 
+          file = "data/filtering_data/spotted_bass.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+spotted_bass <- as.vector(spotted_bass$sample_id)
+
+# Save the list of bad samples as a .Rda file without column names
+save(spotted_bass, file = "data/filtering_data/spotted_bass.Rda")
+```
+
+#### 1b: Filter the filtered VCF to remove Spotted Bass individuals.
+
+##### 3b.1. Copy and paste the code below in the shell file generated in Phase 2 Step 3a above, which will generate a filtered VCF file without Spotted Bass:
+
+##### Command line code for filtering. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 03: omit Spotted Bass 
+#vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/bfc10.txt --recode --recode-INFO-all --out ../../data/processed_vcf/03_popgen_spb
+```
+
+Run: `sbatch vcftools.sh`
+
+<b>Filtering results</b>: <br><br>
+<b>Samples omitted </b> = 1 <br>
+<b>Samples retained </b> = 91 <br>
+<b>SNPs retained </b> = 50,828 <br>
+
+### ----------------------- END OF PHASE 4: SPOTTED BASS REMOVAL ----------------------- ###
+

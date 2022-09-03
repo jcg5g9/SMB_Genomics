@@ -310,51 +310,20 @@ ind_file <- read_tsv("data/processed_eigensoft/popgen.ind",
                      col_names = c("sample_id"))
 
 ind_file <- ind_file %>%
-  separate(sample_id, into = c("sample_id","u","pop"), sep = " ", remove = T)
+  separate(sample_id, into = c("sample_id","u"), sep = " ", remove = T)
 
+# Load in metadata for populations generated in Analysis 4 (population analysis)
+load("../population_analysis/data/metadata/metadata_population.Rda")
 
-read_tsv()
-# Omit the empty second column
-map_file <- map_file[,-c(2)]
+# cbind ind_file with population designations
+ind_file <- cbind(ind_file, metadata_populations)
 
-# Rename "chrom" column as "snp"
-colnames(map_file) <- c("snp","gen_dist","pos")
+# omit column 3
+ind_file <- ind_file[,-c(3)]
 
-# Generate a column of "1" as a placeholder for chromosome designation, to add as the first column to the dataframe
-chrom <- c(rep("1",times = 50828))
-
-# combine "chrom" column and the rest of the data
-map_file <- cbind(chrom, map_file)
-
-# split each SNP name into component pieces to isolate the numerical value of the SNP
-map_file_str_split <- map_file %>%
-  separate(col = snp, into = c("rad","kmer","num"), sep = "_", remove = F)
-
-# Omit leading zeros from the SNP identifier number ("num")
-map_file_str_split$num <- sub("^0+", "", map_file_str_split$num) 
-
-# Make sure the "num" (number of the RAD kmer designation) is a numeric value
-map_file_str_split <- map_file_str_split %>%
-  mutate(num = as.numeric(num))
-
-# Run the equation to generate column genetic distance (gen_dist) 
-map_file_str_split <- map_file_str_split %>%
-  mutate(gen_dist = ((100*num) - pos)/100)
-
-# Round the genetic distance value to the nearest integer
-map_file_str_split <- map_file_str_split %>%
-  mutate(gen_dist = round(gen_dist, digits = 0))
-
-# Create an additional column for physical distance (phys_dist) and set equal to gen_dist
-map_file_str_split <- map_file_str_split %>%
-  mutate(phys_dist = gen_dist)
-
-map_file <- map_file_str_split %>%
-  select(chrom, snp, gen_dist, phys_dist)
-
-# Save the new .map file
-write_tsv(map_file, 
-          file = "data/processed_ped/popgen_mod.map", 
+# Save the new .ind file
+write_tsv(ind_file, 
+          file = "data/processed_eigensoft/popgen_mod.ind",
           col_names = FALSE)
 ```
 

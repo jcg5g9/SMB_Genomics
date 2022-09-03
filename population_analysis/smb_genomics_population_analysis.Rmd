@@ -822,3 +822,27 @@ dev.off()
 We used Plot 3 as the basis for Figure 2b in our in our published paper. We imported these maps into PowerPoint to add cleaner lables and any insets for easier interpretation.
 
 ### ----------------------- END OF PHASE 3: PLOTTING ----------------------- ###
+
+## PHASE 4: POPULATION METADATA GENERATION
+In this phase of the analysis, we are using our inferences of populations from FINERADSTRUCTURE on the pure and admixed datasets to assign each individual to its respective population. We generate a new metadata file with sample_id and population to use in downstream analyses
+
+### STEP 1: Generate new metadata file in Excel.
+In this step, we use Microsoft Excel to create a new metadata set for populations, with column one being sample_id and column 2 being population as inferred in FINERADSTRUCTURE.
+
+#### 1a: Generate new metadata file, input data, and save as `data/metadata/metadata_populations.xlsx`
+
+##### 1a.1. Read in metadata, manipulate, and safe as a .Rda file for use in subsequent analyses; run the Rmd chunk below:
+
+##### Read in and manipulate data:
+```{r}
+metadata_populations <- read_excel("data/metadata/metadata_populations.xlsx")
+
+metadata_populations <- as.data.frame(metadata_populations)
+
+metadata_populations <- metadata_populations  %>% 
+  mutate(sample_id = factor(sample_id), 
+         population = factor(sample_id))
+
+# Save the new .map file
+save(metadata_populations, file = "data/metadata/metadata_population.Rda")
+```
