@@ -111,7 +111,7 @@ Running this command will generate an executable for compute_moment_stats
 Running this command will generate an executable for compute_most_additive trees.
 
 ### STEP 4: Generate input files for MIXMAPPER.
-In this step, we are using the fully filtered, non-thinned VCF dataset `popgen.vcf` generated in Analysis 2 (SNP Filtering...) and generating input files for MIXMAPPER. 
+In this step, we are using the fully filtered, non-thinned VCF dataset excluding the spotted bass hybrid `admixture_phylogenomics_analysis/data/processed_vcf/popgen_spb_hybrid.vcf` generated in Analysis 2 (SNP Filtering...) and generating input files for MIXMAPPER. 
 
 #### 4a: Convert the fully filtered, non-thinned VCF dataset into PED (pedigree) format.
 In this step, we are using the software program PLINK to convert the full dataset to .ped format, which will then be used in subsequent steps to convert to eigenstrat format.
@@ -141,13 +141,13 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
 ```
 
-Make sure to copy the `popgen.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
+Make sure to copy the `popgen_spb_hybrid.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
 
 ##### 4a.2. Copy and paste the code below in the shell file generated in Step 4a.1.1 above, which will generate a .ped file for the full dataset:
 
 ##### Command line code for geenrating .ped. UNCOMMENT this code in the shell script:
 ```{bash}
-#plink --vcf ../../data/processed_vcf/popgen.vcf --recode --recode-INFO-all --out ../../data/processed_ped/popgen
+#plink --vcf ../../data/processed_vcf/popgen_spb_hybrid.vcf --recode --recode-INFO-all --out ../../data/processed_ped/popgen
 ```
 
 Run: `sbatch plink.sh`
@@ -165,7 +165,7 @@ In this step, we are using the software program EIGENSOFT to convert the .ped fo
 Specifically, we are using the `convertf` command to convert .ped to .eigenstrat
 
 ##### 4b.1. Modify the `popgen.map` file generated in Step 4a above.
-In this step, we need to modify the `popgen.map` file generated in Step 4a above, because the software program EIGENSOFT expects to see chromsome and SNP designations in a particular format. The software was built to analyze data sequenced from humans and aligned to the human genome. Thus, the "chromosome" column (column 1) of the .map file will only recognize autosomal chrosomosome designations (1-22). Column 2 of the .map file contains SNP identifier information, and this can be in any format.
+In this step, we need to modify the `popgen.map` file generated in Step 4a above, because the software program EIGENSOFT expects to see chromosome and SNP designations in a particular format. The software was built to analyze data sequenced from humans and aligned to the human genome. Thus, the "chromosome" column (column 1) of the .map file will only recognize autosomal chrosomosome designations (1-22). Column 2 of the .map file contains SNP identifier information, and this can be in any format.
 
 Additionally, EIGENSOFT expects input in columns 3 and 4 (genetic and physical distance, respectively) that is not zero. These values are based on physical distances between each SNP along chromosomes and genetic distances in cM, information that we don't have for these data. The program MIXMAPPER requires this information to make inferences about the timinig of admixture, and as such it is required as input. However, this information is not needed for MIXMAPPER in principle to make inferences about significantly admixed populations vs. pure or incompletely sorted populations, which is our aim in this analysis. So, we generated arbitrary, equal numerical values for these data (d) based arbitrarily on values of x (the numerical value of the RAD kmer) and y (nucleotide position on RAD tags, which is given in our .vcf file), using the custom formula:
 
@@ -227,12 +227,27 @@ write_tsv(map_file,
 
 The modified popgen.map file is saved as `data/processed_ped/popgen_mod.map` to distinguish it from the original file name. 
 
-##### 4b.1.2. Generate copies of each of the other necessary input file type (.ped) to `popgen_mod.ped` to correspond.
+##### 4b.2. Modify the `popgen.ped` file generated in Step 4a above.
+In this step, we need to modify the `popgen.ped` file generated in Step 4a above, because the software program EIGENSOFT expects
 
-##### 4b.2. Generate par.PED.EIGENSTRAT file as input for EIGENSOFT
+###### 4b.2.1. Navigate to the directory where the `popgen.ped` file is located
+
+###### 4b.2.2. Edit column 2 (Individual Name) so that it has the sample name as given in column 1; copy and paste the following code on the command line and run:
+```{bash}
+#awk '{OFS=" ";if($2=="1") {$2=$1;};print;}' popgen.ped > popgen_mod.ped
+```
+
+###### 4b.2.3. Edit column 6 (Phenotype) so that each entry is "1"; copy and paste the following on the command line and run:
+```{bash}
+#awk '{OFS=" ";if($6=="-9") {$6="1";};print;}' popgen.ped > popgen_mod.ped
+```
+
+This step must be taken even though we technically do not have a phenotype that we are interested in. If column 6 has a -9, it will be ignored. Since this is every sample, the whole file will be ignored.
+
+##### 4b.3. Generate par.PED.EIGENSTRAT file as input for EIGENSOFT
 In this step, we are creating a specialized file type ('par.PED.EIGENSTRAT'), which is used as input for the -p flag with the convertf command in EIGENSOFT. This file reads .ped, .map, and .ind files as input and generates .eigenstratgeno, .snp, and .ind files as output
 
-###### 4b.2.1. Navigate into the `data/batch_cmd_lists/` folder and copy and paste the code below in a new nano .txt file:
+###### 4b.3.1. Navigate into the `data/batch_cmd_lists/` folder and copy and paste the code below in a new nano .txt file:
 
 ##### Generate par.PED.EIGENSTRAT input file: `code/batch_cmd_lists/par.PED.EIGENSTRAT`. UNCOMMENT each line of this file.
 ```{bash}
@@ -246,10 +261,10 @@ In this step, we are creating a specialized file type ('par.PED.EIGENSTRAT'), wh
 #familynames:     NO
 ```
 
-##### 4b.3. Generate a general bash shell script header for all EIGENSOFT commands
+##### 4b.4. Generate a general bash shell script header for all EIGENSOFT commands
 In this step, we are generating a universal bash shell script to run all file type conversions in EIGENSOFT. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all EIGENSOFT code is called "eigensoft.sh".
 
-###### 4b.3.1: Copy and paste the code below in a new shell script file:
+###### 4b.4.1: Copy and paste the code below in a new shell script file:
 
 ##### Generate EIGENSOFT bash shell script: `code/shell_scripts/eigensoft.sh`
 ```{bash}
@@ -271,9 +286,9 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load eigensoft/eigensoft-7.2.1
 ```
 
-##### 4b.4. Convert PED files to EIGENSTRAT format.
+##### 4b.5. Convert PED files to EIGENSTRAT format.
 
-###### 4b.4.1. Copy and paste the code below in the shell file generated in Step 4b.1.1 above, which will generate .eigenstratgeno, .snp, and .ind files for the full dataset:
+###### 4b.5.1. Copy and paste the code below in the shell file generated in Step 4b.1.1 above, which will generate .eigenstratgeno, .snp, and .ind files for the full dataset:
 
 ##### Command line code for generating .eigenstrat. UNCOMMENT this code in the shell script:
 ```{bash}
@@ -288,3 +303,59 @@ This code generates three files here: `data/processed_eigensfot/`; these files i
 1) popgen.ind
 2) popgen.snp
 3) popgen.eigenstratgeno
+
+```{r}
+# Read in the map file and designate a temporary header column
+ind_file <- read_tsv("data/processed_eigensoft/popgen.ind",
+                     col_names = c("sample_id"))
+
+ind_file <- ind_file %>%
+  separate(sample_id, into = c("sample_id","u","pop"), sep = " ", remove = T)
+
+
+read_tsv()
+# Omit the empty second column
+map_file <- map_file[,-c(2)]
+
+# Rename "chrom" column as "snp"
+colnames(map_file) <- c("snp","gen_dist","pos")
+
+# Generate a column of "1" as a placeholder for chromosome designation, to add as the first column to the dataframe
+chrom <- c(rep("1",times = 50828))
+
+# combine "chrom" column and the rest of the data
+map_file <- cbind(chrom, map_file)
+
+# split each SNP name into component pieces to isolate the numerical value of the SNP
+map_file_str_split <- map_file %>%
+  separate(col = snp, into = c("rad","kmer","num"), sep = "_", remove = F)
+
+# Omit leading zeros from the SNP identifier number ("num")
+map_file_str_split$num <- sub("^0+", "", map_file_str_split$num) 
+
+# Make sure the "num" (number of the RAD kmer designation) is a numeric value
+map_file_str_split <- map_file_str_split %>%
+  mutate(num = as.numeric(num))
+
+# Run the equation to generate column genetic distance (gen_dist) 
+map_file_str_split <- map_file_str_split %>%
+  mutate(gen_dist = ((100*num) - pos)/100)
+
+# Round the genetic distance value to the nearest integer
+map_file_str_split <- map_file_str_split %>%
+  mutate(gen_dist = round(gen_dist, digits = 0))
+
+# Create an additional column for physical distance (phys_dist) and set equal to gen_dist
+map_file_str_split <- map_file_str_split %>%
+  mutate(phys_dist = gen_dist)
+
+map_file <- map_file_str_split %>%
+  select(chrom, snp, gen_dist, phys_dist)
+
+# Save the new .map file
+write_tsv(map_file, 
+          file = "data/processed_ped/popgen_mod.map", 
+          col_names = FALSE)
+```
+
+
