@@ -15,6 +15,7 @@ In this analysis, we used the finerad.vcf data generated in Analysis 2 (SNP Filt
 ### Phase 1: Data preparation 
 ### Phase 2: Coancestry analysis
 ### Phase 3: Plotting
+### Phase 4: Population metadata generation
 
 ## Libraries needed for analysis
 ```{r libraries, echo = FALSE}
@@ -841,8 +842,10 @@ metadata_populations <- as.data.frame(metadata_populations)
 
 metadata_populations <- metadata_populations  %>% 
   mutate(sample_id = factor(sample_id), 
-         population = factor(sample_id))
+         population = factor(population))
 
 # Save the new .map file
 save(metadata_populations, file = "data/metadata/metadata_population.Rda")
 ```
+
+### ----------------------- END OF PHASE 4: POPULATION METADATA GENERATION ----------------------- ###
