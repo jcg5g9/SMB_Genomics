@@ -53,4 +53,9 @@ In this analysis, we used the finerad.vcf data generated in Analysis 2 (SNP Filt
 ### Analysis 5: Admixture Mapping
 In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i>) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
 
-#### Run the code: `population_analysis/smb_genomics_admixture_mapping_analysis.Rmd`
+#### Run the code: `admixture_mapping_analysis/smb_genomics_admixture_mapping_analysis.Rmd`
+
+## Analysis 6: Directional selection analysis
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to scan for signatures of directional selection on SNP loci with outlier Fst (high outlier Fst: directional selection; low Fst: balancing selection). We used two software programs with different underlying statistical frameworks to detect outliers and then used any outliers commonly detected in both analyses as canditates for being under strong selection. Specifically, we used the software program BAYESCAN (based in Bayesian analysis) and the R package PCAdapt principal component analysis (based in multivariate principal component analysis). We then employed DAPC in R to map patterns of population differentiation at any shared outlier and neutral loci to detect populations that may be under differential selection pressures and to detect signatures of genetic drift,
+
+#### Run the code: `outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
