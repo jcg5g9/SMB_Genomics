@@ -425,12 +425,13 @@ In this step, we are using the general bash script for PGDSPIDER in addition to 
 
 ##### Command line code for generating BAYESCAN file for all samples. UNCOMMENT this code in the shell script:
 ```{bash}
-# convertf -p ../batch_cmd_lists/par.PED.EIGENSTRAT
+## conversion 01: all black bass samples
+#java -Xmx8g -Xms8g -jar ${PGDSPIDER_ROOT}/PGDSpider2-cli.jar -inputfile ../../data/processed_vcf/01_popgen_spb_hybrid.vcf -inputformat VCF -outputfile ../../data/processed_bayescan/01_all -outputformat GESTE_BAYE_SCAN -spid ../spid_files/01_all.spid
 ```
 
 Run: `sbatch pgdspider.sh`
 
-This code generates three files here: `data/processed_eigensfot/`; these files include:
+This code generates three files here: `data/processed_bayescan/`; these files include:
 
 <b>Files</b>: <br><br>
 1) popgen.ind
