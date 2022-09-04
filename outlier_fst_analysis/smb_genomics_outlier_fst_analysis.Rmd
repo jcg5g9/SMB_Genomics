@@ -393,11 +393,10 @@ write_tsv(metadata_populations_smallmouth,
           col_names = FALSE)
 ```
 
-
-#### 1a: Generate a general bash shell script header for all PGDSPIDER conversion commands
+#### 1c: Generate a general bash shell script header for all PGDSPIDER conversion commands
 In this step, we are generating a universal bash shell script to run all file type conversions in PGDSPIDER. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PGDSPIDER code is called "pgdspider.sh".
 
-##### 1a.1: Copy and paste the code below in a new shell script file:
+##### 1c.1: Copy and paste the code below in a new shell script file:
 
 ##### Generate PGDSPIDER bash shell script: `code/shell_scripts/pgdspider.sh`
 ```{bash}
@@ -418,3 +417,23 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load rss/rss-2020
 # module load pgdspider/pgdspider-2.1.1.5
 ```
+
+#### 1d: Convert VCF files to BAYESCAN format.
+In this step, we are using the general bash script for PGDSPIDER in addition to the four unique spid files for each analysis level to generate input files for BAYESCAN.
+
+##### 1d.1. Copy and paste the code below in the shell file generated in Step 1c.1 above, which will generate a BAYESCAN file for the black bass species level dataset:
+
+##### Command line code for generating BAYESCAN file for all samples. UNCOMMENT this code in the shell script:
+```{bash}
+# convertf -p ../batch_cmd_lists/par.PED.EIGENSTRAT
+```
+
+Run: `sbatch pgdspider.sh`
+
+This code generates three files here: `data/processed_eigensfot/`; these files include:
+
+<b>Files</b>: <br><br>
+1) popgen.ind
+2) popgen.snp
+3) popgen.eigenstratgeno
+
