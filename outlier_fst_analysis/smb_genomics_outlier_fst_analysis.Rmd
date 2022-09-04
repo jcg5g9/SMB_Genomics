@@ -267,37 +267,131 @@ Here, we are filling in the parameters necessary to generate a spid file to conv
 #### 1b: Generate population designation files (read by SPID files)
 In this step, we are generating text files listing all samples in at each genome scan level and their corresponding population designations as inferred in Analysis 4 (population inference). Our inferred populations were named according to their general geographic locations (see Phase 4 of population_analysis, "MIDARK", "ELK", "BAYOU", etc.), but PGDSPIDER expects input populations in a specific format (i.e., "pop_1", "pop_2", etc.). We generate population files according to this naming convention
 
-##### 1b.1. Read in sample metadata and generate lists of populations for all genome scan levesl.
+##### 1b.1. Read in sample metadata and generate lists of populations for the black bass species level.
 
-###### 1b.1.1 Generate population file for all black bass samples:
+###### 1b.1.1 Generate population file for all black bass samples (Spotted Bass, Smallmouth Bass, and Neosho Bass):
 
 ##### Generate population file: `data/pop_files/01_all_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
-load("../population_analysis/data/metadata/metadata_populations.Rda")
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+metadata_populations_spb <- metadata_populations_spb %>%
+  mutate(population = as.character(population))
 
 # Rename population designations in SPID format ("pop_1", "pop_2", etc.)
-metadata_populations$population[metadata_populations$population == "MIDARK"] <- "pop_1"
-metadata_populations$population[metadata_populations$population == "MISS"] <- "pop_2"
-metadata_populations$population[metadata_populations$population == "SKIA"] <- "pop_3"
-metadata_populations$population[metadata_populations$population == "LMULB"] <- "pop_4"
-metadata_populations$population[metadata_populations$population == "WHITE"] <- "pop_5"
-metadata_populations$population[metadata_populations$population == "ELK"] <- "pop_6"
-metadata_populations$population[metadata_populations$population == "ILLI"] <- "pop_7"
-metadata_populations$population[metadata_populations$population == "UPPARK"] <- "pop_8"
-metadata_populations$population[metadata_populations$population == "BAYOU"] <- "pop_9"
-metadata_populations$population[metadata_populations$population == "SPB"] <- "pop_10"
+metadata_populations_spb$population[metadata_populations_spb$population == "MIDARK"] <- "pop_1"
+metadata_populations_spb$population[metadata_populations_spb$population == "MISS"] <- "pop_2"
+metadata_populations_spb$population[metadata_populations_spb$population == "SKIA"] <- "pop_3"
+metadata_populations_spb$population[metadata_populations_spb$population == "LMULB"] <- "pop_4"
+metadata_populations_spb$population[metadata_populations_spb$population == "WHITE"] <- "pop_5"
+metadata_populations_spb$population[metadata_populations_spb$population == "ELK"] <- "pop_6"
+metadata_populations_spb$population[metadata_populations_spb$population == "ILLI"] <- "pop_7"
+metadata_populations_spb$population[metadata_populations_spb$population == "UPPARK"] <- "pop_8"
+metadata_populations_spb$population[metadata_populations_spb$population == "BAYOU"] <- "pop_9"
+metadata_populations_spb$population[metadata_populations_spb$population == "SPB"] <- "pop_10"
 
-
-
-
-
-
-
+# Generate text file
+write_tsv(metadata_populations_spb, 
+          file = "data/pop_files/01_all_pops.txt", 
+          col_names = FALSE)
 ```
 
+##### 1b.2. Read in sample metadata and generate lists of populations for the species complex level.
 
+###### 1b.2.1 Generate population file for species complex samples (Smallmouth Bass and Neosho Bass):
 
+##### Generate population file: `data/pop_files/02_species_complex_pops.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+metadata_populations_complex <- metadata_populations_spb %>%
+  filter(population != "SPB")
+
+metadata_populations_complex <- metadata_populations_complex %>%
+  mutate(population = as.character(population))
+
+# Rename population designations in SPID format ("pop_1", "pop_2", etc.)
+metadata_populations_complex$population[metadata_populations_complex$population == "MIDARK"] <- "pop_1"
+metadata_populations_complex$population[metadata_populations_complex$population == "MISS"] <- "pop_2"
+metadata_populations_complex$population[metadata_populations_complex$population == "SKIA"] <- "pop_3"
+metadata_populations_complex$population[metadata_populations_complex$population == "LMULB"] <- "pop_4"
+metadata_populations_complex$population[metadata_populations_complex$population == "WHITE"] <- "pop_5"
+metadata_populations_complex$population[metadata_populations_complex$population == "ELK"] <- "pop_6"
+metadata_populations_complex$population[metadata_populations_complex$population == "ILLI"] <- "pop_7"
+metadata_populations_complex$population[metadata_populations_complex$population == "UPPARK"] <- "pop_8"
+metadata_populations_complex$population[metadata_populations_complex$population == "BAYOU"] <- "pop_9"
+
+# Generate text file
+write_tsv(metadata_populations_complex, 
+          file = "data/pop_files/02_species_complex_pops.txt", 
+          col_names = FALSE)
+```
+
+##### 1b.3. Read in sample metadata and generate lists of populations for the Neosho Bass level.
+
+###### 1b.3.1 Generate population file for Neosho Bass samples (Neosho Bass only):
+
+##### Generate population file: `data/pop_files/03_neosho_pops.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+metadata_populations_neosho <- metadata_populations_spb %>%
+  filter(population != "SPB") %>%
+  filter(population != "MISS") %>%
+  filter(population != "SKIA") %>%
+  filter(population != "WHITE")
+
+metadata_populations_neosho <- metadata_populations_neosho %>%
+  mutate(population = as.character(population))
+
+# Rename population designations in SPID format ("pop_1", "pop_2", etc.)
+metadata_populations_neosho$population[metadata_populations_neosho$population == "MIDARK"] <- "pop_1"
+metadata_populations_neosho$population[metadata_populations_neosho$population == "LMULB"] <- "pop_2"
+metadata_populations_neosho$population[metadata_populations_neosho$population == "ELK"] <- "pop_3"
+metadata_populations_neosho$population[metadata_populations_neosho$population == "ILLI"] <- "pop_4"
+metadata_populations_neosho$population[metadata_populations_neosho$population == "UPPARK"] <- "pop_5"
+metadata_populations_neosho$population[metadata_populations_neosho$population == "BAYOU"] <- "pop_6"
+
+# Generate text file
+write_tsv(metadata_populations_neosho, 
+          file = "data/pop_files/03_neosho_pops.txt", 
+          col_names = FALSE)
+```
+
+##### 1b.4. Read in sample metadata and generate lists of populations for the Smallmouth Bass level.
+
+###### 1b.4.1 Generate population file for Smallmouth Bass samples (Smallmouth Bass only):
+
+##### Generate population file: `data/pop_files/04_neosho_pops.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+metadata_populations_smallmouth <- metadata_populations_spb %>%
+  filter(population != "SPB") %>%
+  filter(population != "MIDARK") %>%
+  filter(population != "ELK") %>%
+  filter(population != "ILLI") %>%
+  filter(population != "LMULB") %>%
+  filter(population != "BAYOU") %>%
+  filter(population != "UPPARK")
+
+metadata_populations_smallmouth <- metadata_populations_smallmouth %>%
+  mutate(population = as.character(population))
+
+# Rename population designations in SPID format ("pop_1", "pop_2", etc.)
+metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "WHITE"] <- "pop_1"
+metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "MISS"] <- "pop_2"
+metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "SKIA"] <- "pop_3"
+
+# Generate text file
+write_tsv(metadata_populations_smallmouth, 
+          file = "data/pop_files/04_smallmouth_pops.txt", 
+          col_names = FALSE)
+```
 
 
 #### 1a: Generate a general bash shell script header for all PGDSPIDER conversion commands
