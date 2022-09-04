@@ -95,8 +95,8 @@ In this step, we are generating a universal bash shell script to run all file ty
 #! /bin/bash
 
 #SBATCH -p Lewis  # use the Lewis partition
-#SBATCH -J plink_conversion # give the job a custom name
-#SBATCH -o get_plink_bed-%j.out  # give the job output a custom name
+#SBATCH -J plink # give the job a custom name
+#SBATCH -o plink.out  # give the job output a custom name
 #SBATCH -t 0-01:00  # two hour time limit
 
 #SBATCH -N 1  # number of nodes
@@ -104,10 +104,12 @@ In this step, we are generating a universal bash shell script to run all file ty
 
 ## Commands here run only on the first core
 
+# (UNCOMMENT THIS LINE TO RUN THE CODE)
+
 ## Modules to load
 
 # module load rss/rss-2020
-# module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
+# module load plink/plink-high-contig-1.90p 
 ```
 
 ### STEP 2: Screen for hybridization population genomic admixture analysis on the FULL dataset
