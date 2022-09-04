@@ -13,7 +13,9 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 
 ## Phases of analysis:
 ### Phase 1: Data preparation
-### Phase 2: 
+### Phase 2: Outlier Fst analysis with BAYESCAN
+### Phase 3: Outlier Fst analysis with PCADAPT
+### Phase 4: Outlier mapping
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
@@ -29,8 +31,8 @@ library(pcadapt)
 library(viridis)
 ```
 
-### PHASE 1: DATA PREPARATION
-In this phase, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the software programs BAYESCAN and the R package PCAdapt. For BAYESCAN, we are using the intermediate conversion software PGDSPIDER to generate input files, and for PCAdapt, we are again using the program PLINK.
+## PHASE 1: DATA PREPARATION
+In this phase of the analysis, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the software programs BAYESCAN and the R package PCAdapt. For BAYESCAN, we are using the intermediate conversion software PGDSPIDER to generate input files, and for PCAdapt, we are again using the program PLINK.
 
 For the outlier Fst analysis, we are conducing scans for outlier loci hiearchically at the black bass species level (between Spotted Bass, Smallmouth Bass, and Neosho Bass), among species within the Smallmouth Bass species complex (Smallmouth Bass and Neosho Bass), and among populations within black bass species. The goal with this structure is to reduce false positive detection due to population structure and to detect potentially selected SNPs at each hierarchical level.
 
@@ -61,13 +63,156 @@ Chang, C. C., Chow, C. C., Tellier, L. C. A. M., Vattikuti, S., Purcell, S. M., 
 ### STEP 1: Prepare input data for BAYESCAN.
 In this step, we are using the conversion software PGDSPIDER to prepare all input data for the software program BAYESCAN.
 
-#### 1a: Generate PGDSPIDER accompanying SPID files
+#### 1a: Filter fully filtered, thinned VCF file (excluding Spotted Bass hybrid) for each analysis level 
+In this step, we are generating filtered VCF data to to run each level of the outlier Fst analysis (see above for the four hierarchical levels of analysis)  
+
+##### 1a.1. Generate a general bash shell script header for all VCF filtering steps commands
+In this step, we are generating a universal bash shell script to run all filtering commands in VCFTOOLS (See Phase 1 in Analysis 2 for programs needed and citation information) Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all VCFTOOLS code is called "vcftools.sh".
+
+###### 1a.1.1 Copy and paste the code below in a new shell script file:
+
+##### Generate VCFTOOLS bash shell script: `code/shell_scripts/vcftools.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J filter_admixed  # give the job a custom name
+#SBATCH -o filtering_missing.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+## UNCOMMENT LINES STARTING HERE 
+
+## Load VCFtools module
+# module load rss/rss-2020
+# module load vcftools/vcftools-v0.1.14
+```
+
+##### 1a.2. Generate lists of individuals to use for all filtering steps.
+In this step, we are generating lists of individuals to filter from the VCF dataset. For the first level of analysis (all black bass samples, we are not excluding any samples). For the second level of analysis, we are excluding Spotted Bass. For the third level of analysis, we are excluding all Smallmouth Bass to retain only Neosho Bass. For the fourth analysis, we are excluding all Neosho Bass to retain only Smallmouth Bass.
+
+###### 1a.2.1. Generate a list of Spotted Bass to omit from analyses 2, 3, and 4.
+
+##### Generate list file: `data/filtering_data/spotted_bass.txt`
+```{r}
+# Load in full metadata
+load("../raw_data/metadata.Rda")
+
+# Filter all individuals but Spotted Bass
+spotted_bass <- metadata %>%
+  filter(species == "Spotted_Bass")
+
+# Convert to dataframe
+spotted_bass <- data.frame(spotted_bass) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(spotted_bass, 
+          file = "data/filtering_data/spotted_bass.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+spotted_bass <- as.vector(spotted_bass$sample_id)
+
+# Save the list of bad samples as a .Rda file without column names
+save(spotted_bass, file = "data/filtering_data/spotted_bass.Rda")
+```
+
+###### 1a.2.2. Generate a list of Smallmouth Bass to omit from analysis 3.
+
+##### Generate list file: `data/filtering_data/smallmouth_bass.txt`
+```{r}
+# Filter all individuals but Spotted Bass
+smallmouth_bass <- metadata %>%
+  filter(species == "Smallmouth_Bass")
+
+# Convert to dataframe
+smallmouth_bass <- data.frame(smallmouth_bass) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(smallmouth_bass, 
+          file = "data/filtering_data/smallmouth_bass.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+smallmouth_bass <- as.vector(smallmouth_bass$sample_id)
+
+# Save the list of bad samples as a .Rda file without column names
+save(smallmouth_bass, file = "data/filtering_data/smallmouth_bass.Rda")
+```
+
+###### 1a.2.3. Generate a list of Neosho Bass to omit from analysis 4.
+
+##### Generate list file: `data/filtering_data/neosho_bass.txt`
+```{r}
+# Filter all individuals but Spotted Bass
+neosho_bass <- metadata %>%
+  filter(species == "Neosho_Bass")
+
+# Convert to dataframe
+neosho_bass <- data.frame(neosho_bass) %>%
+  select(sample_id)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(neosho_bass, 
+          file = "data/filtering_data/neosho_bass.txt", 
+          col_names = FALSE)
+
+# Turn column into vector without column name to save as un-headered list for downstream filtering
+neosho_bass <- as.vector(neosho_bass$sample_id)
+
+# Save the list of bad samples as a .Rda file without column names
+save(neosho_bass, file = "data/filtering_data/neosho_bass.Rda")
+```
+
+#### 1a.3. Filter VCF files.
+
+##### 1a.3.1. Filter out Spotted Bass to generate VCF for species complex samples (Smallmouth Bass and Neosho Bass); copy and paste the code below in the shell file generated in Step 1a.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 01: omit Spotted Bass individuals to get samples at the species complex level (Smallmouth Bass and Neosho Bass only)
+#vcftools --vcf ../../data/processed_vcf/01_popgen_spb_hybrid.vcf --remove ../../data/filtering_data/spotted_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_species_complex
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/02_popgen_species_complex.vcf`.
+
+##### 1a.3.2. Filter out Smallmouth Bass to generate VCF for Neosho Bass samples (Neosho Bass only); copy and paste the code below in the shell file generated in Step 1a.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 02: omit Smallmouth Bass samples to get only Neosho samples for the Neosho Bass population level
+#vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex.vcf --remove ../../data/filtering_data/smallmouth_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/03_popgen_neosho
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/03_popgen_neosho.vcf`.
+
+##### 1a.3.3. Filter out Smallmouth Bass to generate VCF for Smallmouth Bass samples (Smallmouth Bass only); copy and paste the code below in the shell file generated in Step 1a.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 03: omit Neosho Bass samples to get only Smallmouth Bass samples for the Smallmouth Bass population level
+#vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex.vcf --remove ../../data/filtering_data/neosho_bass.txt --recode --recode-INFO-all --out ../../data/processed_vcf/04_popgen_smallmouth
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/03_popgen_neosho.vcf`.
+
+#### 1b: Generate PGDSPIDER accompanying SPID files
 In this step, we are generating text scripts for an accompanying file needed for PGDSPIDER conversions called a "spid" file. This file includes specific parameters that must to be completed for each file conversion in order to generate the correct output.
 
-##### 1a.1. Generate a general text script for PGDSPIDER SPID file
+##### 1b.1. Generate a general text script for PGDSPIDER SPID file
 Here, we only provide the base script without any parameters filled in. In subsequent steps, we include the completed version for each file conversion with specific parameters. The base script is called "spid.spid".
 
-###### 1a.1.1. Copy and paste the code below in a new shell script file:
+###### 1b.1.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate base SPID text script: `code/spid_files/spid.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
 ```{bash}
@@ -104,10 +249,10 @@ Here, we only provide the base script without any parameters filled in. In subse
 #GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=
 ```
 
-##### 1a.2. Generate a PGDSPIDER SPID file for the black bass level genome scan
+##### 1b.2. Generate a PGDSPIDER SPID file for the black bass level genome scan
 Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the Black Bass level genome scan, which includes all Spotted Bass, Smallmouth Bass, and Neosho Bass.
 
-###### 1a.2.1. Copy and paste the code below in a new shell script file:
+###### 1b.2.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate base SPID text script: `code/spid_files/01_all.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
 ```{bash}
@@ -144,10 +289,10 @@ Here, we are filling in the parameters necessary to generate a spid file to conv
 #GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
 ```
 
-##### 1a.3. Generate a PGDSPIDER SPID file for the Smallmouth Bass species complex genome scan
+##### 1b.3. Generate a PGDSPIDER SPID file for the Smallmouth Bass species complex genome scan
 Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the species complex level genome scan, which includes all Smallmouth Bass and Neosho Bass.
 
-###### 1a.3.1. Copy and paste the code below in a new shell script file:
+###### 1b.3.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate base SPID text script: `code/spid_files/02_species_complex.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
 ```{bash}
@@ -184,10 +329,10 @@ Here, we are filling in the parameters necessary to generate a spid file to conv
 #GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
 ```
 
-##### 1a.4. Generate a PGDSPIDER SPID file for the Neosho Bass genome scan
+##### 1b.4. Generate a PGDSPIDER SPID file for the Neosho Bass genome scan
 Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the Neosho Bass population level genome scan, which includes all Neosho Bass only
 
-###### 1a.4.1. Copy and paste the code below in a new shell script file:
+###### 1b.4.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate base SPID text script: `code/spid_files/03_neosho.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
 ```{bash}
@@ -224,10 +369,10 @@ Here, we are filling in the parameters necessary to generate a spid file to conv
 #GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
 ```
 
-##### 1a.5. Generate a PGDSPIDER SPID file for the Neosho Bass genome scan
+##### 1b.5. Generate a PGDSPIDER SPID file for the Neosho Bass genome scan
 Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the Smallmouth Bass population level genome scan, which includes all Smallmouth Bass only
 
-###### 1a.5.1. Copy and paste the code below in a new shell script file:
+###### 1b.5.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate base SPID text script: `code/spid_files/04_smallmouth.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
 ```{bash}
@@ -264,12 +409,12 @@ Here, we are filling in the parameters necessary to generate a spid file to conv
 #GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
 ```
 
-#### 1b: Generate population designation files (read by SPID files)
+#### 1c: Generate population designation files (read by SPID files)
 In this step, we are generating text files listing all samples in at each genome scan level and their corresponding population designations as inferred in Analysis 4 (population inference). Our inferred populations were named according to their general geographic locations (see Phase 4 of population_analysis, "MIDARK", "ELK", "BAYOU", etc.), but PGDSPIDER expects input populations in a specific format (i.e., "pop_1", "pop_2", etc.). We generate population files according to this naming convention
 
-##### 1b.1. Read in sample metadata and generate lists of populations for the black bass species level.
+##### 1c.1. Read in sample metadata and generate lists of populations for the black bass species level.
 
-###### 1b.1.1 Generate population file for all black bass samples (Spotted Bass, Smallmouth Bass, and Neosho Bass):
+###### 1c.1.1 Generate population file for all black bass samples (Spotted Bass, Smallmouth Bass, and Neosho Bass):
 
 ##### Generate population file: `data/pop_files/01_all_pops.txt`
 ```{r}
@@ -292,14 +437,15 @@ metadata_populations_spb$population[metadata_populations_spb$population == "BAYO
 metadata_populations_spb$population[metadata_populations_spb$population == "SPB"] <- "pop_10"
 
 # Generate text file
-write_tsv(metadata_populations_spb, 
+write_delim(metadata_populations_spb, 
+          delim = " ",
           file = "data/pop_files/01_all_pops.txt", 
           col_names = FALSE)
 ```
 
-##### 1b.2. Read in sample metadata and generate lists of populations for the species complex level.
+##### 1c.2. Read in sample metadata and generate lists of populations for the species complex level.
 
-###### 1b.2.1 Generate population file for species complex samples (Smallmouth Bass and Neosho Bass):
+###### 1c.2.1 Generate population file for species complex samples (Smallmouth Bass and Neosho Bass):
 
 ##### Generate population file: `data/pop_files/02_species_complex_pops.txt`
 ```{r}
@@ -324,14 +470,15 @@ metadata_populations_complex$population[metadata_populations_complex$population 
 metadata_populations_complex$population[metadata_populations_complex$population == "BAYOU"] <- "pop_9"
 
 # Generate text file
-write_tsv(metadata_populations_complex, 
+write_delim(metadata_populations_complex, 
+          delim = " ",
           file = "data/pop_files/02_species_complex_pops.txt", 
           col_names = FALSE)
 ```
 
-##### 1b.3. Read in sample metadata and generate lists of populations for the Neosho Bass level.
+##### 1c.3. Read in sample metadata and generate lists of populations for the Neosho Bass level.
 
-###### 1b.3.1 Generate population file for Neosho Bass samples (Neosho Bass only):
+###### 1c.3.1 Generate population file for Neosho Bass samples (Neosho Bass only):
 
 ##### Generate population file: `data/pop_files/03_neosho_pops.txt`
 ```{r}
@@ -356,14 +503,15 @@ metadata_populations_neosho$population[metadata_populations_neosho$population ==
 metadata_populations_neosho$population[metadata_populations_neosho$population == "BAYOU"] <- "pop_6"
 
 # Generate text file
-write_tsv(metadata_populations_neosho, 
+write_delim(metadata_populations_neosho, 
+          delim = " ",
           file = "data/pop_files/03_neosho_pops.txt", 
           col_names = FALSE)
 ```
 
-##### 1b.4. Read in sample metadata and generate lists of populations for the Smallmouth Bass level.
+##### 1c.4. Read in sample metadata and generate lists of populations for the Smallmouth Bass level.
 
-###### 1b.4.1 Generate population file for Smallmouth Bass samples (Smallmouth Bass only):
+###### 1c.4.1 Generate population file for Smallmouth Bass samples (Smallmouth Bass only):
 
 ##### Generate population file: `data/pop_files/04_neosho_pops.txt`
 ```{r}
@@ -388,15 +536,16 @@ metadata_populations_smallmouth$population[metadata_populations_smallmouth$popul
 metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "SKIA"] <- "pop_3"
 
 # Generate text file
-write_tsv(metadata_populations_smallmouth, 
+write_delim(metadata_populations_smallmouth, 
+          delim = " ",
           file = "data/pop_files/04_smallmouth_pops.txt", 
           col_names = FALSE)
 ```
 
-#### 1c: Generate a general bash shell script header for all PGDSPIDER conversion commands
+#### 1d: Generate a general bash shell script header for all PGDSPIDER conversion commands
 In this step, we are generating a universal bash shell script to run all file type conversions in PGDSPIDER. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PGDSPIDER code is called "pgdspider.sh".
 
-##### 1c.1: Copy and paste the code below in a new shell script file:
+##### 1d.1: Copy and paste the code below in a new shell script file:
 
 ##### Generate PGDSPIDER bash shell script: `code/shell_scripts/pgdspider.sh`
 ```{bash}
@@ -418,10 +567,10 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load pgdspider/pgdspider-2.1.1.5
 ```
 
-#### 1d: Convert VCF files to BAYESCAN format.
+#### 1e: Convert VCF files to BAYESCAN format.
 In this step, we are using the general bash script for PGDSPIDER in addition to the four unique spid files for each analysis level to generate input files for BAYESCAN.
 
-##### 1d.1. Copy and paste the code below in the shell file generated in Step 1c.1 above, which will generate a BAYESCAN file for the black bass species level dataset:
+##### 1e.1. Convert VCF to BAYESCAN format for all black bass samples; Copy and paste the code below in the shell file generated in Step 1d.1 above, which will generate a BAYESCAN file:
 
 ##### Command line code for generating BAYESCAN file for all samples. UNCOMMENT this code in the shell script:
 ```{bash}
@@ -431,10 +580,80 @@ In this step, we are using the general bash script for PGDSPIDER in addition to 
 
 Run: `sbatch pgdspider.sh`
 
-This code generates three files here: `data/processed_bayescan/`; these files include:
+This code generates the file: `data/processed_bayescan/01_all`
 
-<b>Files</b>: <br><br>
-1) popgen.ind
-2) popgen.snp
-3) popgen.eigenstratgeno
+##### 1e.2. Convert VCF to BAYESCAN format for all species complex samples; Copy and paste the code below in the shell file generated in Step 1d.1 above, which will generate a BAYESCAN file:
+
+##### Command line code for generating BAYESCAN file for speices complex samples. UNCOMMENT this code in the shell script:
+```{bash}
+## conversion 02: species complex samples
+#java -Xmx8g -Xms8g -jar ${PGDSPIDER_ROOT}/PGDSpider2-cli.jar -inputfile ../../data/processed_vcf/02_popgen_species_complex.vcf -inputformat VCF -outputfile ../../data/processed_bayescan/02_species_complex -outputformat GESTE_BAYE_SCAN -spid ../spid_files/02_species_complex.spid
+```
+
+Run: `sbatch pgdspider.sh`
+
+This code generates the file: `data/processed_bayescan/02_species_complex`
+
+##### 1e.3. Convert VCF to BAYESCAN format for Neosho Bass samples; Copy and paste the code below in the shell file generated in Step 1d.1 above, which will generate a BAYESCAN file:
+
+##### Command line code for generating BAYESCAN file for Neosho Bass samples. UNCOMMENT this code in the shell script:
+```{bash}
+## conversion 03: Neosho Bass samples
+#java -Xmx8g -Xms8g -jar ${PGDSPIDER_ROOT}/PGDSpider2-cli.jar -inputfile ../../data/processed_vcf/03_popgen_neosho.vcf -inputformat VCF -outputfile ../../data/processed_bayescan/03_neosho -outputformat GESTE_BAYE_SCAN -spid ../spid_files/03_neosho.spid
+```
+
+Run: `sbatch pgdspider.sh`
+
+This code generates the file: `data/processed_bayescan/03_neosho`
+
+##### 1e.4. Convert VCF to BAYESCAN format for Smallmouth Bass samples; Copy and paste the code below in the shell file generated in Step 1d.1 above, which will generate a BAYESCAN file:
+
+##### Command line code for generating BAYESCAN file for Smallmouth Bass samples. UNCOMMENT this code in the shell script:
+```{bash}
+## conversion 04: Smallmouth Bass samples
+#java -Xmx8g -Xms8g -jar ${PGDSPIDER_ROOT}/PGDSpider2-cli.jar -inputfile ../../data/processed_vcf/04_popgen_smallmouth.vcf -inputformat VCF -outputfile ../../data/processed_bayescan/04_smallmouth -outputformat GESTE_BAYE_SCAN -spid ../spid_files/04_smallmouth.spid
+```
+
+Run: `sbatch pgdspider.sh`
+
+This code generates the file: `data/processed_bayescan/04_smallmouth`
+
+### STEP 2: Prepare input data for PCADAPT
+In this step, we are preparing all input data for the R program PCADAPT.
+
+### ----------------------- END OF PHASE 1: DATA PREPARATION ----------------------- ###
+
+
+## PHASE 2: OUTLIER ANALYSIS WITH BAYESCAN
+In this phase of the analysis, we are using the software program BAYESCAN to conduct a genome scan for SNP loci with outlier Fst values to assess potential signatures of local directional selection and neutrality at various loci. We are conducting this analysis at four hierarchical levels, as listed in the description for Phase 1 of the analysis (see above). We are using input data for each hierarchical level of analysis as generated in Phase 1 of this analysis.
+
+BAYESCAN uses a Bayesian framework to calculate probabilities of outlier loci across the genome. We used the same parameter set for each hierarchical analysis, as follows:
+
+<b>Parameters set for BAYESCAN analysis</b>: <br>
+Default parameters: <br>
+ -n 5000 (number of MCMC iterations)
+ -thin 10 (number at which to thin MCMC iterations)
+ -nbp 20 (number of pilot runs)
+ -pilot 5000 (length of pilot runs)
+ -burni 5000 (length of burnin run)
+
+### STEP 1: 
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+
+### ----------------------- END OF PHASE 2: OUTLIER ANALYSIS WITH BAYESCAN ----------------------- ###
+
+## PHASE 3: OUTLIER ANALYSIS WITH PCADAPT
+In this phase of the analysis, we are using the R package PCADAPT to conduct a genome scan for SNP loci with outlier Fst values to assess potential signatures of local directional selection and neutrality at various loci. We are conducting this analysis at four hierarchical levels, as listed in the description for Phase 1 of the analysis (see above). We are using input data for each hierarchical level of analysis as generated in Phase 1 of this analysis.
+
+PCADAPT uses
+
+### ----------------------- END OF PHASE 3: OUTLIER ANALYSIS WITH PCADAPT ----------------------- ###
+
+## PHASE 4: OUTLIER MAPPING
+In this phase of the analysis, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the software programs BAYESCAN and the R package PCAdapt. For BAYESCAN, we are using the intermediate conversion software PGDSPIDER to generate input files, and for PCAdapt, we are again using the program PLINK.
+
+### ----------------------- END OF PHASE 4: OUTLIER MAPPING ----------------------- ###
+
 
