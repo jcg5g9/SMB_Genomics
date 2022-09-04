@@ -1,8 +1,8 @@
 #! /bin/bash
 
 #SBATCH -p Lewis  # use the Lewis partition
-#SBATCH -J get_ped  # give the job a custom name
-#SBATCH -o plink.out  # give the job output a custom name
+#SBATCH -J get_ped_for_eigensoft  # give the job a custom name
+#SBATCH -o plink_ped_eigensoft-%j.out  # give the job output a custom name
 #SBATCH -t 0-01:00  # two hour time limit
 
 #SBATCH -N 1  # number of nodes
@@ -16,5 +16,4 @@ module load plink/plink-high-contig-1.90p
 
 # Commands with srun will run on all cores in the allocation
 
-plink --vcf ../../data/processed_vcf/03_popgen_spb.vcf --allow-extra-chr --vcf-half-call m --recode --out ../../data/processed_ped/popgen
-
+plink --vcf ../vcfdata/pass2_noBFC10_smb.vcf --allow-extra-chr --vcf-half-call m --recode --out pass2_noBFC10_smb
