@@ -59,3 +59,5 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to scan for signatures of directional selection on SNP loci with outlier Fst (high outlier Fst: directional selection; low Fst: balancing selection). We used two software programs with different underlying statistical frameworks to detect outliers and then used any outliers commonly detected in both analyses as canditates for being under strong selection. Specifically, we used the software program BAYESCAN (based in Bayesian analysis) and the R package PCAdapt principal component analysis (based in multivariate principal component analysis). We then employed DAPC in R to map patterns of population differentiation at any shared outlier and neutral loci to detect populations that may be under differential selection pressures and to detect signatures of genetic drift,
 
 #### Run the code: `outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
+
+

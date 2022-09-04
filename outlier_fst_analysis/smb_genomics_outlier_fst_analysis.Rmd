@@ -21,4 +21,306 @@ library(readxl)
 library(tidyverse)
 library(cowplot)
 library(devtools)
+library(SNPRelate)
+library(vcfR)
+library(pophelper)
+library(PopGenome)
+library(pcadapt)
+library(viridis)
+```
+
+### PHASE 1: DATA PREPARATION
+In this phase, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the software programs BAYESCAN and the R package PCAdapt. For BAYESCAN, we are using the intermediate conversion software PGDSPIDER to generate input files, and for PCAdapt, we are again using the program PLINK.
+
+For the outlier Fst analysis, we are conducing scans for outlier loci hiearchically at the black bass species level (between Spotted Bass, Smallmouth Bass, and Neosho Bass), among species within the Smallmouth Bass species complex (Smallmouth Bass and Neosho Bass), and among populations within black bass species. The goal with this structure is to reduce false positive detection due to population structure and to detect potentially selected SNPs at each hierarchical level.
+
+With this analysis structure, we conducted scans with the following sets of data: 
+
+1) All black bass samples, including Spotted Bass, Smallmouth Bass, and Neosho Bass (excluding the Spotted Bass hybrid)
+2) All Smallmouth Bass and Neosho Bass samples, excluding Spotted Bass
+3) All Neosho Bass populations only
+4) All Smallmouth Bass populations only
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+PGDSPIDER v.2.1.1.5 (Lischer and Excoffier 2012) <br>
+
+<b>Citation</b>:<br>
+
+Lischer, H. E. L., E& Excoffier, L. (2012). PGDSpider: an automated data conversion tool fo connecting population genetics and genomics programs. Bionformatics, 28, 298-299. doi:/10.1093/bioinformatics/btr642
+
+
+PLINK v.1.90p (high-contig build; Change et al. 2015) <br>
+
+<b>Citation</b>:<br>
+
+Chang, C. C., Chow, C. C., Tellier, L. C. A. M., Vattikuti, S., Purcell, S. M., & Lee, J. J. (2015). Second-generation PLINK: Rising to the challenge of larger and richer datasets. GigaScience, 4, 1–16. doi:10.1186/s13742-015-0047-8
+
+### STEP 1: Prepare input data for BAYESCAN.
+In this step, we are using the conversion software PGDSPIDER to prepare all input data for the software program BAYESCAN.
+
+#### 1a: Generate PGDSPIDER accompanying SPID files
+In this step, we are generating text scripts for an accompanying file needed for PGDSPIDER conversions called a "spid" file. This file includes specific parameters that must to be completed for each file conversion in order to generate the correct output.
+
+##### 1a.1. Generate a general text script for PGDSPIDER SPID file
+Here, we only provide the base script without any parameters filled in. In subsequent steps, we include the completed version for each file conversion with specific parameters. The base script is called "spid.spid".
+
+###### 1a.1.1. Copy and paste the code below in a new shell script file:
+
+##### Generate base SPID text script: `code/spid_files/spid.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
+```{bash}
+# VCF Parser questions
+#PARSER_FORMAT=
+
+# Do you want to include a file with population definitions?
+#VCF_PARSER_POP_QUESTION=
+# Only input following regions (refSeqName:start:end, multiple regions: whitespace separated):
+#VCF_PARSER_REGION_QUESTION=
+# What is the ploidy of the data?
+#VCF_PARSER_PLOIDY_QUESTION=
+# Only output following individuals (ind1, ind2, ind4, ...):
+#VCF_PARSER_IND_QUESTION=
+# Output genotypes as missing if the read depth of a position for the sample is below:
+#VCF_PARSER_READ_QUESTION=
+# Take most likely genotype if "PL" or "GL" is given in the genotype field?
+#VCF_PARSER_PL_QUESTION=
+# Do you want to exclude loci with only missing data?
+#VCF_PARSER_EXC_MISSING_LOCI_QUESTION=
+# Select population definition file:
+#VCF_PARSER_POP_FILE_QUESTION=
+# Only output SNPs with a phred-scaled quality of at least:
+#VCF_PARSER_QUAL_QUESTION=
+# Do you want to include non-polymorphic SNPs?
+#VCF_PARSER_MONOMORPHIC_QUESTION=
+# Output genotypes as missing if the phred-scale genotype quality is below:
+#VCF_PARSER_GTQUAL_QUESTION=
+
+# BayeScan Parser Questions
+#WRITER_FORMAT=
+
+# What type of data are we dealing with?
+#GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=
+```
+
+##### 1a.2. Generate a PGDSPIDER SPID file for the black bass level genome scan
+Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the Black Bass level genome scan, which includes all Spotted Bass, Smallmouth Bass, and Neosho Bass.
+
+###### 1a.2.1. Copy and paste the code below in a new shell script file:
+
+##### Generate base SPID text script: `code/spid_files/01_all.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
+```{bash}
+# VCF Parser questions
+#PARSER_FORMAT=VCF
+
+# Do you want to include a file with population definitions?
+#VCF_PARSER_POP_QUESTION=true
+# Only input following regions (refSeqName:start:end, multiple regions: whitespace separated):
+#VCF_PARSER_REGION_QUESTION=
+# What is the ploidy of the data?
+#VCF_PARSER_PLOIDY_QUESTION=DIPLOID
+# Only output following individuals (ind1, ind2, ind4, ...):
+#VCF_PARSER_IND_QUESTION=
+# Output genotypes as missing if the read depth of a position for the sample is below:
+#VCF_PARSER_READ_QUESTION=
+# Take most likely genotype if "PL" or "GL" is given in the genotype field?
+#VCF_PARSER_PL_QUESTION=false
+# Do you want to exclude loci with only missing data?
+#VCF_PARSER_EXC_MISSING_LOCI_QUESTION=false
+# Select population definition file:
+#VCF_PARSER_POP_FILE_QUESTION=../../data/pop_files/01_all_pops.txt
+# Only output SNPs with a phred-scaled quality of at least:
+#VCF_PARSER_QUAL_QUESTION=
+# Do you want to include non-polymorphic SNPs?
+#VCF_PARSER_MONOMORPHIC_QUESTION=false
+# Output genotypes as missing if the phred-scale genotype quality is below:
+#VCF_PARSER_GTQUAL_QUESTION=
+
+# BayeScan Parser Questions
+#WRITER_FORMAT=GESTE_BAYE_SCAN
+
+# What type of data are we dealing with?
+#GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
+```
+
+##### 1a.3. Generate a PGDSPIDER SPID file for the Smallmouth Bass species complex genome scan
+Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the species complex level genome scan, which includes all Smallmouth Bass and Neosho Bass.
+
+###### 1a.3.1. Copy and paste the code below in a new shell script file:
+
+##### Generate base SPID text script: `code/spid_files/02_species_complex.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
+```{bash}
+# VCF Parser questions
+#PARSER_FORMAT=VCF
+
+# Do you want to include a file with population definitions?
+#VCF_PARSER_POP_QUESTION=true
+# Only input following regions (refSeqName:start:end, multiple regions: whitespace separated):
+#VCF_PARSER_REGION_QUESTION=
+# What is the ploidy of the data?
+#VCF_PARSER_PLOIDY_QUESTION=DIPLOID
+# Only output following individuals (ind1, ind2, ind4, ...):
+#VCF_PARSER_IND_QUESTION=
+# Output genotypes as missing if the read depth of a position for the sample is below:
+#VCF_PARSER_READ_QUESTION=
+# Take most likely genotype if "PL" or "GL" is given in the genotype field?
+#VCF_PARSER_PL_QUESTION=false
+# Do you want to exclude loci with only missing data?
+#VCF_PARSER_EXC_MISSING_LOCI_QUESTION=false
+# Select population definition file:
+#VCF_PARSER_POP_FILE_QUESTION=../../data/pop_files/02_species_complex_pops.txt
+# Only output SNPs with a phred-scaled quality of at least:
+#VCF_PARSER_QUAL_QUESTION=
+# Do you want to include non-polymorphic SNPs?
+#VCF_PARSER_MONOMORPHIC_QUESTION=false
+# Output genotypes as missing if the phred-scale genotype quality is below:
+#VCF_PARSER_GTQUAL_QUESTION=
+
+# BayeScan Parser Questions
+#WRITER_FORMAT=GESTE_BAYE_SCAN
+
+# What type of data are we dealing with?
+#GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
+```
+
+##### 1a.4. Generate a PGDSPIDER SPID file for the Neosho Bass genome scan
+Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the Neosho Bass population level genome scan, which includes all Neosho Bass only
+
+###### 1a.4.1. Copy and paste the code below in a new shell script file:
+
+##### Generate base SPID text script: `code/spid_files/03_neosho.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
+```{bash}
+# VCF Parser questions
+#PARSER_FORMAT=VCF
+
+# Do you want to include a file with population definitions?
+#VCF_PARSER_POP_QUESTION=true
+# Only input following regions (refSeqName:start:end, multiple regions: whitespace separated):
+#VCF_PARSER_REGION_QUESTION=
+# What is the ploidy of the data?
+#VCF_PARSER_PLOIDY_QUESTION=DIPLOID
+# Only output following individuals (ind1, ind2, ind4, ...):
+#VCF_PARSER_IND_QUESTION=
+# Output genotypes as missing if the read depth of a position for the sample is below:
+#VCF_PARSER_READ_QUESTION=
+# Take most likely genotype if "PL" or "GL" is given in the genotype field?
+#VCF_PARSER_PL_QUESTION=false
+# Do you want to exclude loci with only missing data?
+#VCF_PARSER_EXC_MISSING_LOCI_QUESTION=false
+# Select population definition file:
+#VCF_PARSER_POP_FILE_QUESTION=../../data/pop_files/03_neosho_pops.txt
+# Only output SNPs with a phred-scaled quality of at least:
+#VCF_PARSER_QUAL_QUESTION=
+# Do you want to include non-polymorphic SNPs?
+#VCF_PARSER_MONOMORPHIC_QUESTION=false
+# Output genotypes as missing if the phred-scale genotype quality is below:
+#VCF_PARSER_GTQUAL_QUESTION=
+
+# BayeScan Parser Questions
+#WRITER_FORMAT=GESTE_BAYE_SCAN
+
+# What type of data are we dealing with?
+#GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
+```
+
+##### 1a.5. Generate a PGDSPIDER SPID file for the Neosho Bass genome scan
+Here, we are filling in the parameters necessary to generate a spid file to convert input data to BAYESCAN format the Smallmouth Bass population level genome scan, which includes all Smallmouth Bass only
+
+###### 1a.5.1. Copy and paste the code below in a new shell script file:
+
+##### Generate base SPID text script: `code/spid_files/04_smallmouth.spid`. UNCOMMENT every other (all caps) line and fill in with the necessary parameters for each file conversion.
+```{bash}
+# VCF Parser questions
+#PARSER_FORMAT=VCF
+
+# Do you want to include a file with population definitions?
+#VCF_PARSER_POP_QUESTION=true
+# Only input following regions (refSeqName:start:end, multiple regions: whitespace separated):
+#VCF_PARSER_REGION_QUESTION=
+# What is the ploidy of the data?
+#VCF_PARSER_PLOIDY_QUESTION=DIPLOID
+# Only output following individuals (ind1, ind2, ind4, ...):
+#VCF_PARSER_IND_QUESTION=
+# Output genotypes as missing if the read depth of a position for the sample is below:
+#VCF_PARSER_READ_QUESTION=
+# Take most likely genotype if "PL" or "GL" is given in the genotype field?
+#VCF_PARSER_PL_QUESTION=false
+# Do you want to exclude loci with only missing data?
+#VCF_PARSER_EXC_MISSING_LOCI_QUESTION=false
+# Select population definition file:
+#VCF_PARSER_POP_FILE_QUESTION=../../data/pop_files/04_smallmouth_pops.txt
+# Only output SNPs with a phred-scaled quality of at least:
+#VCF_PARSER_QUAL_QUESTION=
+# Do you want to include non-polymorphic SNPs?
+#VCF_PARSER_MONOMORPHIC_QUESTION=false
+# Output genotypes as missing if the phred-scale genotype quality is below:
+#VCF_PARSER_GTQUAL_QUESTION=
+
+# BayeScan Parser Questions
+#WRITER_FORMAT=GESTE_BAYE_SCAN
+
+# What type of data are we dealing with?
+#GESTE_BAYE_SCAN_WRITER_DATA_TYPE_QUESTION=SNP
+```
+
+#### 1b: Generate population designation files (read by SPID files)
+In this step, we are generating text files listing all samples in at each genome scan level and their corresponding population designations as inferred in Analysis 4 (population inference). Our inferred populations were named according to their general geographic locations (see Phase 4 of population_analysis, "MIDARK", "ELK", "BAYOU", etc.), but PGDSPIDER expects input populations in a specific format (i.e., "pop_1", "pop_2", etc.). We generate population files according to this naming convention
+
+##### 1b.1. Read in sample metadata and generate lists of populations for all genome scan levesl.
+
+###### 1b.1.1 Generate population file for all black bass samples:
+
+##### Generate population file: `data/pop_files/01_all_pops.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations.Rda")
+
+# Rename population designations in SPID format ("pop_1", "pop_2", etc.)
+metadata_populations$population[metadata_populations$population == "MIDARK"] <- "pop_1"
+metadata_populations$population[metadata_populations$population == "MISS"] <- "pop_2"
+metadata_populations$population[metadata_populations$population == "SKIA"] <- "pop_3"
+metadata_populations$population[metadata_populations$population == "LMULB"] <- "pop_4"
+metadata_populations$population[metadata_populations$population == "WHITE"] <- "pop_5"
+metadata_populations$population[metadata_populations$population == "ELK"] <- "pop_6"
+metadata_populations$population[metadata_populations$population == "ILLI"] <- "pop_7"
+metadata_populations$population[metadata_populations$population == "UPPARK"] <- "pop_8"
+metadata_populations$population[metadata_populations$population == "BAYOU"] <- "pop_9"
+metadata_populations$population[metadata_populations$population == "SPB"] <- "pop_10"
+
+
+
+
+
+
+
+```
+
+
+
+
+
+#### 1a: Generate a general bash shell script header for all PGDSPIDER conversion commands
+In this step, we are generating a universal bash shell script to run all file type conversions in PGDSPIDER. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PGDSPIDER code is called "pgdspider.sh".
+
+##### 1a.1: Copy and paste the code below in a new shell script file:
+
+##### Generate PGDSPIDER bash shell script: `code/shell_scripts/pgdspider.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J pgd_coversion  # give the job a custom name
+#SBATCH -o pgd_results-%j.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+#SBATCH --mem-per-cpu=8G
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+# UNCOMMENT STARTING HERE
+
+## Commands here run only on the first core
+# module load rss/rss-2020
+# module load pgdspider/pgdspider-2.1.1.5
 ```

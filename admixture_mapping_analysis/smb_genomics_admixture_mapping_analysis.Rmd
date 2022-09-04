@@ -23,7 +23,7 @@ library(cowplot)
 library(devtools)
 ```
 
-### PHASE 1: DATA PREPARATION
+## PHASE 1: DATA PREPARATION
 In this phase, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
 
 All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>

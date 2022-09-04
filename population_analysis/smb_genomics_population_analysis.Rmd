@@ -836,16 +836,37 @@ In this step, we use Microsoft Excel to create a new metadata set for population
 
 ##### Read in and manipulate data:
 ```{r}
+# Generate a population dataset including Spotted Bass (for future outlier Fst analysis)
+
+# Read in pre-made Excel file
+metadata_populations_spb <- read_excel("data/metadata/metadata_populations_spb.xlsx")
+
+# Convert to dataframe
+metadata_populations_spb <- as.data.frame(metadata_populations_spb)
+
+# Mutate sample_id and population columns to factors
+metadata_populations_spb <- metadata_populations_spb %>% 
+  mutate(sample_id = factor(sample_id), 
+         population = factor(population))
+
+# Save the new population metadata file
+save(metadata_populations_spb, file = "data/metadata/metadata_populations_spb.Rda")
+
+## Generate a population metadata set excluding Spotted Bass
+
+# Read in pre-made Excel file
 metadata_populations <- read_excel("data/metadata/metadata_populations.xlsx")
 
+# Convert to dataframe
 metadata_populations <- as.data.frame(metadata_populations)
 
+# Mutate sample_id and population columns to factors
 metadata_populations <- metadata_populations  %>% 
   mutate(sample_id = factor(sample_id), 
          population = factor(population))
 
-# Save the new .map file
-save(metadata_populations, file = "data/metadata/metadata_population.Rda")
+# Save the new population metadata file
+save(metadata_populations, file = "data/metadata/metadata_populations.Rda")
 ```
 
 ### ----------------------- END OF PHASE 4: POPULATION METADATA GENERATION ----------------------- ###
