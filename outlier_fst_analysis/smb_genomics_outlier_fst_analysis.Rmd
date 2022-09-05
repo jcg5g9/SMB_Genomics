@@ -902,10 +902,30 @@ We provided information on the level of significance for each "significant" SNP 
 0.50 <= log_po < 1.00: substantial <br>
 0.00 <= log_po < 0.50: barely worth mentioning <br>
 
-##### 2b.1. Isolate significant and insignificant SNPs for all black bass samples; run the Rmd chunk below:
+##### 2b.1.  Generate metadata for SNP ID (RAD_kmer_...) and SNP position (nucleotide position on the kmer)
+In this step, we are generating a list of SNP IDs and positions to append to the datasets below in order to determine the identity of outlier SNPs
+
+###### 2b.1.1.Generate SNP position and metadata; run the Rmd chunk below:
+
+##### Generate list of SNP ID and position:
+```{r}
+# Read in .bim file, which contains a list of RAD kmer names and associated positions
+metadata_snps <- read_tsv("data/processed_bed/01_all_output/01_all.bim", col_names = F)
+  
+# Keep only SNP name and position columns
+metadata_snps <- metadata_snps[,c(1,4)]
+
+# Rename columns
+colnames(metadata_snps) <- c("snp_id", "position")
+```
+
+##### 2b.2. Isolate significant and insignificant SNPs for all black bass samples; run the Rmd chunk below:
 
 ##### Outlier SNP identification for all black bass samples:
 ```{r}
+# Append SNP IDs to data
+all_fst <- cbind(metadata_snps, all_fst)
+
 # Isolate SNPs with log_po greater than or equal to 0.5
 all_significant <- all_fst %>% 
       filter(log_po >= 0.5) 
@@ -949,10 +969,14 @@ all_not_significant$sig_level <- c(rep("not_significant", times = 50825))
 #combine data into one dataframe
 all_fst <- rbind(all_significant, all_not_significant)
 ```
-##### 2b.2. Isolate significant and insignificant SNPs for species complex samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below:
+
+##### 2b.3. Isolate significant and insignificant SNPs for species complex samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below:
 
 ##### Outlier SNP identification for all black bass samples:
 ```{r}
+# Append SNP IDs to data
+species_complex_fst <- cbind(metadata_snps, species_complex_fst)
+
 # Isolate SNPs with log_po greater than or equal to 0.5
 species_complex_significant <- species_complex_fst %>% 
       filter(log_po >= 0.5) 
@@ -1000,10 +1024,14 @@ species_complex_not_significant$sig_level <- c(rep("not_significant", times = 50
 #combine data into one dataframe
 species_complex_fst <- rbind(species_complex_significant, species_complex_not_significant)
 ```
-##### 2b.3. Isolate significant and insignificant SNPs for Neosho Bass only; run the Rmd chunk below:
+
+##### 2b.4. Isolate significant and insignificant SNPs for Neosho Bass only; run the Rmd chunk below:
 
 ##### Outlier SNP identification for all black bass samples:
 ```{r}
+# Append SNP IDs to data
+neosho_fst <- cbind(metadata_snps, neosho_fst)
+
 # Isolate SNPs with log_po greater than or equal to 0.5
 neosho_significant <- neosho_fst %>% 
       filter(log_po >= 0.5) 
@@ -1052,10 +1080,13 @@ neosho_not_significant$sig_level <- c(rep("not_significant", times = 50796))
 neosho_fst <- rbind(neosho_significant, neosho_not_significant)
 ```
 
-##### 2b.4. Isolate significant and insignificant SNPs for  Smallmouth Bass only; run the Rmd chunk below:
+##### 2b.5. Isolate significant and insignificant SNPs for  Smallmouth Bass only; run the Rmd chunk below:
 
 ##### Outlier SNP identification for all black bass samples:
 ```{r}
+# Append SNP IDs to data
+smallmouth_fst <- cbind(metadata_snps, smallmouth_fst)
+
 # Isolate SNPs with log_po greater than or equal to 0.5
 smallmouth_significant <- smallmouth_fst %>% 
       filter(log_po >= 0.5) 
@@ -1154,7 +1185,7 @@ a <- ggplot(all_clean, aes(x = log_po, y = fst, fill = sig_level)) +
       geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) +
       geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") + 
-       geom_vline(xintercept = 1, linetype = "longdash", color = "black") +
+      geom_vline(xintercept = 1, linetype = "longdash", color = "black") +
       geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
       theme_set(theme_cowplot(12)) + 
       scale_fill_manual(values = c("grey","#FCFFA4FF","#BB3754FF")) +
@@ -1173,7 +1204,7 @@ b <- ggplot(species_complex_clean, aes(x = log_po, y = fst, fill = sig_level)) +
       geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) +
       geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") +
-       geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
       theme_set(theme_cowplot(12)) + 
       scale_fill_manual(values = c("#56106EFF","grey","#F98C0AFF","#FCFFA4FF","#BB3754FF")) + 
@@ -1193,7 +1224,7 @@ c <- ggplot(neosho_clean, aes(x = log_po, y = fst, fill = sig_level)) +
       geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) + 
       geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") +
-       geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
       theme_set(theme_cowplot(12)) +
       scale_fill_manual(values = c("#56106EFF","grey","#F98C0AFF","#FCFFA4FF","#BB3754FF")) + 
@@ -1211,7 +1242,7 @@ d <- ggplot(smallmouth_clean, aes(x = log_po, y = fst, fill = sig_level)) +
       geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) + 
       geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") + 
-       geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
       geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
       theme_set(theme_cowplot(12)) + 
       scale_fill_manual(values = c("grey","#FCFFA4FF")) + 
@@ -1246,13 +1277,646 @@ In this phase of the analysis, we are using the R package PCADAPT to conduct a g
 
 PCADAPT uses a multivariate framework (Principal Component Analysis; PCA) to account for population structure among populations and determine likely outlier SNPs driving differentiation between populations.
 
+### STEP 1: Read in input data for PCADAPT, which are the .bed format files generated in Phase 1 above, and prepare sample metadata
+
+#### 1a: Read in .bed files for all hierarchical analyses; run the Rmd chunk below:
+
+###### Read in input data:
+```{r, include=FALSE}
+# Read in data for all black bass samples
+all_bed <- read.pcadapt("data/processed_bed/01_all_output/01_all.bed", type = "bed") 
+
+# Read in data for species complex samples
+species_complex_bed <- read.pcadapt("data/processed_bed/02_species_complex_output/02_species_complex.bed", type = "bed") 
+
+# Read in data for Neosho Bass samples
+neosho_bed <- read.pcadapt("data/processed_bed/03_neosho_output/03_neosho.bed", type = "bed")
+
+# Read in data for Smallmouth Bass samples
+smallmouth_bed <- read.pcadapt("data/processed_bed/04_smallmouth_output/04_smallmouth.bed", type = "bed") 
+```
+
+#### 1b: Filter sample metadata to include only individuals and their corresponding populations in each hierarchical analysis. Population IDs will be used for later plotting; run the Rmd chunk below:
+
+##### Generate sample metadata for plotting:
+```{r}
+# Load in raw metadata
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+# Generate metadata for all black bass samples
+all_metadata <- metadata_populations_spb %>%
+  filter(sample_id != "BFC10_1")
+
+# Generate metadata for species complex samples
+species_complex_metadata <- metadata_populations_spb %>%
+  filter(sample_id != "BFC10_1") %>%
+  filter(population != "SPB")
+
+# Generate metadata for Neosho Bass samples
+neosho_metadata <- metadata_populations_spb %>%
+  filter(sample_id != "BFC10_1") %>%
+  filter(population != "SPB") %>%
+  filter(population != "MISS") %>%
+  filter(population != "WHITE") %>%
+  filter(population != "SKIA")
+
+# Generate metadata for Smallmouth Bass samples
+smallmouth_metadata <- metadata_populations_spb %>%
+  filter(sample_id != "BFC10_1") %>%
+  filter(population != "SPB") %>%
+  filter(population != "MIDARK") %>%
+  filter(population != "LMULB") %>%
+  filter(population != "ELK") %>%
+  filter(population != "ILLI") %>%
+  filter(population != "BAYOU") %>%
+  filter(population != "UPPARK")
+
+# Convert population lists for each metadata file into vectors
+
+# Make vector for all black bass populations
+all_pops <- as.vector(all_metadata[,c(2)])
+
+# Make vector for species complex populations
+species_complex_pops <- as.vector(species_complex_metadata[,c(2)])
+
+# Make vector for Neosho Bass populations
+neosho_pops <- as.vector(neosho_metadata[,c(2)])
+
+# Make vector for Smallmouth Bass populations
+smallmouth_pops <- as.vector(smallmouth_metadata[,c(2)])
+```
+
+### STEP 2: Run PCADAPT Analysis on all hierarchical levels. 
+
+#### 2a: Run PCAdapt analysis for a possible K = 1-20 and with a minimum allele frequency threshold of 0.0001. 
+PCADAPT explicitly accounts for population structure in the data by testing different possible numbers of K clusters (similar in principle to the program ADMIXTURE). The minor allele frequency threshold is just a placeholder here for the the analysis to run
+
+##### 2a.1. Run PCAdapt analysis; run the Rmd chunk below:
+
+##### Run PCA through PCAdapt to identify outlier SNPs:
+```{r}
+#Run PCAdapt for all black bass samples 
+all_pca_k20 <- pcadapt(all_bed, K = 20, min.maf = 0.0001) 
+
+#Run PCAdapt for species complex samples 
+species_complex_pca_k20 <- pcadapt(species_complex_bed, K = 20, min.maf = 0.0001)
+
+#Run PCAdapt for Neosho Bass samples 
+neosho_pca_k20 <- pcadapt(neosho_bed, K = 20, min.maf = 0.0001)
+
+#Run PCAdapt for Smallmouth Bass samples 
+smallmouth_pca_k20 <- pcadapt(smallmouth_bed, K = 20, min.maf = 0.0001)
+```
+
+##### 2a.2. Choose the optimal number of K PCAs to retain in downstream analyses by assessing Scree plots; run the Rmd chunk below:
+
+##### Visualize Scree plots:
+```{r}
+#Scree plot for all black bass samples 
+all_scree <- plot(all_pca_k20, option = "screeplot") 
+
+#Scree plot for species complex samples 
+species_complex_scree <- plot(species_complex_pca_k20, option = "screeplot") 
+
+#Scree plot for Neosho Bass samples 
+neosho_scree <- plot(neosho_pca_k20, option = "screeplot") 
+
+#Scree plot for Smallmouth Bass samples 
+smallmouth_scree <- plot(smallmouth_pca_k20, option = "screeplot") 
+```
+Here, we used Catell's Rule to determine the optimal number of clusters to retain in PC analysis. Thus, we chose the number of K PCs to retain based on where the Scree plot line began to plateau. We then reran PCADAPT analysis on the optimal number of K to determine the amount of variance explained by that number of PCs in downstream analyses.
+
+##### 2a.3. Extract Scree plot variance explained information and generate figures.
+In tis step, we are extracting information on the variance explained by each Principal Component in the PCAs calculated with K = 20 above and plotting these data.
+
+###### 2a.3.1. Summarize variance information from each hierarchical analysis; run the Rmd chunk below:
+
+##### Generate Scree plot figures for publication:
+```{r}
+## Generate variance data for all black bass samples at K = 20
+
+# Get root variance information from PCA calculation above
+all_pca_variance_k20 <- data.frame(root_variance = as.numeric(all_pca_k20$singular.values))
+
+# Calculate variance 
+all_pca_variance_k20 <- all_pca_variance_k20 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+all_pca_variance_k20 <- rownames_to_column(all_pca_variance_k20, "K")
+
+# Convert K to numeric vector
+all_pca_variance_k20 <- all_pca_variance_k20 %>% 
+   mutate(K = as.numeric(K))
+
+
+## Generate variance data for species complex samples at K = 20
+
+# Get root variance information from PCA calculation above
+species_complex_pca_variance_k20 <- data.frame(root_variance = as.numeric(species_complex_pca_k20$singular.values))
+
+# Calculate variance 
+species_complex_pca_variance_k20 <- species_complex_pca_variance_k20 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+species_complex_pca_variance_k20 <- rownames_to_column(species_complex_pca_variance_k20, "K")
+
+# Convert K to numeric vector
+species_complex_pca_variance_k20 <- species_complex_pca_variance_k20 %>% 
+   mutate(K = as.numeric(K))
+
+
+## Generate variance data for Neosho Bass samples at K = 20
+
+# Get root variance information from PCA calculation above
+neosho_pca_variance_k20 <- data.frame(root_variance = as.numeric(neosho_pca_k20$singular.values))
+
+# Calculate variance 
+neosho_pca_variance_k20 <- neosho_pca_variance_k20 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+neosho_pca_variance_k20 <- rownames_to_column(neosho_pca_variance_k20, "K")
+
+# Convert K to numeric vector
+neosho_pca_variance_k20 <- neosho_pca_variance_k20 %>% 
+   mutate(K = as.numeric(K))
+
+
+## Generate variance data for Smallmouth Bass samples at K = 20
+
+# Get root variance information from PCA calculation above
+smallmouth_pca_variance_k20 <- data.frame(root_variance = as.numeric(smallmouth_pca_k20$singular.values))
+
+# Calculate variance 
+smallmouth_pca_variance_k20 <- smallmouth_pca_variance_k20 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+smallmouth_pca_variance_k20 <- rownames_to_column(smallmouth_pca_variance_k20, "K")
+
+# Convert K to numeric vector
+smallmouth_pca_variance_k20 <- smallmouth_pca_variance_k20 %>% 
+   mutate(K = as.numeric(K))
+
+## Summarize information on total variance explained by 20 PCs for each dataset
+sum(all_pca_variance_k20$variance) #96.19% 
+sum(species_complex_pca_variance_k20$variance) #59.80% 
+sum(neosho_pca_variance_k20$variance) #53.52% 
+sum(smallmouth_pca_variance_k20$variance) #100.00% 
+```
+
+###### 2a.3.2. Generate variance explained figures; run the Rmd chunk below:
+Here, we have chosen to include all individual Scree plots as panels in a single plot. Panels are labeled "a", "b", "c", and "d", and are presented in the figure in that order.
+
+##### Generate Scree plot figure: `figures/pcadapt_figures/variance.pdf`
+```{r}
+## NOTE: Plots are named a,c,e,g because they are appended to the PCA plots generated below for the final publication. Those PCA plots have the missing letters (b,d,f,h)
+
+# Plot for all black bass samples
+a <- ggplot(all_pca_variance_k20, aes(x = K, y = variance)) + 
+   geom_point(size = 3) + 
+   geom_path(stat = "identity", size = 1) + 
+   geom_vline(xintercept = 2, linetype = "longdash") +
+   scale_x_continuous("Number of PCs Retained", labels = as.character(all_pca_variance_k20$K), breaks = all_pca_variance_k20$K) +
+   labs(x = "Number of PCs Retained", y = "% Variance Explained") +
+   theme_set(theme_cowplot(12)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for species complex samples
+c <- ggplot(species_complex_pca_variance_k20, aes(x = K, y = variance)) + 
+   geom_point(size = 3) + 
+   geom_path(stat = "identity", size = 1) + 
+   geom_vline(xintercept = 3, linetype = "longdash") +
+   scale_x_continuous("Number of PCs Retained", labels = as.character(species_complex_pca_variance_k20$K), breaks = species_complex_pca_variance_k20$K) +
+   labs(x = "Number of PCs Retained", y = "% Variance Explained") +
+   theme_set(theme_cowplot(12)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(axis.title.x = element_text(face = "italic")) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for Neosho Bass samples
+e <- ggplot(neosho_pca_variance_k20, aes(x = K, y = variance)) + 
+   geom_point(size = 3) + 
+   geom_path(stat = "identity", size = 1) + 
+   geom_vline(xintercept = 4, linetype = "longdash") +
+   scale_x_continuous("Number of PCs Retained", labels = as.character(neosho_pca_variance_k20$K), breaks = neosho_pca_variance_k20$K) +
+   labs(x = "Number of PCs Retained", y = "% Variance Explained") +
+   theme_set(theme_cowplot(12)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(axis.title.x = element_text(face = "italic")) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for Smallmouth Bass samples
+g <- ggplot(smallmouth_pca_variance_k20, aes(x = K, y = variance)) + 
+   geom_point(size = 3) + 
+   geom_path(stat = "identity", size = 1) + 
+   geom_vline(xintercept = 3, linetype = "longdash") +
+   scale_x_continuous("Number of PCs Retained", labels = as.character(smallmouth_pca_variance_k20$K), breaks = smallmouth_pca_variance_k20$K) +
+   labs(x = "Number of PCs Retained", y = "% Variance Explained") +
+   theme_set(theme_cowplot(12)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot all figures together in a single pdf.
+pdf("figures/pcadapt_figures/variance.pdf", width=7, height=17) 
+
+plot_grid(a,c,e,g, nrow = 4, labels = c("a","c","e","g"), label_size = 30, label_y = 1.03)
+
+dev.off()
+```
+
+This plot is later combined with the associated PCA plots for one composite figure in the manuscript (see below)
+
+#### 2b: Re-run PCADAPT analysis for the number of K clusters inferred using Catell's rule.
+
+##### 2b.1. Re-run PCADAPT for all hierarchical analyses; run the Rmd chunk below:
+
+##### PCADAPT analyses for optimal number of K clusters/PCs:
+```{r}
+#Run PCAdapt for all black bass samples at K = 2
+all_pca_k2 <- pcadapt(all_bed, K = 2, min.maf = 0.0001)
+
+#Run PCAdapt for species complex samples at K = 2
+species_complex_pca_k2 <- pcadapt(species_complex_bed, K = 2, min.maf = 0.0001)
+
+#Run PCAdapt for Neosho Bass samples at K = 4
+neosho_pca_k4 <- pcadapt(neosho_bed, K = 4, min.maf = 0.0001)
+
+#Run PCAdapt for Smallmout Bass samples at K = 3
+smallmouth_pca_k3 <- pcadapt(smallmouth_bed, K = 3, min.maf = 0.0001)
+```
+
+##### 2b.2. Extract variance explained information and generate figures.
+In tis step, we are extracting information on the variance explained by each Principal Component in the PCAs calculated with optimal number of K PCs above and plotting these data.
+
+###### 2b.2.1. Summarize variance information from each hierarchical analysis; run the Rmd chunk below:
+
+##### Generate Scree plot figures for publication:
+```{r}
+# Get root variance information from PCA calculation above
+all_pca_variance_k2 <- data.frame(root_variance = as.numeric(all_pca_k2$singular.values))
+
+# Calculate variance 
+all_pca_variance_k2 <- all_pca_variance_k2 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+all_pca_variance_k2 <- rownames_to_column(all_pca_variance_k2, "K")
+
+# Convert K to numeric vector
+all_pca_variance_k2 <- all_pca_variance_k2 %>% 
+   mutate(K = as.numeric(K))
+   
+# Get root variance information from PCA calculation above
+species_complex_pca_variance_k2 <- data.frame(root_variance = as.numeric(species_complex_pca_k2$singular.values))
+
+# Convert K to numeric vector
+species_complex_pca_variance_k2 <- species_complex_pca_variance_k2 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+species_complex_pca_variance_k2 <- rownames_to_column(species_complex_pca_variance_k2, "K")
+
+# Convert K to numeric vector
+species_complex_pca_variance_k2 <- species_complex_pca_variance_k2 %>% 
+   mutate(K = as.numeric(K))
+   
+# Get root variance information from PCA calculation above
+neosho_pca_variance_k4 <- data.frame(root_variance = as.numeric(neosho_pca_k4$singular.values))
+
+# Convert K to numeric vector
+neosho_pca_variance_k4 <- neosho_pca_variance_k4 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+neosho_pca_variance_k4 <- rownames_to_column(neosho_pca_variance_k4, "K")
+
+# Convert K to numeric vector
+neosho_pca_variance_k4 <- neosho_pca_variance_k4 %>% 
+   mutate(K = as.numeric(K))
+
+# Get root variance information from PCA calculation above
+smallmouth_pca_variance_k3 <- data.frame(root_variance = as.numeric(smallmouth_pca_k3$singular.values))
+
+# Convert K to numeric vector
+smallmouth_pca_variance_k3 <- smallmouth_pca_variance_k3 %>%
+   mutate(variance = (root_variance)^2)
+
+# Convert rownames to column
+smallmouth_pca_variance_k3 <- rownames_to_column(smallmouth_pca_variance_k3, "K")
+
+# Convert K to numeric vector
+smallmouth_pca_variance_k3 <- smallmouth_pca_variance_k3 %>% 
+   mutate(K = as.numeric(K))
+
+   
+## Summarize information on total variance explained by 20 PCs for each dataset
+sum(all_pca_variance_k2$variance) #68.68% 
+sum(species_complex_pca_variance_k2$variance) #24.04% 
+sum(neosho_pca_variance_k4$variance) #18.78% 
+sum(smallmouth_pca_variance_k3$variance) #33.62% 
+```
+
+###### 2b.2.2. Generate PCA figures for optimal number of K; run the Rmd chunk below:
+
+##### Generate PCA figure: `figures/pcadapt_figures/pca.pdf`
+```{r}
+## Extract PC information for all black bass samples
+
+# Get PC scores
+all_pca_k2_scores <- as.data.frame(all_pca_k2$scores)
+
+# Append population names to PC scores
+all_pca_k2_scores <- cbind(data.frame(all_pops), all_pca_k2_scores)
+
+# Modify column names
+colnames(all_pca_k2_scores) <- c("pop","PC1","PC2")
+
+
+## Extract PC information for species complex samples
+
+# Get PC scores
+species_complex_pca_k2_scores <- as.data.frame(species_complex_pca_k2$scores)
+
+# Append population names to PC scores
+species_complex_pca_k2_scores <- cbind(data.frame(species_complex_pops), species_complex_pca_k2_scores)
+
+# Modify column names
+colnames(species_complex_pca_k2_scores) <- c("pop","PC1","PC2")
+
+
+## Extract PC information for Neosho Bass samples
+
+# Get PC scores
+neosho_pca_k4_scores <- as.data.frame(neosho_pca_k4$scores)
+
+# Append population names to PC scores
+neosho_pca_k4_scores <- cbind(data.frame(neosho_pops), neosho_pca_k4_scores)
+
+# Modify column names
+colnames(neosho_pca_k4_scores) <- c("pop","PC1","PC2","PC3","PC4")
+
+
+## Extract PC information for Neosho Bass samples
+
+# Get PC scores
+smallmouth_pca_k3_scores <- as.data.frame(smallmouth_pca_k3$scores)
+
+# Append population names to PC scores
+smallmouth_pca_k3_scores <- cbind(data.frame(smallmouth_pops), smallmouth_pca_k3_scores)
+
+# Modify column names
+colnames(smallmouth_pca_k3_scores) <- c("pop","PC1","PC2","PC3")
+
+
+# Generate figure
+
+# Plot for all black bass samples
+b <- ggplot(all_pca_k2_scores, aes(x = PC1, y = PC2)) + 
+   geom_point(aes(fill = pop), color = "black", pch = 21, size = 4, show.legend = F) +
+   labs(x = "PC1 (53.94 %)", y = "PC2 (14.74 %)", fill = "Species") +
+   scale_fill_manual(values = c("lightgreen","sienna4","mediumpurple","forestgreen","deepskyblue","chocolate1","navyblue","goldenrod3","orchid1","deeppink2")) +
+   theme_set(theme_cowplot(12)) +
+   theme(legend.title = element_text(size = 15)) +
+   theme(legend.title = element_text(face = "bold")) +
+   theme(legend.text = element_text(size = 15)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for species complex samples
+d <- ggplot(species_complex_pca_k2_scores, aes(x = PC1, y = PC2)) + 
+   geom_point(aes(fill = pop), color = "black", pch = 21, size = 4, show.legend = F) +
+   labs(x = "PC1 (18.50 %)", y = "PC2 (5.55 %)", fill = "Population") +
+   scale_fill_manual(values = c("lightgreen","sienna4","mediumpurple","forestgreen","deepskyblue","chocolate1","navyblue","orchid1","deeppink2")) +
+   theme_set(theme_cowplot(12)) +
+   theme(legend.title = element_text(size = 15)) +
+   theme(legend.title = element_text(face = "bold")) +
+   theme(legend.text = element_text(size = 15)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for Neosho Bass samples
+f <- ggplot(neosho_pca_k4_scores, aes(x = PC1, y = PC2)) + 
+   geom_point(aes(fill = pop), color = "black", pch = 21, size = 4, show.legend = F) +
+   labs(x = "PC1 (6.60 %)", y = "PC2 (5.22 %)", fill = "Population") +
+   scale_fill_manual(values = c("lightgreen","sienna4","mediumpurple","forestgreen","deepskyblue","orchid1")) +
+   theme_set(theme_cowplot(12)) +
+   theme(legend.title = element_text(size = 15)) +
+   theme(legend.title = element_text(face = "bold")) +
+   theme(legend.text = element_text(size = 15)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for Smallmouth Bass samples
+h <- ggplot(smallmouth_pca_k3_scores, aes(x = PC1, y = PC2)) + 
+   geom_point(aes(fill = pop), color = "black", pch = 21, size = 4, show.legend = F) +
+   labs(x = "PC1 (15.76 %)", y = "PC2 (11.25 %)", fill = "Population") +
+   scale_fill_manual(values = c("chocolate1","navyblue","deeppink2")) +
+   theme_set(theme_cowplot(12)) +
+   theme(legend.title = element_text(size = 15)) +
+   theme(legend.title = element_text(face = "bold")) +
+   theme(legend.text = element_text(size = 15)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 15)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Combine all PCA score plots 
+pdf("figures/pcadapt_figures/pca.pdf", width=7, height=17) 
+
+plot_grid(b,d,f,h, 
+          nrow = 4, 
+          labels = c("b","d","f","h"), 
+          label_y = 1.03, 
+          label_size = 30)
+
+dev.off()
+```
+
+###### 2b.2.3. Generate Combined Scree and PCA figures for optimal number of K; run the Rmd chunk below:
+
+##### Generate a combined Scree and PCA plot: `figures/pcadapt_figures/scree_pca.pdf`
+```{r}
+# Get a named version of the Scree plot figure
+scree <-plot_grid(a,c,e,g, 
+                  nrow = 4, 
+                  labels = c("a","c","e","g"), 
+                  label_size = 30, 
+                  label_y = 1.03)
+
+pca <- plot_grid(b,d,f,h, 
+                 nrow = 4, 
+                 labels = c("b","d","f","h"), 
+                 label_y = 1.03, 
+                 label_size = 30)
+
+
+#Combine Scree and PCA plots
+pdf("figures/pcadapt_figures/scree_pca.pdf", width=14, height=17) 
+
+plot_grid(scree, 
+          pca, 
+          ncol = 2,
+          align = "v")
+
+dev.off()
+```
+
+### STEP 3: Identify outlier SNP loci.
+In this step, we are identifying SNPs explaining the largest proportion of variance on each retained PC to determine SNPs potentially under selection.
+
+#### 3a: 
+
+## Get outlier SNPs using bonferroni p-value corrections
+```{r}
+all_p_vals_pca <- all_pca_K2$pvalues
+
+#IMPORTANT NOTE: 4 SNPs were dropped here, because after removal of BFC10, 4 SNPs appear to be fixed for one allele (homozygous for a single SNP). 
+
+#Adjust and clean p-values
+all_p_vals_bonf <- p.adjust(all_p_vals_pca, method = "bonferroni") #adjust p-values for multiple test with bonferroni correction
+all_p_vals_bonf <- as.data.frame(all_p_vals_bonf) #create dataframe from bonferroni corrected p-values
+all_p_vals_bonf <- cbind(snp_ids_with_pos, all_p_vals_bonf) #append snp ids dataset to corrected p-values
+all_p_vals_bonf <- all_p_vals_bonf[,c(1,3)]
+colnames(all_p_vals_bonf) <- c("snp_id","p_val") #clean dataframe to include appropriate column lables
+all_p_vals_bonf <- all_p_vals_bonf %>%
+   drop_na() #50,824 SNPs left after removing fixed alleles
+
+#Retrieve significant outlier snps
+all_pcadapt_snps_significant <- all_p_vals_bonf %>% 
+   filter(p_val < 0.05) #extract only snps with p-values less than 0.05
+
+all_pcadapt_snps_not_significant <- all_p_vals_bonf %>% 
+   filter(p_val >= 0.05) #extract only snps with p-values greater than or equal to 0.05
+
+#Get the number of significant and non-significant SNPs from PCADAPT
+dim(all_pcadapt_snps_significant) #16,358 SNPs
+dim(all_pcadapt_snps_not_significant) #34,466 SNPs
+
+all_bayescan_pcadapt_outlier_merged <- merge(all_pcadapt_snps_significant, bayescan_all_fst_significant, by = "snp_id")
+all_bayescan_pcadapt_neutral_merged <- merge(all_pcadapt_snps_not_significant, bayescan_all_fst_not_significant, by = "snp_id")
+
+#There are no shared outlier SNPs between datasets, so they will not be analyed further
+#There are 34,463 neutral SNPs
+```
+
+## Outlier SNPs - SMB Samples Only
+
+## Get outlier SNPs using bonferroni p-value corrections
+```{r}
+#Get outlier SNPs using various p-value corrections
+smb_p_vals_pca <- smb_pca_K2$pvalues #extract p-values for each snp
+smb_p_dropped <- as.data.frame(smb_p_vals_pca) %>% filter(is.na(smb_p_vals_pca)) # 7,951 dropped
+
+###IMPORTANT NOTE: At this point, 7,951 SNPs were dropped from the analysis (and do not have p-values; NAs), because they are not true SNPs. They are fixed SNPs for all Smallmouth Bass samples. In other words, all 87 SMB individuals are homozygous for a single allele in this case.
+
+###I thought that, at this point, it may be necessary to re-run my original, hierarchical datasets for SMB only, Neosho SMB only, and Northern SMB only, because minor allele frequency will change when any number of samples are dropped from a dataset. This will affect the number of SNPs that are filtered when different filter thresholds are set (for missing data, heterozygosity, minor allele frequency, etc.). However, I argue that this is NOT necessary, because my original filters were applied to the whole dataset, which is the dataset that was used to call SNPs in the first place. Minor allele frequency thresholds are typically used to filter out samples that have low minor allele frequencies due to sequencing error. Sequencing error should be evaluated at the level of the entire dataset (i.e. including every single sample). If samples are then removed from the dataset post-hoc, that will affect allele frequencies because the total number alleles in the dataset will change. But it will not affect the minor allele frequency due to sequencing errors. After post-hoc sample filtering, we should expect that minor allele frequencies below the originally established threshold are due to differences between the samples and potentially representative of biological differences.
+
+#Adjust and clean p-values
+smb_p_vals_bonf <- p.adjust(smb_p_vals_pca, method = "bonferroni") #adjust p-values for multiple test with bonferroni correction
+smb_p_vals_bonf <- as.data.frame(smb_p_vals_bonf) #create dataframe from bonferroni corrected p-values
+smb_p_vals_bonf <- cbind(snp_ids_with_pos, smb_p_vals_bonf) #append snp ids dataset to corrected p-values
+smb_p_vals_bonf <- smb_p_vals_bonf[,c(1,3)]
+colnames(smb_p_vals_bonf) <- c("snp_id","p_val") #clean dataframe to include appropriate column lables
+smb_p_vals_bonf <- smb_p_vals_bonf %>%
+   drop_na() #42,877 SNPs left after removing fixed alleles
+
+#Retrieve significant outlier snps
+smb_pcadapt_snps_significant <- smb_p_vals_bonf %>% 
+   filter(p_val < 0.05) #extract only snps with p-values less than 0.05
+
+smb_pcadapt_snps_not_significant <- smb_p_vals_bonf %>% 
+   filter(p_val >= 0.05) #extract only snps with p-values greater than or equal to 0.05
+
+#Get the number of significant and non-significant SNPs from PCADAPT
+dim(smb_pcadapt_snps_significant) #1006 SNPs
+dim(smb_pcadapt_snps_not_significant) #41,871 SNPs
+```
+
+## MERGE DATASETS
+## Merge datasets for outlier SNPs and neutral SNPs for BAYESCAN and PCADAPT
+```{r}
+#Merge datasets for outlier SNPs and neutral SNPs for BAYESCAN and PCADAPT
+smb_bayescan_pcadapt_outlier_merged <- merge(smb_pcadapt_snps_significant, bayescan_smb_lineages_fst_significant, by = "snp_id")
+smb_bayescan_pcadapt_neutral_merged <- merge(smb_pcadapt_snps_not_significant, bayescan_smb_lineages_fst_not_significant, by = "snp_id")
+
+#########This is where PCAdapt and Bayescan overlap#############
+
+# 156 SNPs (signficant in both pcadapt analysis and bayescan)
+# 41,324 SNPs (non-significant in both pcadapt analysis and bayescan)
+```
+
+###The Merge Datasets section combines the tabular output of both Bayescan and PCAdapt to identify individual SNPs that are signicant outliers in both types of analyses. SNPs that are identified as outliers in both types of analysis are considered to have stronger support as actual outliers. There are no separate subsections for this section. 
+```{r}
+#Write out tables with merged datasets to be used for making new vcfs with only outliers and only neutral SNPs
+write.table(smb_bayescan_pcadapt_outlier_merged,"~/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/analysis/outlier_fst_analysis/by_lineages/smb_merged_datasets/smb_bayescan_pcadapt_outlier_merged.txt", sep="\t") #this is the combined dataset with significant snps, written out as a .txt file
+write.table(smb_bayescan_pcadapt_neutral_merged,"~/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/analysis/outlier_fst_analysis/by_lineages/smb_merged_datasets/smb_bayescan_pcadapt_neutral_merged.txt", sep="\t") #this is the combined dataset with non-significant snps, written out as a .txt file
+
+#Create table for significant snps (including snp id and position)
+smb_sig_snps <- as.data.frame(smb_bayescan_pcadapt_outlier_merged[,c(1)]) #This dataset includes appended the names of each individual SNP
+colnames(smb_sig_snps) <- c("snp_id")
+smb_sig_snps_pos <- merge(smb_sig_snps, snp_ids_with_pos, by = "snp_id")
+
+#Create table for neutral snps (including snp id and position)
+smb_insig_snps <- as.data.frame(smb_bayescan_pcadapt_neutral_merged[,c(1)])
+colnames(smb_insig_snps) <- c("snp_id")
+smb_insig_snps_pos <- merge(smb_insig_snps, snp_ids_with_pos, by = "snp_id")
+```
+
+## Write out separate tables with outlier and neutral snps, respectively, for later analysis
+```{r}
+#Write out separate tables with outlier and neutral snps, respectively, for later analysis
+write.table(smb_sig_snps_pos,"~/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/analysis/outlier_fst_analysis/by_lineages/smb_snps/smb_sig_snps.txt", sep="\t") #this is the dataset with only significant snps, including unique SNP ids
+write.table(smb_insig_snps_pos,"~/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/analysis/outlier_fst_analysis/by_lineages/smb_snps/smb_insig_snps.txt", sep="\t") #this is the dataset with only significant snps, including unique SNP ids
+
+#IMPORTANT NOTE: both of these tables need to be further edited in excel so that they are compatible with vcftools for later editing. The first column (column identifiers) needs to be omitted, and the RAD_kmer_ tag on each SNP needs to be removed. Also, column headers need to be removed. 
+```
+
+## Outlier SNPs - Neosho Smallmouth Bass
+
+## Get outlier SNPs using various p-value corrections
+```{r}
+#Get outlier SNPs using various p-value corrections
+neosho_p_vals_pca <- neosho_pca_K4$pvalues #extract p-values for each snp
+
+###IMPORTANT NOTE: At this point, 14,483 SNPs were dropped from the analysis (and do not have p-values; NAs), because they are not true SNPs. They are fixed SNPs for all Neosho Smallmouth Bass samples. In other words, all 63 Neosho individuals are homozygous for a single allele in this case.
+
+#Adjust and clean p-values
+neosho_p_vals_bonf <- p.adjust(neosho_p_vals_pca, method = "bonferroni") #adjust p-values for multiple test with bonferroni correction
+neosho_p_vals_bonf <- as.data.frame(neosho_p_vals_bonf) #create dataframe from bonferroni corrected p-values
+neosho_p_vals_bonf <- cbind(filtered_vcf_snp_ids, neosho_p_vals_bonf) #append snp ids dataset to corrected p-values
+colnames(neosho_p_vals_bonf) <- c("snp_id","p_val") #clean dataframe to include appropriate column lables
+neosho_p_vals_bonf <- neosho_p_vals_bonf %>%
+   drop_na() #36,345 SNPs left after removing fixed alleles
+
+#Retrieve significant outlier snps
+neosho_pcadapt_snps_significant <- neosho_p_vals_bonf %>% 
+   filter(p_val < 0.05) #extract only snps with p-values less than 0.05
+
+neosho_pcadapt_snps_not_significant <- neosho_p_vals_bonf %>% 
+   filter(p_val >= 0.05) #extract only snps with p-values greater than or equal to 0.05
+
+
+#Get the number of significant and non-significant SNPs from PCADAPT
+dim(neosho_pcadapt_snps_significant) #1304 SNPs
+dim(neosho_pcadapt_snps_not_significant) #35,041 SNPs
+```
+
 
 
 ### ----------------------- END OF PHASE 3: OUTLIER ANALYSIS WITH PCADAPT ----------------------- ###
 
 ## PHASE 4: OUTLIER MAPPING
-In this phase of the analysis, we are conducting a multivariate analysis on SNPs either inferred to be significant outliers or neutral in both the BAYESCAN and PCADAPT genome scan analyses. Specifically, we are mapping <i>a priori</i> populations (determined in Analysis 4 (population inference)) onto multivariate space using outlier and neutral SNPs as response variables in Discriminant Analysis of Principal Components
-
+In this phase of the analysis, we are conducting a multivariate analysis on SNPs either inferred to be significant outliers or neutral in both the BAYESCAN and PCADAPT genome scan analyses. Specifically, we are mapping <i>a priori</i> populations (determined in Analysis 4 (population inference)) onto multivariate space using outlier and neutral SNPs as response variables in Discriminant Analysis of Principal Components (DAPC).
 
 
 ### ----------------------- END OF PHASE 4: OUTLIER MAPPING ----------------------- ###
