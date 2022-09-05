@@ -843,6 +843,402 @@ This code generates four oupt files here: `data/bayescan_output/04_smallmouth_ou
 3) 04_smallmouth.sel
 4) 04_smallmouth.txt
 
+### STEP 2: Identify SNP loci associated with outlier Fst inferred in BAYESCAN.
+In this step, we are reading in the Fst results generated in the BAYESCAN analysis in Phase 2 Step 1 and identifying loci with outlier Fst values.
+
+#### 2a: Read in Fst results for all hiearchical analyses; run the Rmd chunk below.
+
+##### Read in Fst results for all analyses:
+```{r}
+# Read in data for all black bass samples (Spotted Bass, Neosho Bass, and Smallmouth Bass)
+all_fst <- read.table("data/bayescan_output/01_all_output/01_all_fst.txt")
+
+# Convert to dataframe
+all_fst <- as.data.frame(all_fst)
+
+# Modify column names
+colnames(all_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+
+
+# Read in data for species complex samples (Neosho Bass and Smallmouth Bass)
+species_complex_fst <- read.table("data/bayescan_output/02_species_complex_output/02_species_complex_fst.txt")
+
+# Convert to dataframe
+species_complex_fst <- as.data.frame(species_complex_fst)
+  
+# Modify column names
+colnames(species_complex_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+
+
+# Read in data for Neosho Bass
+neosho_fst <- read.table("data/bayescan_output/03_neosho_output/03_neosho_fst.txt")
+
+# Convert to dataframe
+neosho_fst <- as.data.frame(neosho_fst)
+
+# Modify column names
+colnames(neosho_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+  
+
+# Read in data for Smallmouth Bass
+smallmouth_fst <- read.table("data/bayescan_output/04_smallmouth_output/04_smallmouth_fst.txt")
+
+# Convert to dataframe
+smallmouth_fst <- as.data.frame(smallmouth_fst)
+
+# Modify column names
+colnames(smallmouth_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+```
+
+#### 2b: Identify outlier SNP loci
+In this step, we are identifying SNP loci with high probability of being under selection based on log10 of the posterior odds (log_po), which is given in column 2 of the BAYESCAN output data. Per the BAYESCAN user manual, any SNP with log10 posterior odds greater than or equal to 0.5 is deemed "substantially likely to be under selection". We therefore isolated all SNPs with log_po greater than 0.5 and designated them as "significant". All SNPs with log_po less than 0.5 were designated as "not significant".
+
+We provided information on the level of significance for each "significant" SNP per to the BAYESCAN user manual (retrieved from: http://www.cmpg.unibe.ch/software/BayeScan/files/BayeScan2.0_manual.pdf):
+
+<b>BAYESCAN levels of significance</b>: <br>
+2.00 <= log_po < infinity: decisive <br>
+1.50 <= log_po < 2.00: very strong <br>
+1.00 <= log_po < 1.50: strong <br>
+0.50 <= log_po < 1.00: substantial <br>
+0.00 <= log_po < 0.50: barely worth mentioning <br>
+
+##### 2b.1. Isolate significant and insignificant SNPs for all black bass samples; run the Rmd chunk below:
+
+##### Outlier SNP identification for all black bass samples:
+```{r}
+# Isolate SNPs with log_po greater than or equal to 0.5
+all_significant <- all_fst %>% 
+      filter(log_po >= 0.5) 
+
+# Isolate SNPs with log_po less than 0.5
+all_not_significant <- all_fst %>% 
+      filter(log_po < 0.5) 
+
+# Put log_po in descending order to analyze significance level 
+all_significant <- all_significant %>%
+  arrange(desc(log_po))
+
+# count SNPs that are decisively under selection
+all_significant %>% 
+  filter(log_po >= 2) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+all_significant %>% 
+  filter(log_po >= 1.5 & log_po < 2) %>% 
+  count()
+
+# count SNPs that are under strong selection
+all_significant %>% 
+  filter(log_po >= 1 & log_po < 1.5) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+all_significant %>% 
+  filter(log_po >= 0.5 & log_po < 1) %>% 
+  count()
+
+# Append column for selection status ("selection"; significant or not signficant)
+all_significant$selection <- c(rep("significant", times = 3))
+all_not_significant$selection <- c(rep("insignificant", times = 50825))
+
+# Append column for significance level ("sig_level"; decisive, very strong, substantial)
+all_significant$sig_level <- c(rep("very_strong", times = 1),rep("substantial", times = 2))
+all_not_significant$sig_level <- c(rep("not_significant", times = 50825))
+
+#combine data into one dataframe
+all_fst <- rbind(all_significant, all_not_significant)
+```
+##### 2b.2. Isolate significant and insignificant SNPs for species complex samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below:
+
+##### Outlier SNP identification for all black bass samples:
+```{r}
+# Isolate SNPs with log_po greater than or equal to 0.5
+species_complex_significant <- species_complex_fst %>% 
+      filter(log_po >= 0.5) 
+
+# Isolate SNPs with log_po less than 0.5
+species_complex_not_significant <- species_complex_fst %>% 
+      filter(log_po < 0.5) 
+
+# Put log_po in descending order to analyze significance level 
+species_complex_significant <- species_complex_significant %>%
+  arrange(desc(log_po))
+
+# count SNPs that are decisively under selection
+species_complex_significant %>% 
+  filter(log_po >= 2) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+species_complex_significant %>% 
+  filter(log_po >= 1.5 & log_po < 2) %>% 
+  count()
+
+# count SNPs that are under strong selection
+species_complex_significant %>% 
+  filter(log_po >= 1 & log_po < 1.5) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+species_complex_significant %>% 
+  filter(log_po >= 0.5 & log_po < 1) %>% 
+  count()
+
+# Append column for selection status ("selection"; significant or not signficant)
+species_complex_significant$selection <- c(rep("significant", times = 703))
+species_complex_not_significant$selection <- c(rep("insignificant", times = 50125))
+
+# Append column for significance level ("sig_level"; decisive, very strong, substantial)
+species_complex_significant$sig_level <- c(rep("decisive", times = 118), 
+                                                rep("very_strong", times = 86), 
+                                                rep("strong", times = 164), 
+                                                rep("substantial", times = 335))
+
+species_complex_not_significant$sig_level <- c(rep("not_significant", times = 50125))
+
+#combine data into one dataframe
+species_complex_fst <- rbind(species_complex_significant, species_complex_not_significant)
+```
+##### 2b.3. Isolate significant and insignificant SNPs for Neosho Bass only; run the Rmd chunk below:
+
+##### Outlier SNP identification for all black bass samples:
+```{r}
+# Isolate SNPs with log_po greater than or equal to 0.5
+neosho_significant <- neosho_fst %>% 
+      filter(log_po >= 0.5) 
+
+# Isolate SNPs with log_po less than 0.5
+neosho_not_significant <- neosho_fst %>% 
+      filter(log_po < 0.5) 
+
+# Put log_po in descending order to analyze significance level 
+neosho_significant <- neosho_significant %>%
+  arrange(desc(log_po))
+
+# count SNPs that are decisively under selection
+neosho_significant %>% 
+  filter(log_po >= 2) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+neosho_significant %>% 
+  filter(log_po >= 1.5 & log_po < 2) %>% 
+  count()
+
+# count SNPs that are under strong selection
+neosho_significant %>% 
+  filter(log_po >= 1 & log_po < 1.5) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+neosho_significant %>% 
+  filter(log_po >= 0.5 & log_po < 1) %>% 
+  count()
+
+# Append column for selection status ("selection"; significant or not signficant)
+neosho_significant$selection <- c(rep("significant", times = 32))
+neosho_not_significant$selection <- c(rep("insignificant", times = 50796))
+
+# Append column for significance level ("sig_level"; decisive, very strong, substantial)
+neosho_significant$sig_level <- c(rep("decisive", times = 2), 
+                                                rep("very_strong", times = 5), 
+                                                rep("strong", times = 4), 
+                                                rep("substantial", times = 21))
+
+neosho_not_significant$sig_level <- c(rep("not_significant", times = 50796))
+
+#combine data into one dataframe
+neosho_fst <- rbind(neosho_significant, neosho_not_significant)
+```
+
+##### 2b.4. Isolate significant and insignificant SNPs for  Smallmouth Bass only; run the Rmd chunk below:
+
+##### Outlier SNP identification for all black bass samples:
+```{r}
+# Isolate SNPs with log_po greater than or equal to 0.5
+smallmouth_significant <- smallmouth_fst %>% 
+      filter(log_po >= 0.5) 
+
+# Isolate SNPs with log_po less than 0.5
+smallmouth_not_significant <- smallmouth_fst %>% 
+      filter(log_po < 0.5) 
+
+# Put log_po in descending order to analyze significance level 
+smallmouth_significant <- smallmouth_significant %>%
+  arrange(desc(log_po))
+
+# count SNPs that are decisively under selection
+smallmouth_significant %>% 
+  filter(log_po >= 2) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+smallmouth_significant %>% 
+  filter(log_po >= 1.5 & log_po < 2) %>% 
+  count()
+
+# count SNPs that are under strong selection
+smallmouth_significant %>% 
+  filter(log_po >= 1 & log_po < 1.5) %>% 
+  count()
+
+# count SNPs that are under very strong selection
+smallmouth_significant %>% 
+  filter(log_po >= 0.5 & log_po < 1) %>% 
+  count()
+
+# Append column for selection status ("selection"; significant or not signficant)
+smallmouth_significant$selection <- c(rep("significant", times = 6))
+smallmouth_not_significant$selection <- c(rep("insignificant", times = 50822))
+
+# Append column for significance level ("sig_level"; decisive, very strong, substantial)
+smallmouth_significant$sig_level <- c(rep("substantial", times = 6))
+
+smallmouth_not_significant$sig_level <- c(rep("not_significant", times = 50822))
+
+#combine data into one dataframe
+smallmouth_fst <- rbind(smallmouth_significant, smallmouth_not_significant)
+```
+
+#### 2c: Filter datasets to omit SNPs with log_po values of 1000 for clean visualization (because they distort the figure).
+
+##### Omit SNPs with log_po greater than or equal to 1000; run the Rmd chunk below:
+
+##### Omit SNPs with log_po greater than or equal to 1000:
+```{r}
+# Get SNPs with log_po = 1000 for all black bass samples
+all_1000 <- all_fst %>% 
+      filter(log_po >= 1000) 
+
+# Get SNPs with log_po < 1000 for all black bass samples
+all_clean <- all_fst %>% 
+      filter(log_po < 1000) 
+
+# Get SNPs with log_po = 1000 for species complex samples
+species_complex_1000 <- species_complex_fst %>% 
+      filter(log_po >= 1000) 
+
+# Get SNPs with log_po < 1000 for all species complex samples
+species_complex_clean <- species_complex_fst %>% 
+      filter(log_po < 1000) 
+
+# Get SNPs with log_po = 1000 for species complex samples
+neosho_1000 <- neosho_fst %>% 
+      filter(log_po >= 1000)
+
+# Get SNPs with log_po < 1000 for Neosho Bass samples
+neosho_clean <- neosho_fst %>% 
+      filter(log_po < 1000) #extract only snps with log10 less than 1000
+
+# Get SNPs with log_po = 1000 for Smallmouth Bass samples
+smallmouth_1000 <- smallmouth_fst %>% 
+      filter(log_po >= 1000) 
+
+# Get SNPs with log_po < 1000 for Smallmouth Bass samples
+smallmouth_clean <- smallmouth_fst %>% 
+      filter(log_po < 1000) #extract only snps with log10 less than 1000
+
+```
+
+### STEP 3: Plot BAYESCAN Fst results
+In this step, we are using the Fst data inferred from BAYESCAN to plot Fst as a function of log posterior odds, which shows the distribution of Fst values and their respective signficance.
+
+#### 3a: Generate plots for each hierarchical analysis; run the Rmd chunk below:
+We chose to include each plot as separate panels in one figure. The plots are named "a", "b", "c", and "d", and appear in that order in the final manuscript. We colored points and included dotted lines to indicate significance level.
+
+##### Generate plot for all black bass samples: `figures/bayescan_figures/fst.pdf`
+```{r}
+# Plot for all black bass samples
+a <- ggplot(all_clean, aes(x = log_po, y = fst, fill = sig_level)) + 
+      geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) +
+      geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") + 
+       geom_vline(xintercept = 1, linetype = "longdash", color = "black") +
+      geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
+      theme_set(theme_cowplot(12)) + 
+      scale_fill_manual(values = c("grey","#FCFFA4FF","#BB3754FF")) +
+      labs(x = "Log10(Posterior Odds)", y = "FST") + 
+      theme(axis.title = element_text(size = 20, color = "black")) +
+      theme(axis.text = element_text(size = 15, color = "black")) + 
+      theme(axis.line = element_line(color = "black")) +
+      theme(axis.ticks = element_line(color = "black")) +
+      theme(axis.title.x = element_blank()) +
+      theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+      ylab(expression(F[ST])) +
+      xlab(expression(log[10]~{("posterior odds")}))
+
+# Plot for species complex samples
+b <- ggplot(species_complex_clean, aes(x = log_po, y = fst, fill = sig_level)) +
+      geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) +
+      geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") +
+       geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
+      theme_set(theme_cowplot(12)) + 
+      scale_fill_manual(values = c("#56106EFF","grey","#F98C0AFF","#FCFFA4FF","#BB3754FF")) + 
+      labs(x = "Log10(Posterior Odds)", y = "FST") + 
+      theme(axis.title = element_text(size = 20, color = "black")) + 
+      theme(axis.text = element_text(size = 15, color = "black")) + 
+      theme(axis.line = element_line(color = "black")) +
+      theme(axis.ticks = element_line(color = "black")) +
+      theme(axis.title.x = element_blank()) +
+      theme(axis.title.y = element_blank())  +
+      theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+      ylab(expression(F[ST])) +
+      xlab(expression(log[10]~{("posterior odds")}))
+
+# Plot for Neosho BAss samples
+c <- ggplot(neosho_clean, aes(x = log_po, y = fst, fill = sig_level)) + 
+      geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) + 
+      geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") +
+       geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
+      theme_set(theme_cowplot(12)) +
+      scale_fill_manual(values = c("#56106EFF","grey","#F98C0AFF","#FCFFA4FF","#BB3754FF")) + 
+      labs(x = "Log10(Posterior Odds)", y = "FST") + 
+      theme(axis.title = element_text(size = 20, color = "black")) +
+      theme(axis.text = element_text(size = 15, color = "black")) + 
+      theme(axis.line = element_line(color = "black")) +
+      theme(axis.ticks = element_line(color = "black")) +
+      theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+      ylab(expression(F[ST])) +
+      xlab(expression(log[10]~{("posterior odds")}))
+
+# Plot for Smallmouth Bass samples
+d <- ggplot(smallmouth_clean, aes(x = log_po, y = fst, fill = sig_level)) + 
+      geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) + 
+      geom_vline(xintercept = 2, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 1.5, linetype = "longdash", color = "black") + 
+       geom_vline(xintercept = 1, linetype = "longdash", color = "black") + 
+      geom_vline(xintercept = 0.5, linetype = "longdash", color = "black") + 
+      theme_set(theme_cowplot(12)) + 
+      scale_fill_manual(values = c("grey","#FCFFA4FF")) + 
+      labs(x = "Log10(Posterior Odds)", y = "FST") + 
+      theme(axis.title = element_text(size = 20, color = "black")) + 
+      theme(axis.text = element_text(size = 15, color = "black")) + 
+      theme(axis.title.y = element_blank()) + 
+      theme(axis.line = element_line(color = "black")) +
+      theme(axis.ticks = element_line(color = "black"))  +
+      theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+      ylab(expression(F[ST])) +
+      xlab(expression(log[10]~{("posterior odds")}))
+
+# Put plots together
+pdf("figures/bayescan_figures/fst.pdf", width=13, height=10)
+
+plot_grid(a,b,c,d, 
+          nrow = 2, 
+          align = "hv", 
+          labels = c("a","b","c","d"), 
+          label_size = 25)
+
+dev.off()
+```
+
+This figure was used as the basis for Supplementary Figure 6 in our manuscript.
+
 ### ----------------------- END OF PHASE 2: OUTLIER ANALYSIS WITH BAYESCAN ----------------------- ###
 
 ## PHASE 3: OUTLIER ANALYSIS WITH PCADAPT
