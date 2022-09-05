@@ -2150,314 +2150,446 @@ Run: `sbatch vcftools.sh`
 
 This code generates the file: `data/processed_vcf/04_popgen_smallmouth_neutral_snps.vcf`.
 
+### STEP 3: Conduct DAPC Analysis
+In this step, we are reading in the filtered VCF files for all hierarchical analyses generated in Step 2 and mapping both neutral and outlier SNPs onto our a priori inferred populations using Discriminant Analysis of Principal Components (DAPC).
 
+#### 3a: Read in and modify VCF files for all hierarchical analyses.
 
+##### 3a.1. Read in input data; run the Rmd chunk below:
 
-## Metadata 
-```{r}
-#Read in metadata file. I am using the population designations as inferred from fineradstructure and admixture analysis, which keeps all of the rivers as separate populations, with the exception of Honey Creek and Sycamore Creek, Piney AR and Illinois Bayou, and Lee Creek and Mulberry River. Northern Smallmouth Bass populations are separated into drainages. 
-smb_pops_noBFC10 <- read_excel("../../metadata/sample_metadata/genomics_metadata_filtered.xlsx") %>%
-   filter(sample_id != "BFC10") %>%
-   filter(species != "Spotted Bass") 
-
-smb_pops <- smb_pops_noBFC10
-
-neosho_pops <- smb_pops_noBFC10 %>% 
-   filter(species == "Neosho")
-
-midark_white_elk_pops <- smb_pops_noBFC10 %>%
-   filter(finerad_pops == "WHITE" |finerad_pops == "MIDARK"|finerad_pops == "ELK")
-
-midark_white_bayou_pops <- smb_pops_noBFC10 %>%
-   filter(finerad_pops == "WHITE" |finerad_pops == "MIDARK"|finerad_pops == "BAYOU")
-
-midark_white_uppark_pops <- smb_pops_noBFC10 %>%
-   filter(finerad_pops == "WHITE" |finerad_pops == "MIDARK"|finerad_pops == "UPPARK")
-
-midark_skia_illi_pops <- smb_pops_noBFC10 %>%
-   filter(finerad_pops == "SKIA" |finerad_pops == "MIDARK"|finerad_pops == "ILLI")
-
-#convert population abbreviations into a single vector
-smb_pops <- cbind(smb_pops$finerad_pops)
-as.vector(smb_pops)
-
-neosho_pops <- cbind(neosho_pops$finerad_pops)
-as.vector(neosho_pops)
-
-midark_white_elk_pops <- cbind(midark_white_elk_pops$finerad_pops)
-as.vector(midark_white_elk_pops)
-
-midark_white_bayou_pops <- cbind(midark_white_bayou_pops$finerad_pops)
-as.vector(midark_white_bayou_pops)
-
-midark_white_uppark_pops <- cbind(midark_white_uppark_pops$finerad_pops)
-as.vector(midark_white_uppark_pops)
-
-midark_skia_illi_pops <- cbind(midark_skia_illi_pops$finerad_pops)
-as.vector(midark_skia_illi_pops)
-
-```
-
-# DAPC Analysis
-### All DAPC analyses were conducted using data generated from BayeScan and PCAdapt and coverted to VCF in VCFTOOLS. R analysis was conducted with the adegenet package
 ## Read-in VCF data for DAPC
 ```{r}
-#read-in VCF files for outlier SNPs and neutral SNPs
-###SMB Samples Only###
-vcf_smb_noBFC10_outliers <- read.vcfR("../../raw_data/dapc_data/smb_snps/smb_lineages_outlier_snps.vcf")
-vcf_smb_noBFC10_neutral <- read.vcfR("../../raw_data/dapc_data/smb_snps/smb_lineages_neutral_snps.vcf")
+# Read in VCF data for all black bass samples
 
-###Neosho Samples Only###
-vcf_neosho_noBFC10_outliers <- read.vcfR("../../raw_data/dapc_data/neosho_snps/neosho_lineages_outlier_snps.vcf")
-vcf_neosho_noBFC10_neutral <- read.vcfR("../../raw_data/dapc_data/neosho_snps/neosho_lineages_neutral_snps.vcf")
+# Read in outlier snps
+all_outliers <- read.vcfR("data/processed_vcf/01_popgen_all_outlier_snps.vcf")
 
-#Convert VCF to a genind object
-###SMB Samples Only###
-smb_noBFC10_outliers_genind <- vcfR2genind(vcf_smb_noBFC10_outliers)
-smb_noBFC10_neutral_genind <- vcfR2genind(vcf_smb_noBFC10_neutral)
+# Read in neutral snps
+all_neutral <- read.vcfR("data/processed_vcf/01_popgen_all_neutral_snps.vcf")
 
-###Neosho Samples Only###
-neosho_noBFC10_outliers_genind <- vcfR2genind(vcf_neosho_noBFC10_outliers)
-neosho_noBFC10_neutral_genind <- vcfR2genind(vcf_neosho_noBFC10_neutral)
+# Read in VCF data for species complex samples
 
-#Convert population designation vector into pop object within genind
-###SMB Samples Only###
-smb_noBFC10_outliers_genind@pop <- as.factor(smb_pops)
-smb_noBFC10_neutral_genind@pop <- as.factor(smb_pops)
+# Read in outlier snps
+species_complex_outliers <- read.vcfR("data/processed_vcf/02_popgen_species_complex_outlier_snps.vcf")
 
-###Neosho Samples Only###
-neosho_noBFC10_outliers_genind@pop <- as.factor(neosho_pops)
-neosho_noBFC10_neutral_genind@pop <- as.factor(neosho_pops)
+# Read in neutral snps
+species_complex_neutral <- read.vcfR("data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf")
 
-#In order for DAPC to run, it is important to "scale" the outlier and neutral datasets and to make sure that there is data for EVERY individual at EVERY SNP. To account for missing data, the NA.method = c("mean) command below changes each NA value to an average across samples.
+# Read in VCF data for Neosho Bass samples
 
-###SMB Samples Only###
-#outlier SNPs only
-smb_noBFC10_outliers_genind <- scaleGen(smb_noBFC10_outliers_genind, 
-                                           center = TRUE, 
-                                           scale = TRUE, 
-                                           NA.method = c("mean"), 
-                                           truenames = TRUE)
-#neutral SNPs only
-smb_noBFC10_neutral_genind <- scaleGen(smb_noBFC10_neutral_genind, 
+# Read in outlier snps
+neosho_outliers <- read.vcfR("data/processed_vcf/03_popgen_neosho_outlier_snps.vcf")
+
+# Read in neutral snps
+neosho_neutral <- read.vcfR("data/processed_vcf/03_popgen_neosho_neutral_snps.vcf")
+
+# Read in VCF data for Smallmouth Bass samples
+
+# Read in outlier snps
+smallmouth_outliers <- read.vcfR("data/processed_vcf/04_popgen_smallmouth_outlier_snps.vcf")
+
+# Read in neutral snps
+smallmouth_neutral <- read.vcfR("data/processed_vcf/04_popgen_smallmouth_neutral_snps.vcf")
+```
+
+##### 3a.2. Convert VCF files to genind objects, which are the preferred input type for DAPC, and include population designations in the object:
+
+## Convert VCF to genind format for DAPC:
+```{r}
+## Convert files to genind objects
+
+# Convert files for all black bass samples
+all_outliers_genind <- vcfR2genind(all_outliers) # No SNPs to work with (this code will not run)
+all_neutral_genind <- vcfR2genind(all_neutral)
+
+# Convert files for species complex samples
+species_complex_outliers_genind <- vcfR2genind(species_complex_outliers)
+species_complex_neutral_genind <- vcfR2genind(species_complex_neutral)
+
+# Convert files for Neosho Bass samples
+neosho_outliers_genind <- vcfR2genind(neosho_outliers)
+neosho_neutral_genind <- vcfR2genind(neosho_neutral)
+
+# Convert files for Smallmouth Bass samples
+smallmouth_outliers_genind <- vcfR2genind(smallmouth_outliers)  # No SNPs to work with (this code will not run)
+smallmouth_neutral_genind <- vcfR2genind(smallmouth_neutral)
+
+## Include population designations in genind objects
+
+# Include populations for all black bass samples 
+all_outliers_genind@pop <- as.factor(all_pops) # No SNPs to work with (this code will not run)
+all_neutral_genind@pop <- as.factor(all_pops)
+
+# Include populations for species complex samples 
+species_complex_outliers_genind@pop <- as.factor(species_complex_pops)
+species_complex_neutral_genind@pop <- as.factor(species_complex_pops)
+
+# Include populations for Neosho Bass samples 
+neosho_outliers_genind@pop <- as.factor(neosho_pops)
+neosho_neutral_genind@pop <- as.factor(neosho_pops)
+
+# Include populations for Smallmouth Bass samples 
+smallmouth_outliers_genind@pop <- as.factor(smallmouth_pops) # No SNPs to work with (this code will not run)
+smallmouth_neutral_genind@pop <- as.factor(smallmouth_pops)
+```
+
+Since there are no shared outlier SNPs for the black bass species combined dataset and for the Smallmouth Bass only dataset, we are at this point only moving forward with analysis on the species complex samples (Neosho Bass and Smallmouth Bass) and are not further analyzing all black bass species or only Smallmouth Bass.
+
+#### 3b: Scale and impute missing data in genind objects.
+In this step, we are calibrating all genomic data and imputing missing values so that DAPC will run. We are using the "mean" method of imputation, where the value of the genotype is computed based on a population mean.
+
+##### 3b.1. Scale and impute data for species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass samples only; run the Rmd chunk below:
+
+##### Scale and impute data:
+```{r}
+## Scale data for species complex samples
+
+# Scale outlier SNPs
+species_complex_outliers_genind <- scaleGen(species_complex_outliers_genind, 
                                           center = TRUE, 
                                           scale = TRUE, 
                                           NA.method = c("mean"), 
                                           truenames = TRUE)
 
-
-###Neosho Samples Only###
-#outlier SNPs only
-neosho_noBFC10_outliers_genind <- scaleGen(neosho_noBFC10_outliers_genind, 
-                                           center = TRUE, 
-                                           scale = TRUE, 
-                                           NA.method = c("mean"), 
-                                           truenames = TRUE)
-#neutral SNPs only
-neosho_noBFC10_neutral_genind <- scaleGen(neosho_noBFC10_neutral_genind, 
+# Scale neutral SNPs
+species_complex_neutral_genind <- scaleGen(species_complex_neutral_genind, 
                                           center = TRUE, 
                                           scale = TRUE, 
                                           NA.method = c("mean"), 
                                           truenames = TRUE)
 
-#Now, I am running cross validation on my samples, using 90 % of samples as a training set and 10% of samples as a test set, and choosing the number of PCs per analysis that maximizes successful assignment
+## Scale data for Neosho Bass samples
 
-#SMB outlier SNPs only
-xval_smb_noBFC10_outliers_genind <- xvalDapc(smb_noBFC10_outliers_genind, smb_pops, n.pca.max = 300, training.set = 0.9,result = "groupMean", center = TRUE, scale = FALSE, n.pca = NULL, n.rep = 30, xval.plot = TRUE)
-
-xval_smb_noBFC10_outliers_genind_df <- as.data.frame(xval_smb_noBFC10_outliers_genind$`Cross-Validation Results`) 
-xval_smb_outlier_aves <- xval_smb_noBFC10_outliers_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-##25 PCs retained
-
-#SMB neutral SNPs only
-xval_smb_noBFC10_neutral_genind <- xvalDapc(smb_noBFC10_neutral_genind, smb_pops, n.pca.max = 300, training.set = 0.9,result = "groupMean", center = TRUE, scale = FALSE, n.pca = NULL, n.rep = 30, xval.plot = TRUE)
-
-xval_smb_noBFC10_neutral_genind_df <- as.data.frame(xval_smb_noBFC10_neutral_genind$`Cross-Validation Results`) 
-xval_smb_neutral_aves <- xval_smb_noBFC10_neutral_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-#5 PCs retained
-
-#Neosho outlier SNPs only
-xval_neosho_noBFC10_outliers_genind <- xvalDapc(neosho_noBFC10_outliers_genind, neosho_pops, n.pca.max = 300, training.set = 0.9,result = "groupMean", center = TRUE, scale = FALSE, n.pca = NULL, n.rep = 30, xval.plot = TRUE)
-
-xval_neosho_noBFC10_outliers_genind_df <- as.data.frame(xval_neosho_noBFC10_outliers_genind$`Cross-Validation Results`) 
-xval_neosho_outlier_aves <- xval_neosho_noBFC10_outliers_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-#6 PCs retained
-
-#Neosho neutral SNPs only
-xval_neosho_noBFC10_neutral_genind <- xvalDapc(neosho_noBFC10_neutral_genind, neosho_pops, n.pca.max = 300, training.set = 0.9,result = "groupMean", center = TRUE, scale = FALSE, n.pca = NULL, n.rep = 30, xval.plot = TRUE)
-
-xval_neosho_noBFC10_neutral_genind_df <- as.data.frame(xval_neosho_noBFC10_neutral_genind$`Cross-Validation Results`) 
-xval_neosho_neutral_aves <- xval_neosho_noBFC10_neutral_genind_df  %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-#10 PCs retained
-
-
-
-
-
-
-```
-
-#####TEST
-```{r}
-
-vcf_midark_white_elk_neosho_outliers <- read.vcfR("../../raw_data/dapc_data/neosho_snps/MIDARK_WHITE_ELK_neosho_outlier_snps.vcf")
-vcf_midark_white_elk_neosho_outliers_genind <- vcfR2genind(vcf_midark_white_elk_neosho_outliers)
-vcf_midark_white_elk_neosho_outliers_genind@pop <- as.factor(midark_white_elk_pops)
-
-vcf_midark_white_elk_neosho_outliers_genind <- scaleGen(vcf_midark_white_elk_neosho_outliers_genind, 
+# Scale outlier SNPs
+neosho_outliers_genind <- scaleGen(neosho_outliers_genind, 
                                            center = TRUE, 
                                            scale = TRUE, 
                                            NA.method = c("mean"), 
                                            truenames = TRUE)
-
-vcf_midark_white_bayou_neosho_outliers <- read.vcfR("../../raw_data/dapc_data/neosho_snps/MIDARK_WHITE_BAYOU_neosho_outlier_snps.vcf")
-vcf_midark_white_bayou_neosho_outliers_genind <- vcfR2genind(vcf_midark_white_bayou_neosho_outliers)
-vcf_midark_white_bayou_neosho_outliers_genind@pop <- as.factor(midark_white_bayou_pops)
-
-vcf_midark_white_bayou_neosho_outliers_genind <- scaleGen(vcf_midark_white_bayou_neosho_outliers_genind, 
-                                           center = TRUE, 
-                                           scale = TRUE, 
-                                           NA.method = c("mean"), 
-                                           truenames = TRUE)
-
-vcf_midark_white_uppark_neosho_outliers <- read.vcfR("../../raw_data/dapc_data/neosho_snps/MIDARK_WHITE_UPPARK_neosho_outlier_snps.vcf")
-vcf_midark_white_uppark_neosho_outliers_genind <- vcfR2genind(vcf_midark_white_uppark_neosho_outliers)
-vcf_midark_white_uppark_neosho_outliers_genind@pop <- as.factor(midark_white_uppark_pops)
-
-vcf_midark_white_uppark_neosho_outliers_genind <- scaleGen(vcf_midark_white_uppark_neosho_outliers_genind, 
-                                           center = TRUE, 
-                                           scale = TRUE, 
-                                           NA.method = c("mean"), 
-                                           truenames = TRUE)
-
-vcf_midark_skia_illi_neosho_outliers <- read.vcfR("../../raw_data/dapc_data/neosho_snps/MIDARK_SKIA_ILLI_neosho_outlier_snps.vcf")
-vcf_midark_skia_illi_neosho_outliers_genind <- vcfR2genind(vcf_midark_skia_illi_neosho_outliers)
-vcf_midark_skia_illi_neosho_outliers_genind@pop <- as.factor(midark_skia_illi_pops)
-
-vcf_midark_skia_illi_neosho_outliers_genind <- scaleGen(vcf_midark_skia_illi_neosho_outliers_genind, 
-                                           center = TRUE, 
-                                           scale = TRUE, 
-                                           NA.method = c("mean"), 
-                                           truenames = TRUE)
-
-
+# Scale neutral SNPs
+neosho_neutral_genind <- scaleGen(neosho_neutral_genind, 
+                                          center = TRUE, 
+                                          scale = TRUE, 
+                                          NA.method = c("mean"), 
+                                          truenames = TRUE)
 ```
 
-## Run DAPC Analysis
+#### 3c: Run cross validation analysis on species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass samples only.
+In this step, we are running a cross-validation analysis, using 90% of samples in the data as a training set and 10% of data as a test set, maximum number of pcs at 300, and 30 replicates per PC value tested, to choose the number of PCs to use in each analysis. We are choosing hte number of PCs that maximizes successful assignment to our a priori defined populations, which will then give us the optimal clustering patterns of the data.
+
+##### 3c.1. Run cross validation tests on all hierarchical analyses; run the Rmd chunk below:
+
+##### Run cross validation for DAPC:
 ```{r}
-###SMB Samples Only###
-#Run DAPC on outlier SNPs
-dapc_smb_outliers <- dapc(smb_noBFC10_outliers_genind, smb_pops)
+## Run cross validation for species complex samples
 
-    #PCs used: 25
-    #Discriminant Functions retained: 2
+# Run analysis for outlier SNPs
+species_complex_outliers_xval<- xvalDapc(species_complex_outliers_genind,
+                                smb_pops,
+                                n.pca.max = 300, 
+                                training.set = 0.9,
+                                result = "groupMean",
+                                center = TRUE, 
+                                scale = FALSE, 
+                                n.pca = NULL,
+                                n.rep = 30, 
+                                xval.plot = TRUE)
 
-#Run DAPC on Neutral SNPs
-dapc_smb_neutrals <- dapc(smb_noBFC10_neutral_genind, smb_pops)
-scatter(dapc_smb_neutrals)
-    #PCs used: 5
-    #Discriminant Functions retained:2
+# Run analysis for neutral SNPs
+species_complex_neutral_xval <- xvalDapc(species_complex_neutral_genind, 
+                               smb_pops,
+                               n.pca.max = 300, 
+                               training.set = 0.9,
+                               result = "groupMean",
+                               center = TRUE, 
+                               scale = FALSE, 
+                               n.pca = NULL,
+                               n.rep = 30, 
+                               xval.plot = TRUE)
 
-################################################3
+## Run cross validation for Neosho Bass samples
 
-###Neosho Samples Only###
-#Run DAPC on outlier SNPs
-dapc_neosho_outliers <- dapc(neosho_noBFC10_outliers_genind, neosho_pops)
+# Run analysis for outlier SNPs
+neosho_outliers_xval <- xvalDapc(neosho_outliers_genind,
+                                smb_pops,
+                                n.pca.max = 300, 
+                                training.set = 0.9,
+                                result = "groupMean",
+                                center = TRUE, 
+                                scale = FALSE, 
+                                n.pca = NULL,
+                                n.rep = 30, 
+                                xval.plot = TRUE)
 
-    #PCs used: 6
-    #Discriminant Functions retained: 2
+# Run analysis for neutral SNPs
+neosho_neutral_xval <- xvalDapc(neosho_neutral_genind, 
+                               smb_pops,
+                               n.pca.max = 300, 
+                               training.set = 0.9,
+                               result = "groupMean",
+                               center = TRUE, 
+                               scale = FALSE, 
+                               n.pca = NULL,
+                               n.rep = 30, 
+                               xval.plot = TRUE)
+```
 
-#Run DAPC on Neutral SNPs
-dapc_neosho_neutrals <- dapc(neosho_noBFC10_neutral_genind, neosho_pops)
-scatter(dapc_neosho_neutrals)
+##### 3c.2. Generate plots to display results of cross validation; run the Rmd chunk below to create figure.
 
-    #PCs used: 10
-    #Discriminant Functions retained:2
+###### 3c.2.1. Extract cross validation statistics data from analyses run in Step 3c.1.
 
+##### Extract cross-validaiton data:
+```{r}
+## Extract cross validation data from species complex samples
 
-dapc_midark_white_elk_neosho_outliers <- dapc(vcf_midark_white_elk_neosho_outliers_genind, midark_white_elk_pops)
+# Get xval data for outlier SNPs
+species_complex_outliers_xval_data <- as.data.frame(species_complex_outliers_xval$`Cross-Validation Results`) 
 
-dapc_midark_white_bayou_neosho_outliers <- dapc(vcf_midark_white_bayou_neosho_outliers_genind, midark_white_bayou_pops) 
+# Get averages of assignment success to determine optimal number of PCs and for plotting
+species_complex_outliers_xval_aves <- species_complex_outliers_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(mean_success = mean(success))
 
-scatter(dapc_midark_white_bayou_neosho_outliers)
+# Get standard deviation of assignment success for plotting
+species_complex_outliers_xval_sd <- species_complex_outliers_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(sd_success = sd(success))
 
-dapc_midark_white_uppark_neosho_outliers <- dapc(vcf_midark_white_uppark_neosho_outliers_genind, midark_white_uppark_pops)  
-scatter(dapc_midark_white_uppark_neosho_outliers)
+# Get xval data for neutral SNPs
+species_complex_neutral_xval_data <- as.data.frame(species_complex_neutral_xval$`Cross-Validation Results`) 
 
-dapc_midark_skia_illi_neosho_outliers <- dapc(vcf_midark_skia_illi_neosho_outliers_genind, midark_skia_illi_pops)    
-scatter(dapc_midark_skia_illi_neosho_outliers)
+# Get averages of assignment success to determine optimal number of PCs and for plotting
+species_complex_neutral_xval_aves <- species_complex_neutral_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(mean_success = mean(success))
 
-    
-##Get the little PCA-explained and LDs used graphs from the dapc analyses
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_smb_outlier_pca_da.pdf", width=11, height=9)
+# Get standard deviation of assignment success for plotting
+species_complex_neutral_xval_sd <- species_complex_neutral_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(sd_success = sd(success))
 
-scatter(dapc_smb_outliers, posi.da = "topright", scree.pca = TRUE, posi.pca = "bottomright")
+## Extract cross validation data from Neosho samples
 
-dev.off()
+# Get xval data for outlier SNPs
+neosho_outliers_xval_data <- as.data.frame(neosho_outliers_xval$`Cross-Validation Results`) 
 
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_smb_neutral_pca_da.pdf", width=11, height=9)
+# Get averages of assignment success to determine optimal number of PCs and for plotting
+neosho_outliers_xval_aves <- neosho_outliers_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(mean_success = mean(success))
 
-scatter(dapc_smb_neutrals, posi.da = "bottomright", scree.pca = TRUE, posi.pca = "topright")
+# Get standard deviation of assignment success for plotting
+neosho_outliers_xval_sd <- neosho_outliers_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(sd_success = sd(success))
 
-dev.off()
+# Get xval data for neutral SNPs
+neosho_neutral_xval_data <- as.data.frame(neosho_neutral_xval$`Cross-Validation Results`) 
 
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_neosho_outliers_pca_da.pdf", width=11, height=9)
+# Get averages of assignment success to determine optimal number of PCs and for plotting
+neosho_neutral_xval_aves <- neosho_neutral_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(mean_success = mean(success))
 
-scatter(dapc_neosho_outliers, posi.da = "bottomright", scree.pca = TRUE, posi.pca = "topright")
+# Get standard deviation of assignment success for plotting
+neosho_neutral_xval_sd <- neosho_neutral_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(sd_success = sd(success))
 
-dev.off()
+# Merge averages and standard deviation for plotting
+species_complex_outliers_xval_data <- merge(species_complex_outliers_xval_aves, species_complex_outliers_xval_sd, by = "n.pca")
+species_complex_neutral_xval_data <- merge(species_complex_neutral_xval_aves, species_complex_neutral_xval_sd, by = "n.pca")
+neosho_outliers_xval_data <- merge(neosho_outliers_xval_aves, neosho_outliers_xval_sd, by = "n.pca")
+neosho_neutral_xval_data <- merge(neosho_neutral_xval_aves, neosho_neutral_xval_sd, by = "n.pca")
+```
 
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_neosho_neutrals_pca_da.pdf", width=11, height=9)
+###### 3c.2.2. Generate plots for cross validation results; run the Rmd chunk below:
 
-scatter(dapc_neosho_neutrals, posi.da = "topright", scree.pca = TRUE, posi.pca = "bottomright")
+##### Generate figure for cross validation results: `figures/dapc_figures/xval.pdf`
+```{r}
+# Plot for species complex outlier SNPs
+a <- ggplot(species_complex_outliers_xval_data, aes(x = n.pca, y = mean_success)) +
+   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
+   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
+   theme_set(theme_cowplot(12)) +
+   labs(x = "PCs retained", y = "Average CV success (%)") +
+   theme(axis.text = element_text(size = 20)) +
+   theme(axis.title = element_text(size = 20)) +
+   scale_x_continuous("PCs retained", labels = as.character(species_complex_outliers_xval_data$n.pca), breaks = species_complex_outliers_xval_data$n.pca) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for species complex neutral SNPs
+b <- ggplot(species_complex_neutral_xval_data, aes(x = n.pca, y = mean_success)) +
+   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
+   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
+   theme_set(theme_cowplot(12)) +
+   labs(x = "PCs retained", y = "Average CV success (%)") +
+   theme(axis.text = element_text(size = 20)) +
+   theme(axis.title = element_text(size = 20)) +
+   scale_x_continuous("PCs retained", labels = as.character(species_complex_neutral_xval_data$n.pca), breaks = species_complex_neutral_xval_data$n.pca) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for neosho outlier SNPs
+c <- ggplot(neosho_outliers_xval_data, aes(x = n.pca, y = mean_success)) +
+   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
+   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
+   theme_set(theme_cowplot(12)) +
+   labs(x = "PCs retained", y = "Average CV success (%)") +
+   theme(axis.text = element_text(size = 20)) +
+   theme(axis.title = element_text(size = 20)) +
+   scale_x_continuous("PCs retained", labels = as.character(neosho_outliers_xval_data$n.pca), breaks = neosho_outliers_xval_data$n.pca) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Plot for neosho neutral SNPs
+d <- ggplot(neosho_neutral_xval_data, aes(x = n.pca, y = mean_success)) +
+   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
+   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
+   theme_set(theme_cowplot(12)) +
+   labs(x = "PCs retained", y = "Average CV success (%)") +
+   theme(axis.text = element_text(size = 20)) +
+   theme(axis.title = element_text(size = 20)) +
+   scale_x_continuous("PCs retained", labels = as.character(neosho_neutral_xval_data$n.pca), breaks = neosho_neutral_xval_data$n.pca) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+pdf("figures/dapc_figures/xval.pdf", width=13, height=14)
+
+plot_grid(a,b,c,d, 
+          nrows = 2, 
+          ncol = 2)
 
 dev.off()
 ```
 
-## Gather DAPC Data for Plotting
+This figure is the basis for Supplementary Figure 8 in our manuscript.
+
+#### 3d: Run DAPC analysis on species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass only; run the Rmd chunk below. 
+For this analysis, it is necessary to pay attention to the console, because it will prompt you to enter the desired number of PCs (determined above) and Discriminant functions. For all analyses, we are retaining only two discriminant functions for ease of visualization.
+
+## Run DAPC analyses:
 ```{r}
-###DAPC Datasets###
+#Run DAPC on species complex outlier SNPs
+species_complex_outliers_dapc <- dapc(species_complex_outliers_genind, species_complex_pops) # 25 PCs 
 
-###SMB Samples Only
-###Outlier SNPs###
-dapc_smb_outlier_LDs <- as.data.frame(dapc_smb_outliers$ind.coord)
-dapc_smb_outlier_LDs <- cbind(data.frame(smb_pops), dapc_smb_outlier_LDs)
-colnames(dapc_smb_outlier_LDs) <- c("pop","LD1","LD2")
+#Run DAPC on species complex neutral SNPs
+species_complex_neutral_dapc <- dapc(species_complex_neutral_genind, smb_pops) # 5 PCs
 
-###Neutral SNPs###
-dapc_smb_neutral_LDs <- as.data.frame(dapc_smb_neutrals$ind.coord)
-dapc_smb_neutral_LDs <- cbind(data.frame(smb_pops), dapc_smb_neutral_LDs)
-colnames(dapc_smb_neutral_LDs) <- c("pop","LD1","LD2")
 
-###Neosho Samples Only
-###Outlier SNPs###
-dapc_neosho_outlier_LDs <- as.data.frame(dapc_neosho_outliers$ind.coord)
-dapc_neosho_outlier_LDs <- cbind(data.frame(neosho_pops), dapc_neosho_outlier_LDs)
-colnames(dapc_neosho_outlier_LDs) <- c("pop","LD1","LD2")
+#Run DAPC on Neosho Bass outlier SNPs
+neosho_outliers_dapc <- dapc(neosho_outliers_genind, neosho_pops) # 6 PCs
 
-###Neutral SNPs###
-dapc_neosho_neutral_LDs <- as.data.frame(dapc_neosho_neutrals$ind.coord)
-dapc_neosho_neutral_LDs <- cbind(data.frame(neosho_pops), dapc_neosho_neutral_LDs)
-colnames(dapc_neosho_neutral_LDs) <- c("pop","LD1","LD2")
+#Run DAPC on Neosho Bass outlier SNPs
+neosho_neutrals_dapc <- dapc(neosho_neutral_genind, neosho_pops) # 10 PCs
 ```
 
-## Plot DAPC for neutlier and outlier loci for SMB Only and for Neosho Smallmouth Bass Only
+##### 3d.1. Extract PC and Discriminant Functions plots (insets in the scatter() dapc function), which give information on the number of PCs used and the number of Discriminant functions retained.
+We generated individual scatter plots for our DAPC analyses above and manually extracted the PC and DF plots by cropping and manipulating in PowerPoint. Individual plots are printed here and can be further manipulated as needed.
+
+###### 3d.1.1. Generate individual DAPC scatter plots for extracting PC and DF mini-plots:
 ```{r}
-###SMB Samples Only###
-###Outlier SNPs###
-smb_outlier_dapc_plot <- ggplot(dapc_smb_outlier_LDs, aes(x = LD1, y = LD2, fill = pop)) +
+##Get the little PCA-explained and LDs used graphs from species complex outliers 
+pdf("figures/dapc_figures/pcld_species_complex_outliers.pdf", width=11, height=9)
+
+scatter(species_complex_outliers_dapc, 
+        posi.da = "topright", 
+        scree.pca = TRUE, 
+        posi.pca = "bottomright")
+
+dev.off()
+
+##Get the little PCA-explained and LDs used graphs from species complex neutral
+pdf("figures/dapc_figures/pcld_species_complex_neutral.pdf", width=11, height=9)
+
+scatter(species_complex_neutral_dapc, 
+        posi.da = "bottomright", 
+        scree.pca = TRUE, 
+        posi.pca = "topright")
+
+dev.off()
+
+##Get the little PCA-explained and LDs used graphs from Neosho Bass outliers 
+pdf("figures/dapc_figures/pcld_neosho_outliers.pdf", width=11, height=9)
+
+scatter(neosho_outliers_dapc, 
+        posi.da = "topright", 
+        scree.pca = TRUE, 
+        posi.pca = "bottomright")
+
+dev.off()
+
+##Get the little PCA-explained and LDs used graphs from Neosho BAss neutral
+pdf("figures/dapc_figures/pcld_neosho_neutral.pdf", width=11, height=9)
+
+scatter(neosho_neutral_dapc, 
+        posi.da = "bottomright", 
+        scree.pca = TRUE, 
+        posi.pca = "topright")
+
+dev.off()
+```
+
+These figures are the basis for Supplementary Figure 9 in our manuscript.
+
+#### 3e: Plot results from DAPC analyses for species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass only.
+In this step, we are plotting all results from DAPC analysis.
+
+##### 3e.1. Extract LD information and append population designations for plotting; run the Rmd chunk below:
+
+##### Extract LD information:
+```{r}
+## Get LD and population information from species complex sample outlier SNPs
+
+# Get lds
+species_complex_outliers_ld <- as.data.frame(species_complex_outliers_dapc$ind.coord)
+
+# Bind lds with population data
+species_complex_outliers_ld <- cbind(data.frame(species_complex_pops), species_complex_outliers_ld)
+
+# Modify column names
+colnames(species_complex_outliers_ld) <- c("pop","LD1","LD2")
+
+## Get LD and population information from species complex sample neutral SNPs
+
+# Get lds
+species_complex_neutral_ld <- as.data.frame(species_complex_neutral_dapc$ind.coord)
+
+# Bind lds with population data
+species_complex_neutral_ld <- cbind(data.frame(species_complex_pops), species_complex_neutral_ld)
+
+# Modify column names
+colnames(species_complex_neutral_ld) <- c("pop","LD1","LD2")
+
+
+## Get LD and population information from Neosho Bass sample outlier SNPs
+
+# Get lds
+neosho_outliers_ld <- as.data.frame(neosho_outliers_dapc$ind.coord)
+
+# Bind lds with population data
+neosho_outliers_ld <- cbind(data.frame(neosho_pops), neosho_outliers_ld)
+
+# Modify column names
+colnames(neosho_outliers_ld) <- c("pop","LD1","LD2")
+
+## Get LD and population information from Neosho Bass sample neutral SNPs
+
+# Get lds
+neosho_neutral_ld <- as.data.frame(neosho_neutral_dapc$ind.coord)
+
+# Bind lds with population data
+neosho_neutral_ld <- cbind(data.frame(neosho_pops), neosho_neutral_ld)
+
+# Modify column names
+colnames(neosho_neutral_ld) <- c("pop","LD1","LD2")
+```
+
+##### 3e.2. Plot DAPC results; run the Rmd chunk below:
+We have chosen to combine each DAPC analysis as an individual panel into a single plot. Plots are named "a", "b", "c", "d" and are included in that order in the manuscript. 
+
+##### Extract LD information:
+
+```{r}
+# Plot species complex outlier SNPs
+a <- ggplot(species_complex_outliers_ld, aes(x = LD1, y = LD2, fill = pop)) +
    geom_point(aes(fill = pop), color = "black", pch = 21, size = 6, show.legend = F) +
    labs(x = "LD1", y = "LD2", fill = "Population") +
    scale_fill_manual(values = c("lightgreen", "sienna4","mediumpurple","forestgreen" ,"deepskyblue", "chocolate1", "navyblue","orchid1","deeppink2","deeppink2","orchid1")) +
@@ -2473,9 +2605,8 @@ smb_outlier_dapc_plot <- ggplot(dapc_smb_outlier_LDs, aes(x = LD1, y = LD2, fill
    theme(axis.title.x = element_blank()) +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-
-###Neutral SNPs###
-smb_neutral_dapc_plot <- ggplot(dapc_smb_neutral_LDs, aes(x = LD1, y = LD2, fill = pop)) +
+# Plot species complex neutral SNPs
+b <- ggplot(species_complex_neutral_ld, aes(x = LD1, y = LD2, fill = pop)) +
    geom_point(aes(fill = pop), color = "black", pch = 21, size = 6, show.legend = F) +
    labs(x = "LD1", y = "LD2", fill = "Population") +
    scale_fill_manual(values = c("lightgreen", "sienna4","mediumpurple","forestgreen" ,"deepskyblue", "chocolate1", "navyblue","orchid1","deeppink2","deeppink2","orchid1")) +
@@ -2491,9 +2622,8 @@ smb_neutral_dapc_plot <- ggplot(dapc_smb_neutral_LDs, aes(x = LD1, y = LD2, fill
    theme(axis.title = element_blank()) +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-###Neosho Samples Only###
-###Outlier SNPs###
-neosho_outlier_dapc_plot <- ggplot(dapc_neosho_outlier_LDs, aes(x = LD1, y = LD2, fill = pop)) +
+# Plot Neosho Bass outlier SNPs
+c <- ggplot(neosho_neutral_ld, aes(x = LD1, y = LD2, fill = pop)) +
    geom_point(aes(fill = pop), color = "black", pch = 21, size = 6, show.legend = F) +
    labs(x = "LD1", y = "LD2", fill = "Population") +
    scale_fill_manual(values = c("lightgreen", "sienna4", "mediumpurple", "forestgreen","deepskyblue","orchid1")) +
@@ -2508,8 +2638,8 @@ neosho_outlier_dapc_plot <- ggplot(dapc_neosho_outlier_LDs, aes(x = LD1, y = LD2
    theme(axis.text = element_text(size = 20)) +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-###Neutral SNPs###
-neosho_neutral_dapc_plot <- ggplot(dapc_neosho_neutral_LDs, aes(x = LD1, y = LD2, fill = pop)) +
+# Plot Neosho Bass neutral SNPs
+d <- ggplot(neosho_neutral_ld, aes(x = LD1, y = LD2, fill = pop)) +
    geom_point(aes(fill = pop), color = "black", pch = 21, size = 6, show.legend = F) +
    labs(x = "LD1", y = "LD2", fill = "Population") +
    scale_fill_manual(values = c("lightgreen", "sienna4", "mediumpurple", "forestgreen","deepskyblue","orchid1")) +
@@ -2525,193 +2655,16 @@ neosho_neutral_dapc_plot <- ggplot(dapc_neosho_neutral_LDs, aes(x = LD1, y = LD2
    theme(axis.title.y = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-#Combine both DAPC Plots
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_plots_lineages.pdf", width=16, height=12)
+# Combine all plots
+pdf("figures/dapc_figures/dapc.pdf", width=11, height=9)
 
-plot_grid(smb_outlier_dapc_plot, smb_neutral_dapc_plot, neosho_outlier_dapc_plot, neosho_neutral_dapc_plot, nrow = 2)
-
-dev.off()
-
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_plots_lineages_more_compact.pdf", width=11, height=9)
-
-plot_grid(smb_outlier_dapc_plot, smb_neutral_dapc_plot, neosho_outlier_dapc_plot, neosho_neutral_dapc_plot, nrow = 2)
+plot_grid(a,b,c,d, 
+          nrow = 2)
 
 dev.off()
 ```
 
-## Plot Results for Xval cross-validaiton 
-```{r}
-#SMB outlier SNPs only
-xval_smb_outlier_aves <- xval_smb_noBFC10_outliers_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-xval_smb_outlier_sd <- xval_smb_noBFC10_outliers_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(sd_success = sd(success))
-
-xval_smb_outlier_data <- merge(xval_smb_outlier_aves, xval_smb_outlier_sd, by = "n.pca")
-
-xval_smb_outlier_plot <- ggplot(xval_smb_outlier_data, aes(x = n.pca, y = mean_success)) +
-   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
-   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
-   theme_set(theme_cowplot(12)) +
-   labs(x = "PCs retained", y = "Average CV success (%)") +
-   theme(axis.text = element_text(size = 20)) +
-   theme(axis.title = element_text(size = 20)) +
-   scale_x_continuous("PCs retained", labels = as.character(xval_smb_outlier_data$n.pca), breaks = xval_smb_outlier_data$n.pca) +
-   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-#SMB neutral SNPs only
-xval_smb_neutral_aves <- xval_smb_noBFC10_neutral_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-xval_smb_neutral_sd <- xval_smb_noBFC10_neutral_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(sd_success = sd(success))
-
-xval_smb_neutral_data <- merge(xval_smb_neutral_aves, xval_smb_neutral_sd, by = "n.pca")
-
-xval_smb_neutral_plot <- ggplot(xval_smb_neutral_data, aes(x = n.pca, y = mean_success)) +
-   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
-   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
-   theme_set(theme_cowplot(12)) +
-   labs(x = "PCs retained", y = "Average CV success (%)") +
-   theme(axis.text = element_text(size = 20)) +
-   theme(axis.title = element_text(size = 20)) +
-   scale_x_continuous("PCs retained", labels = as.character(xval_smb_neutral_data$n.pca), breaks = xval_smb_neutral_data$n.pca) +
-   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-#Neosho outlier SNPs only
-xval_neosho_outlier_aves <- xval_neosho_noBFC10_outliers_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-xval_neosho_outlier_sd <- xval_neosho_noBFC10_outliers_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(sd_success = sd(success))
-
-xval_neosho_outlier_data <- merge(xval_neosho_outlier_aves, xval_neosho_outlier_sd, by = "n.pca")
-
-xval_neosho_outlier_plot <- ggplot(xval_neosho_outlier_data, aes(x = n.pca, y = mean_success)) +
-   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
-   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
-   theme_set(theme_cowplot(12)) +
-   labs(x = "PCs retained", y = "Average CV success (%)") +
-   theme(axis.text = element_text(size = 20)) +
-   theme(axis.title = element_text(size = 20)) +
-   scale_x_continuous("PCs retained", labels = as.character(xval_neosho_outlier_data$n.pca), breaks = xval_neosho_outlier_data$n.pca) +
-   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-#Neosho neutral SNPs only
-xval_neosho_neutral_aves <- xval_neosho_noBFC10_neutral_genind_df  %>%
-   group_by(n.pca) %>%
-   summarize(mean_success = mean(success))
-
-xval_neosho_neutral_sd <- xval_neosho_noBFC10_neutral_genind_df %>%
-   group_by(n.pca) %>%
-   summarize(sd_success = sd(success))
-
-xval_neosho_neutral_data <- merge(xval_neosho_neutral_aves, xval_neosho_neutral_sd, by = "n.pca")
-
-xval_neosho_neutral_plot <- ggplot(xval_neosho_neutral_data, aes(x = n.pca, y = mean_success)) +
-   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
-   geom_point(fill = "grey", color = "black", pch = 21, size = 6, show.legend = F) +
-   theme_set(theme_cowplot(12)) +
-   labs(x = "PCs retained", y = "Average CV success (%)") +
-   theme(axis.text = element_text(size = 20)) +
-   theme(axis.title = element_text(size = 20)) +
-   scale_x_continuous("PCs retained", labels = as.character(xval_neosho_neutral_data$n.pca), breaks = xval_neosho_neutral_data$n.pca) +
-   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/dapc_xval_plots.pdf", width=13, height=14)
-
-plot_grid(xval_smb_outlier_plot, xval_smb_neutral_plot, xval_neosho_outlier_plot, xval_neosho_neutral_plot, nrows = 2, ncol = 2)
-
-dev.off()
-
-
-```
-
-## Identify SNPs that are contributing most to the population structure seen in the Outlier SNP analysis for SMB Samples Only
-```{r}
-#In order to determine which SNPs are contributing most to the population structure seen in the DAPC plot, we can retrieve the variation contributed by each individual SNP and allele (var.contrib within the dapc outlier objec). The loading plot built into DAPC in adegenet will show the contributed variation by each SNP in a bar plot, and the y axis appears to be the numerical value of LD1. The variance contributed by each individual allele within a SNP are always identical, so it is not necessary to plot each allele independently
-
-# Here, I am creating a dataset that includes only the SNP id (131 total SNPs) and excludes the allele identifier and LD2. This will allow me to plot the variance contributed easily and clearly.
-smb_dapc_outlier_driving_snps <- as.data.frame(dapc_smb_outliers$var.contr)
-smb_dapc_outlier_driving_snps <- rownames_to_column(smb_dapc_outlier_driving_snps, "snp_id")
-smb_dapc_outlier_driving_snps <- smb_dapc_outlier_driving_snps[,-c(3)]
-smb_dapc_outlier_driving_snps <- smb_dapc_outlier_driving_snps %>%
-  mutate(snp_id = factor(snp_id)) %>%
-  separate(snp_id, into = c("snp_id", "allele"), sep = "_")
-smb_dapc_outlier_driving_snps <- smb_dapc_outlier_driving_snps[,-c(2)]
-smb_dapc_outlier_driving_snps <- smb_dapc_outlier_driving_snps %>%
-  mutate(snp_id = factor(snp_id)) %>%
-  group_by(snp_id) %>%
-  summarize(LD1 = mean(LD1))
-
-smb_dapc_outlier_driving_snps_arranged <- smb_dapc_outlier_driving_snps %>%
-   arrange(desc(LD1))
-
-smb_dapc_outlier_driving_snps_arranged_top10 <- as.data.frame(smb_dapc_outlier_driving_snps_arranged[1:10,])
-
-smb_dapc_outlier_driving_snps_arranged_top10$snp_id <- factor(smb_dapc_outlier_driving_snps_arranged_top10$snp_id, levels = c("175380", "130606", "46037", "77748", "163080", "87556", "253461","102722","54829","96877"))
-
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/smb_dapc_driving_snps.pdf", width=6, height=6)
-
-ggplot(smb_dapc_outlier_driving_snps_arranged_top10, aes(x = snp_id, y = LD1)) +
-   geom_bar(position = position_dodge(), stat="identity", fill = "grey", color = "black") +
-   coord_flip() +
-   labs(x = "SNP ID", y = "LD1") +
-   theme(axis.text.x = element_text(size = 15)) +
-   theme(axis.text.y = element_text(size = 15)) +
-   theme(axis.title = element_text(size = 15))
-    
-dev.off()
-```
-
-
-## Identify SNPs that are contributing most to the population structure seen in the Outlier SNP analysis for Neosho Smallmouth Bass only
-```{r}
-#In order to determine which SNPs are contributing most to the population structure seen in the DAPC plot, we can retrieve the variation contributed by each individual SNP and allele (var.contrib within the dapc outlier objec). The loading plot built into DAPC in adegenet will show the contributed variation by each SNP in a bar plot, and the y axis appears to be the numerical value of LD1. The variance contributed by each individual allele within a SNP are always identical, so it is not necessary to plot each allele independently
-
-# Here, I am creating a dataset that includes only the SNP id (29 total SNPs) and excludes the allele identifier and LD2. This will allow me to plot the variance contributed easily and clearly.
-neosho_dapc_outlier_driving_snps <- as.data.frame(dapc_neosho_outliers$var.contr)
-neosho_dapc_outlier_driving_snps <- rownames_to_column(neosho_dapc_outlier_driving_snps, "snp_id")
-neosho_dapc_outlier_driving_snps <- neosho_dapc_outlier_driving_snps[,-c(3)]
-neosho_dapc_outlier_driving_snps <- neosho_dapc_outlier_driving_snps %>%
-  mutate(snp_id = factor(snp_id)) %>%
-  separate(snp_id, into = c("snp_id", "allele"), sep = "_")
-neosho_dapc_outlier_driving_snps <- neosho_dapc_outlier_driving_snps[,-c(2)]
-neosho_dapc_outlier_driving_snps <- neosho_dapc_outlier_driving_snps %>%
-  mutate(snp_id = factor(snp_id)) %>%
-  group_by(snp_id) %>%
-  summarize(LD1 = mean(LD1))
-
-neosho_dapc_outlier_driving_snps_arrange <- neosho_dapc_outlier_driving_snps %>%
-   arrange(desc(LD1))
-
-neosho_dapc_outlier_driving_snps_arrange_top10 <- as.data.frame(neosho_dapc_outlier_driving_snps_arrange[c(1:10),])
-
-neosho_dapc_outlier_driving_snps_arrange_top10$snp_id <- factor(neosho_dapc_outlier_driving_snps_arrange_top10$snp_id, levels = c("191350", "74243", "215656", "161869", "131695", "133235", "231240","57650","25440","223852"))
-
-pdf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/visualization/outlier_fst_figures/neosho_dapc_driving_snps.pdf", width=6, height=10)
-
-ggplot(neosho_dapc_outlier_driving_snps_arrange_top10, aes(x = snp_id, y = LD1)) +
-   geom_bar(position = position_dodge(), stat="identity", fill = "grey", color = "black") +
-   coord_flip() +
-   labs(x = "SNP ID", y = "LD1") +
-   theme(axis.text.x = element_text(hjust = 0.5)) +
-   theme(axis.text.x = element_text(size = 15)) +
-   theme(axis.text.y = element_text(size = 15)) +
-   theme(axis.title = element_text(size = 15))
-    
-dev.off()
-```
-
-
+This figure is the basis for Figure 3 in the maintext of our manuscript.
 
 ### ----------------------- END OF PHASE 4: OUTLIER MAPPING ----------------------- ###
 
