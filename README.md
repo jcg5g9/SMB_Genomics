@@ -61,6 +61,6 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 #### Run the code: `outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
 
 ## Analysis 7: Demographic analysis
-In this analysis, ...
+In this analysis, we investigated the demographic history of populations found to be admixed between Smallmouth Bass and Neosho Bass based on admixture and phylogenomics (Analysis 3) and admixture mapping analysis (Analysis 5). Specifically, we used the joint site frequency spectrum (JSFS) of admixed populations within the Neosho Bass range (ELK, BAYOU, ILLI, and UPPARK) and the inferred interspecific parent population within the Smallmouth Bass range (SKIA, MISS, and WHITE) to determine the relative timing of admixture events by testing multiple demographic scenarios in a model-testing maximum likelihood framework. We inferred whether admixed populations were the results of relatively recent admixture, old admixture, or a combination of both and gleaned insights about the complexities of potential natural and anthropogenic sources of gene flow.
 
 #### Run the code: `demographic_analysis/smb_genomics_demographic_analysis.Rmd`
