@@ -60,4 +60,7 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 
 #### Run the code: `outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
 
+## Analysis 7: Demographic analysis
+In this analysis, ...
 
+#### Run the code: `demographic_analysis/smb_genomics_demographic_analysis.Rmd`
