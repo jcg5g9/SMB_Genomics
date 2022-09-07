@@ -13,13 +13,16 @@ In this analysis, we investigated the demographic history of populations found t
 
 ## Phases of analysis:
 ### Phase 1: Model identification and definitions
-### Phase 2:
-### Phase 3: 
+### Phase 2: Data preparation
+### Phase 3: DADI analysis
 ### Phase 4:
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
-
+library(readxl)
+library(tidyverse)
+library(cowplot)
+library(tools)
 ```
 
 ## PHASE 1: MODEL IDENTIFICATION AND DEFINITIONS
@@ -58,13 +61,229 @@ We reviewed the 'Models_2D.pdf' and chose 9 models to explicitly test for each o
 
 ### ----------------------- END OF PHASE 1: MODEL IDENTIFICATION AND DEFINITIONS ----------------------- ###
 
-## PHASE 2: 
+## PHASE 2: Data preparation
+In this phase, we are preparing the fully filtered (thinned) VCF data and generating metadata population files for model testing in DADI. Since DADI assesses demographic history, we are only using neutral (non-outlier) SNP loci in all analyses. Thus, we begin with the neutral SNPs VCF generated for the species complex hierarchical level in Analysis 6 (outlier fst analysis): `outlier_fst_analysis/data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf`. We further manipulate this VCF dataset into four different files, one for each pair of populations as listed above in Phase 1. 
 
+### STEP 1: Prepare VCF input data for DADI
+In this step, we are using the software VCFTools to prepare all input data for the program DADI.
 
-To run all models, I adapted the dadi_Run_2D_Set.py python script provided in the dadi_pipeline. I converted vcf files for each pair of populations for analysis directly in the script using the code for coverting a vcf to an fs spectrum object. For each pair of populations, I projected to the exact number of alleles expected in each set of individuals (2*the number of individuals, because diploid). This is because I used the vcf2sfs.r script (see SMB_DADI_PREP.Rmd) to impute missing genotype values based on the binomical distribution. Thus, for each pair of populations, I retained the maximum number of segregating sites (SNPS) with complete data.
+#### 1a: Generate lists of samples based on population (for filtering VCF files)
+In this step, we are generating text files listing samples belonging to the four two-population pairs of interest (see Phase 1 above) for DADI analysis, as inferred in Analysis 4 (population inference). These lists are then used to filter the four VCF files for downstream analyses.
 
+##### 1a.1. Read in sample metadata and generate list of samples for the BAYOU and WHITE populations; run the Rmd chunk below:
 
+##### Generate population file: `data/pop_files/bayou_white.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+# Get only BAYOU and White populations
+bayou_white <- metadata_populations_spb %>%
+  filter(population == "BAYOU" | population == "WHITE")
+
+# Select sample id column
+bayou_white <- bayou_white %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(bayou_white, 
+          file = "data/filtering_data/bayou_white.txt", 
+          col_names = FALSE)
+```
+
+##### 1a.2. Read in sample metadata and generate list of samples for the ELK and WHITE populations; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/elk_white.txt`
+```{r}
+# Get only BAYOU and White populations
+elk_white <- metadata_populations_spb %>%
+  filter(population == "ELK" | population == "WHITE")
+
+# Select sample id column
+elk_white <- elk_white %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(elk_white, 
+          file = "data/filtering_data/elk_white.txt", 
+          col_names = FALSE)
+```
+
+##### 1a.3. Read in sample metadata and generate list of samples for the ILLI and SKIA populations; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/illi_skia.txt`
+```{r}
+# Get only BAYOU and White populations
+illi_skia <- metadata_populations_spb %>%
+  filter(population == "ILLI" | population == "SKIA")
+
+# Select sample id column
+illi_skia <- illi_skia %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(illi_skia, 
+          file = "data/filtering_data/illi_skia.txt", 
+          col_names = FALSE)
+```
+
+##### 1a.2. Read in sample metadata and generate list of samples for the UPPARK and WHITE populations; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/uppark_white.txt`
+```{r}
+# Get only BAYOU and White populations
+uppark_white <- metadata_populations_spb %>%
+  filter(population == "UPPARK" | population == "WHITE")
+
+# Select sample id column
+uppark_white <- uppark_white %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(uppark_white, 
+          file = "data/filtering_data/uppark_white.txt", 
+          col_names = FALSE)
+```
+
+#### 1b: Filter VCF data to generate datasets for each pair of populations
+
+##### 1b.1. Generate a general bash shell script header for all VCF filtering steps commands
+In this step, we are generating a universal bash shell script to run all filtering commands in VCFTOOLS (See Phase 1 in Analysis 2 for programs needed and citation information). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all VCFTOOLS code is called "vcftools.sh".
+
+###### 1b.1.1. Copy and paste the code below in a new shell script file:
+
+##### Generate VCFTOOLS bash shell script: `code/shell_scripts/vcftools.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J filter_admixed  # give the job a custom name
+#SBATCH -o filtering_missing.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+## UNCOMMENT LINES STARTING HERE 
+
+## Load VCFtools module
+# module load rss/rss-2020
+# module load vcftools/vcftools-v0.1.14
+```
+
+##### 1b.2. Filter VCF to retain BAYOU and WHITE population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 01: keep BAYOU and WHITE samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/bayou_white.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_popgen_bayou_white
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/01_popgen_bayou_white.vcf`.
+
+##### 1b.3. Filter VCF to retain ELK and WHITE population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 02: keep ELK and WHITE population samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/elk_white.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_elk_white
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/02_popgen_elk_white.vcf`.
+
+##### 1b.4. Filter VCF to retain ILLI and SKIA population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 03: keep ILLI and SKIA population samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/illi_skia.txt --recode --recode-INFO-all --out ../../data/processed_vcf/03_popgen_illi_skia
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/03_popgen_illi_skia.vcf`.
+
+##### 1b.5. Filter VCF to retain UPPARK and WHITE population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 04: keep UPPARK and WHITE population samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/uppark_white.txt --recode --recode-INFO-all --out ../../data/processed_vcf/04_popgen_uppark_white
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/04_popgen_uppark_white.vcf`.
   
+### ----------------------- END OF PHASE 2: DATA PREPARATION ----------------------- ###
+
+## PHASE 3: DADI ANALYSIS
+In this phase of the analysis, we are conducting demographic analysis of admixture in our four population pairs using folded joint site frequency spectra for neutral SNP loci in teh software program DADI. Specifically, we are comparing 9 distinct, previously developed models of demographic history (see Phase 1 for models run and corresponding definitions). DADI employs maximum likelihood model testing, wherein the likelihood of a given model is determined based on residuals calculated from comparing the empirical data to theoretical data based on population genetic theory. All model likelihoods are then compared to determine the best-fitting model (the model with the smallest average residual differences between empirical and theoretical data).
+
+DADI is written in Python and is compatible with Python Version 3. Below, we detail the steps taken to install DADI in a Python Anaconda virtual environment. We specifically used the compact version of Anaconda, Miniconda3, which only includes code for Conda, Python, and dependencies, rather than all of the software built into Anaconda (Anaconda is too large for our computing cluster disk quota). We then accessed all previously developed python scripts for running DADI on GitHub (see Phase 1 above for link to the GitHub code repository). 
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+DADI v.3.1.6 (Gutenkunst et al. 2009) <br>
+
+<b>Citation</b>:<br>
+
+Gutenkunst, R.N., Hernandez, R.D., Williamson, S.D., Bustamante, C.D. (2009). Inferring the joint demographic history of multiple populations from multidimensional SNP frequency data. PLoS Genetics 5: e1000695. doi:/10.1371/journal.pgen.1000695
+
+### STEP 1: Load in Miniconda software and set up a Python virtual environment.
+In this step, we are setting up a virtual Python working environment for running all Python analyses; we are using the software package Miniconda for Python v.3.7.
+
+#### 1a: Generate a general bash shell script header for running all DADI commands
+In this step, we are generating a universal bash shell script to run all commands in DADI. Here, we only generate the annotated header for the shell script, including loading in Miniconda3. In subsequent steps, we include and provide details on each step of the analysis and the associated lines of code in Rmd chunks. The shell script for running all DADI code is called "dadi.sh".
+
+##### 1a.1. Copy and paste the code below in a new shell script file:
+
+##### Generate DADI bash shell script: `code/shell_scripts/dadi.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J ILLI_SKIA  # give the job a custom name
+#SBATCH -o ILLI_SKIA-%j.out  # give the job output a custom name
+#SBATCH -t 2-00:00  # two day time limit
+#SBATCH --mem 100G
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 14  # number of cores (AKA tasks)
+
+# UNCOMMENT STARTING HERE
+
+## Commands here run only on the first core
+# module load miniconda3
+```
+
+##### 1a.1. Create a Python virtual environment to run all DADI analysis, and install the DADI software library in this environment.
+
+###### 1a.1.1. Create a new virtual environment; copy and paste the code below on the command line:
+
+##### Command line code for generating virutal environment: `dadi_env`. UNCOMMENT this code in the shell script:
+```{bash}
+# conda create --name dadi_env
+```
+
+###### 1a.1.2. Activate the new conda environment; copy and past the code below on the command line:
+
+##### Command line code for activating the `dadi_env` virtual environment. UNCOMMENT this code in the shell script:
+```{bash}
+# conda activate dadi_env
+```
+
+###### 1a.1.3. Install DADI; copy and past the code below on the command line:
+
+##### Command line code for installing DADI. UNCOMMENT this code in the shell script:
+```{bash}
+# conda install -c conda-forge dadi
+```
 
 
-    

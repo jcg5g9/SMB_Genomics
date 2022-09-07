@@ -65,9 +65,9 @@ In this step, we are using the conversion software PGDSPIDER to prepare all inpu
 In this step, we are generating filtered VCF data to to run each level of the outlier Fst analysis (see above for the four hierarchical levels of analysis)  
 
 ##### 1a.1. Generate a general bash shell script header for all VCF filtering steps commands
-In this step, we are generating a universal bash shell script to run all filtering commands in VCFTOOLS (See Phase 1 in Analysis 2 for programs needed and citation information) Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all VCFTOOLS code is called "vcftools.sh".
+In this step, we are generating a universal bash shell script to run all filtering commands in VCFTOOLS (See Phase 1 in Analysis 2 for programs needed and citation information). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all VCFTOOLS code is called "vcftools.sh".
 
-###### 1a.1.1 Copy and paste the code below in a new shell script file:
+###### 1a.1.1. Copy and paste the code below in a new shell script file:
 
 ##### Generate VCFTOOLS bash shell script: `code/shell_scripts/vcftools.sh`
 ```{bash}
@@ -412,13 +412,14 @@ In this step, we are generating text files listing all samples in at each genome
 
 ##### 1c.1. Read in sample metadata and generate lists of populations for the black bass species level.
 
-###### 1c.1.1 Generate population file for all black bass samples (Spotted Bass, Smallmouth Bass, and Neosho Bass):
+###### 1c.1.1 Generate population file for all black bass samples (Spotted Bass, Smallmouth Bass, and Neosho Bass); run the Rmd chunk below:
 
 ##### Generate population file: `data/pop_files/01_all_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
 load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
 
+# Convert factors to characters
 metadata_populations_spb <- metadata_populations_spb %>%
   mutate(population = as.character(population))
 
@@ -443,16 +444,18 @@ write_delim(metadata_populations_spb,
 
 ##### 1c.2. Read in sample metadata and generate lists of populations for the species complex level.
 
-###### 1c.2.1 Generate population file for species complex samples (Smallmouth Bass and Neosho Bass):
+###### 1c.2.1 Generate population file for species complex samples (Smallmouth Bass and Neosho Bass); run the Rmd chunk below:
 
 ##### Generate population file: `data/pop_files/02_species_complex_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
 load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
 
+# Filter out Spotted Bass
 metadata_populations_complex <- metadata_populations_spb %>%
   filter(population != "SPB")
 
+# Convert factors to characters
 metadata_populations_complex <- metadata_populations_complex %>%
   mutate(population = as.character(population))
 
@@ -476,19 +479,21 @@ write_delim(metadata_populations_complex,
 
 ##### 1c.3. Read in sample metadata and generate lists of populations for the Neosho Bass level.
 
-###### 1c.3.1 Generate population file for Neosho Bass samples (Neosho Bass only):
+###### 1c.3.1 Generate population file for Neosho Bass samples (Neosho Bass only); run the Rmd chunk below:
 
 ##### Generate population file: `data/pop_files/03_neosho_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
 load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
 
+# Filter out Spotted Bass and Smallmouth Bass
 metadata_populations_neosho <- metadata_populations_spb %>%
   filter(population != "SPB") %>%
   filter(population != "MISS") %>%
   filter(population != "SKIA") %>%
   filter(population != "WHITE")
 
+# Convert factors to characters
 metadata_populations_neosho <- metadata_populations_neosho %>%
   mutate(population = as.character(population))
 
@@ -509,13 +514,14 @@ write_delim(metadata_populations_neosho,
 
 ##### 1c.4. Read in sample metadata and generate lists of populations for the Smallmouth Bass level.
 
-###### 1c.4.1 Generate population file for Smallmouth Bass samples (Smallmouth Bass only):
+###### 1c.4.1 Generate population file for Smallmouth Bass samples (Smallmouth Bass only); run the Rmd chunk below:
 
 ##### Generate population file: `data/pop_files/04_neosho_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
 load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
 
+# Filter out Spotted Bass and Neosho Bass
 metadata_populations_smallmouth <- metadata_populations_spb %>%
   filter(population != "SPB") %>%
   filter(population != "MIDARK") %>%
@@ -525,6 +531,7 @@ metadata_populations_smallmouth <- metadata_populations_spb %>%
   filter(population != "BAYOU") %>%
   filter(population != "UPPARK")
 
+# Convert factors to characters
 metadata_populations_smallmouth <- metadata_populations_smallmouth %>%
   mutate(population = as.character(population))
 
@@ -540,7 +547,7 @@ write_delim(metadata_populations_smallmouth,
           col_names = FALSE)
 ```
 
-#### 1d: Generate a general bash shell script header for all PGDSPIDER conversion commands
+#### 1d: Generate a general bash shell script header for all PGDSPIDER conversion commands.
 In this step, we are generating a universal bash shell script to run all file type conversions in PGDSPIDER. Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all PGDSPIDER code is called "pgdspider.sh".
 
 ##### 1d.1: Copy and paste the code below in a new shell script file:
