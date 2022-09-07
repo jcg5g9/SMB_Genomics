@@ -12,7 +12,7 @@ We investigated the extent of genomic divergence, local directional selection, a
 In this analysis, we investigated the demographic history of populations found to be admixed between Smallmouth Bass and Neosho Bass based on admixture and phylogenomics (Analysis 3) and admixture mapping analysis (Analysis 5). Specifically, we used the joint site frequency spectrum (JSFS) of admixed populations within the Neosho Bass range (ELK, BAYOU, ILLI, and UPPARK) and the inferred interspecific parent population within the Smallmouth Bass range (SKIA, MISS, and WHITE) to determine the relative timing of admixture events by testing multiple demographic scenarios in a model-testing maximum likelihood framework. We inferred whether admixed populations were the results of relatively recent admixture, old admixture, or a combination of both and gleaned insights about the complexities of potential natural and anthropogenic sources of gene flow.
 
 ## Phases of analysis:
-### Phase 1: Data preparation
+### Phase 1: Model identification and definitions
 ### Phase 2:
 ### Phase 3: 
 ### Phase 4:
@@ -21,3 +21,50 @@ In this analysis, we investigated the demographic history of populations found t
 ```{r setup, echo = FALSE, include=FALSE}
 
 ```
+
+## PHASE 1: MODEL IDENTIFICATION AND DEFINITIONS
+In this phase of the analysis, we prepared to analyze the demographic history of admxiture events between Smallmouth Bass and Neosho Bass by selecting previously developed demographic models based on joint site frequency spectra. We reviewed the 'Two_Population_Pipeline' (Portik et al. 2017; Charles et al. 2018) for the software program DADI (Diffusion Analysis of Demographic Inference; Gutenkunst et al. 2009; see Phase 2 for citation information), which defines an array of possible models representing different demographic scenarios involving two potentially diverging and fusing populations.\
+
+<b>Programs and sources needed:</b> <br><br>
+
+Two_Population_Pipeline GitHub repo (Portik et al. 2017; Charles et al. 2018; retrieved from GitHub: https://github.com/dportik/dadi_pipeline)
+
+<b>Citation</b>:<br>
+
+Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O., Barej, M.F., Hirschfeld, M., Burger, M., and M.K. Fujita. 2017. Evaluating mechanisms of diversification in a Guineo-Congolian forest frog using demographic model selection. Molecular Ecology 26: 5245-5263. doi: 10.1111/mec.14266
+
+Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K., Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea, and forest islands: diversification in the African leaf-folding frog Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae). Journal of Biogeography 45: 1781-1794. doi: 10.1111/jbi.13365
+
+### STEP 1: Populations Modeled
+We modeled the demographic history of four pairs of populations, which represent admixed stream populations in the Neosho Bass native range and their corresponding Smallmouth Bass parent:
+
+  1. Elk River (ELK) and White River (WHITE)
+  2. Bayou River (BAYOU) and White River (WHITE)
+  3. Upper Arkansas Tributaries (UPPARK) and the White River (WHITE)
+  4. Illinois River (ILLI) and Skiatook Lake (SKIA)
+
+### STEP 2: Models Tested
+We reviewed the 'Models_2D.pdf' and chose 9 models to explicitly test for each of these four population pairs based on our knowledge of the Smallmouth Bass and Neosho system in the Central Interior Highlands. The models we tested are defined below:
+
+  1. no_mig: Divergence with no migration
+  2. sym_mig: Divdergence with continuous symmetric migration
+  3. asym_mig: Divergence with continuous asymmetric migration
+  4. sec_contact_sym_mig: Divergence in isolation, continuous symmetric secondary contact (recent symmetric admixture)
+  5. sec_contact_asym_mig: Divergence in isolation, continuous asymmetric secondary contact (recent asymmetric admixture)
+  6. anc_sym_mig: Divergence with ancient continuous symmetric migration, then isolation (ancient symmetric admixture)
+  7. anc_asym_mig: Divergence with ancient continuous asymmetric migration, then isolation (ancient asymmetric admixture)
+  8. sym_mig_twoepoch: Divergence with continuous symmetric migration that varies across two epochs
+  9. asym_mig_twoepoch: Divergence with continuous asymmetric migration that varies across two epochs
+
+### ----------------------- END OF PHASE 1: MODEL IDENTIFICATION AND DEFINITIONS ----------------------- ###
+
+## PHASE 2: 
+
+
+To run all models, I adapted the dadi_Run_2D_Set.py python script provided in the dadi_pipeline. I converted vcf files for each pair of populations for analysis directly in the script using the code for coverting a vcf to an fs spectrum object. For each pair of populations, I projected to the exact number of alleles expected in each set of individuals (2*the number of individuals, because diploid). This is because I used the vcf2sfs.r script (see SMB_DADI_PREP.Rmd) to impute missing genotype values based on the binomical distribution. Thus, for each pair of populations, I retained the maximum number of segregating sites (SNPS) with complete data.
+
+
+  
+
+
+    

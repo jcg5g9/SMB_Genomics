@@ -2198,7 +2198,7 @@ smallmouth_neutral <- read.vcfR("data/processed_vcf/04_popgen_smallmouth_neutral
 ## Convert files to genind objects
 
 # Convert files for all black bass samples
-all_outliers_genind <- vcfR2genind(all_outliers) # No SNPs to work with (this code will not run)
+# all_outliers_genind <- vcfR2genind(all_outliers) # No SNPs to work with (this code will not run)
 all_neutral_genind <- vcfR2genind(all_neutral)
 
 # Convert files for species complex samples
@@ -2210,13 +2210,13 @@ neosho_outliers_genind <- vcfR2genind(neosho_outliers)
 neosho_neutral_genind <- vcfR2genind(neosho_neutral)
 
 # Convert files for Smallmouth Bass samples
-smallmouth_outliers_genind <- vcfR2genind(smallmouth_outliers)  # No SNPs to work with (this code will not run)
+# smallmouth_outliers_genind <- vcfR2genind(smallmouth_outliers)  # No SNPs to work with (this code will not run)
 smallmouth_neutral_genind <- vcfR2genind(smallmouth_neutral)
 
 ## Include population designations in genind objects
 
 # Include populations for all black bass samples 
-all_outliers_genind@pop <- as.factor(all_pops) # No SNPs to work with (this code will not run)
+# all_outliers_genind@pop <- as.factor(all_pops) # No SNPs to work with (this code will not run)
 all_neutral_genind@pop <- as.factor(all_pops)
 
 # Include populations for species complex samples 
@@ -2228,7 +2228,7 @@ neosho_outliers_genind@pop <- as.factor(neosho_pops)
 neosho_neutral_genind@pop <- as.factor(neosho_pops)
 
 # Include populations for Smallmouth Bass samples 
-smallmouth_outliers_genind@pop <- as.factor(smallmouth_pops) # No SNPs to work with (this code will not run)
+# smallmouth_outliers_genind@pop <- as.factor(smallmouth_pops) # No SNPs to work with (this code will not run)
 smallmouth_neutral_genind@pop <- as.factor(smallmouth_pops)
 ```
 
@@ -2284,7 +2284,7 @@ In this step, we are running a cross-validation analysis, using 90% of samples i
 
 # Run analysis for outlier SNPs
 species_complex_outliers_xval<- xvalDapc(species_complex_outliers_genind,
-                                smb_pops,
+                                species_complex_pops,
                                 n.pca.max = 300, 
                                 training.set = 0.9,
                                 result = "groupMean",
@@ -2296,7 +2296,7 @@ species_complex_outliers_xval<- xvalDapc(species_complex_outliers_genind,
 
 # Run analysis for neutral SNPs
 species_complex_neutral_xval <- xvalDapc(species_complex_neutral_genind, 
-                               smb_pops,
+                               species_complex_pops,
                                n.pca.max = 300, 
                                training.set = 0.9,
                                result = "groupMean",
@@ -2310,7 +2310,7 @@ species_complex_neutral_xval <- xvalDapc(species_complex_neutral_genind,
 
 # Run analysis for outlier SNPs
 neosho_outliers_xval <- xvalDapc(neosho_outliers_genind,
-                                smb_pops,
+                                neosho_pops,
                                 n.pca.max = 300, 
                                 training.set = 0.9,
                                 result = "groupMean",
@@ -2322,7 +2322,7 @@ neosho_outliers_xval <- xvalDapc(neosho_outliers_genind,
 
 # Run analysis for neutral SNPs
 neosho_neutral_xval <- xvalDapc(neosho_neutral_genind, 
-                               smb_pops,
+                               neosho_pops,
                                n.pca.max = 300, 
                                training.set = 0.9,
                                result = "groupMean",
