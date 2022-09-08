@@ -15,8 +15,12 @@ module load miniconda3
 # Commands with srun will run on all cores in the allocation
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Run DADI
 
+=======
+### Run DADI
+>>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
 =======
 ### Run DADI
 >>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
@@ -33,7 +37,11 @@ module load miniconda3
 #python3 ../analysis_scripts/uppark_white.py
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Summarize DADI output
+=======
+### Summarize DADI output
+>>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
 =======
 ### Summarize DADI output
 >>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
@@ -50,7 +58,10 @@ module load miniconda3
 ## Summarize DADI output 04:	Summarize DADI results for UPPARK and WHITE populations
 #python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/uppark_white/
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
 
 ### Plot DADI
 
@@ -68,4 +79,7 @@ module load miniconda3
 
 
 
+<<<<<<< HEAD
+>>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
+=======
 >>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
