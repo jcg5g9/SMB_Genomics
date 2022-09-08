@@ -1,8 +1,8 @@
 #! /bin/bash
 
 #SBATCH -p Lewis  # use the Lewis partition
-#SBATCH -J ILLI_SKIA  # give the job a custom name
-#SBATCH -o ILLI_SKIA-%j.out  # give the job output a custom name
+#SBATCH -J dadi  # give the job a custom name
+#SBATCH -o dadi.out  # give the job output a custom name
 #SBATCH -t 2-00:00  # two day time limit
 #SBATCH --mem 100G
 
@@ -13,6 +13,7 @@
 module load miniconda3
 
 ### Run DADI
+
 ## DADI run 01: Run DADI on BAYOU and WHITE populations
 #python3 ../analysis_scripts/bayou_white.py
 
