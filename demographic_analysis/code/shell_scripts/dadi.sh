@@ -12,18 +12,7 @@
 # Commands here run only on the first core
 module load miniconda3
 
-# Commands with srun will run on all cores in the allocation
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-## Run DADI
-
-=======
 ### Run DADI
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
-=======
-### Run DADI
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
 ## DADI run 01: Run DADI on BAYOU and WHITE populations
 #python3 ../analysis_scripts/bayou_white.py
 
@@ -36,15 +25,7 @@ module load miniconda3
 ## DADI run 04:	Run DADI on UPPARK and WHITE populations
 #python3 ../analysis_scripts/uppark_white.py
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-## Summarize DADI output
-=======
 ### Summarize DADI output
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
-=======
-### Summarize DADI output
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
 
 ## Summarize DADI output 01: Summarize DADI results for BAYOU and WHITE populations
 #python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/bayou_white/
@@ -57,11 +38,6 @@ module load miniconda3
 
 ## Summarize DADI output 04:	Summarize DADI results for UPPARK and WHITE populations
 #python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/uppark_white/
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
 
 ### Plot DADI
 
@@ -77,9 +53,3 @@ module load miniconda3
 ## Plot DADI 04:	Plot DADI on UPPARK and WHITE populations
 #python3 ../plotting_scripts/uppark_white.py
 
-
-
-<<<<<<< HEAD
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
-=======
->>>>>>> 100c6e0df153e0d40890256beaaf3d15777dd549
