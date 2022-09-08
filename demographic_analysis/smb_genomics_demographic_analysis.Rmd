@@ -15,7 +15,7 @@ In this analysis, we investigated the demographic history of populations found t
 ### Phase 1: Model identification and definitions
 ### Phase 2: Data preparation
 ### Phase 3: DADI analysis
-### Phase 4:
+### Phase 4: Data summarization and plotting
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
@@ -1633,4 +1633,11 @@ This code produces two output files: `Results_Summary_Extended.txt` and `Results
 ```
 
 This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+### ----------------------- END OF PHASE 3: DADI ANALYSIS ----------------------- ###
+
+## PHASE 4: DATA SUMMARIZATION AND PLOTTING
+In this phase of the analysis, we are summarizing all output from DADI for all population pairs, determining the best-fitting model for each pair, and plotting model results.
+
+### STEP 1:
 
