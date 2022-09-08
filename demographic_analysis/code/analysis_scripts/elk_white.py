@@ -97,7 +97,7 @@ import Models_2D
 
 #Create python dictionary from snps file
 #dd = dadi.Misc.make_data_dict(snps)
-dd = dadi.Misc.make_data_dict_vcf("/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/raw_data/dadi_data/vcfs_for_dadi/dadi_elk_white_neutral.vcf", "/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/raw_data/dadi_data/dadi_pops/dadi_elk_white.txt")
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/02_popgen_elk_white.vcf", "../../data/pop_files/elk_white.txt")
 
 
 #**************
