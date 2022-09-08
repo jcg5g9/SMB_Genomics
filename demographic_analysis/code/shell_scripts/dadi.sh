@@ -14,6 +14,7 @@ module load miniconda3
 
 # Commands with srun will run on all cores in the allocation
 
+### Run DADI
 ## DADI run 01: Run DADI on BAYOU and WHITE populations
 #python3 ../analysis_scripts/bayou_white.py
 
@@ -25,3 +26,34 @@ module load miniconda3
 
 ## DADI run 04:	Run DADI on UPPARK and WHITE populations
 #python3 ../analysis_scripts/uppark_white.py
+
+### Summarize DADI output
+
+## Summarize DADI output 01: Summarize DADI results for BAYOU and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/bayou_white/
+
+## Summarize DADI output 02: Summarize DADI results for ELK and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/elk_white/
+
+## Summarize DADI output 03: Summarize DADI results for ILLI and SKIA populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/illi_skia/
+
+## Summarize DADI output 04:	Summarize DADI results for UPPARK and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/uppark_white/
+
+### Plot DADI
+
+## Plot DADI 01:	Plot DADI on BAYOU and WHITE populations
+#python3 ../plotting_scripts/bayou_white.py
+
+## Plot DADI 02:	Plot DADI on ELK and WHITE populations
+#python3 ../plotting_scripts/elk_white.py
+
+## Plot DADI 03:	Plot DADI on ILLI and SKIA populations
+#python3 ../plotting_scripts/illi_skia.py
+
+## Plot DADI 04:	Plot DADI on UPPARK and WHITE populations
+#python3 ../plotting_scripts/uppark_white.py
+
+
+
