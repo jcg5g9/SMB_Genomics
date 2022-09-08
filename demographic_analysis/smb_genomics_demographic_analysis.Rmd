@@ -12,12 +12,4247 @@ We investigated the extent of genomic divergence, local directional selection, a
 In this analysis, we investigated the demographic history of populations found to be admixed between Smallmouth Bass and Neosho Bass based on admixture and phylogenomics (Analysis 3) and admixture mapping analysis (Analysis 5). Specifically, we used the joint site frequency spectrum (JSFS) of admixed populations within the Neosho Bass range (ELK, BAYOU, ILLI, and UPPARK) and the inferred interspecific parent population within the Smallmouth Bass range (SKIA, MISS, and WHITE) to determine the relative timing of admixture events by testing multiple demographic scenarios in a model-testing maximum likelihood framework. We inferred whether admixed populations were the results of relatively recent admixture, old admixture, or a combination of both and gleaned insights about the complexities of potential natural and anthropogenic sources of gene flow.
 
 ## Phases of analysis:
-### Phase 1: Data preparation
-### Phase 2:
-### Phase 3: 
-### Phase 4:
+### Phase 1: Model identification and definitions
+### Phase 2: Data preparation
+### Phase 3: DADI analysis
+### Phase 4: Data summarization and plotting
 
 ## Libraries needed for analysis
 ```{r setup, echo = FALSE, include=FALSE}
-
+library(readxl)
+library(tidyverse)
+library(cowplot)
+library(tools)
 ```
+
+## PHASE 1: MODEL IDENTIFICATION AND DEFINITIONS
+In this phase of the analysis, we prepared to analyze the demographic history of admxiture events between Smallmouth Bass and Neosho Bass by selecting previously developed demographic models based on joint site frequency spectra. We reviewed the 'Two_Population_Pipeline' (Portik et al. 2017; Charles et al. 2018) for the software program DADI (Diffusion Analysis of Demographic Inference; Gutenkunst et al. 2009; see Phase 2 for citation information), which defines an array of possible models representing different demographic scenarios involving two potentially diverging and fusing populations.\
+
+<b>Programs and sources needed:</b> <br><br>
+
+Two_Population_Pipeline GitHub repo (Portik et al. 2017; Charles et al. 2018; retrieved from GitHub: https://github.com/dportik/dadi_pipeline)
+
+<b>Citation</b>:<br>
+
+Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O., Barej, M.F., Hirschfeld, M., Burger, M., and M.K. Fujita. 2017. Evaluating mechanisms of diversification in a Guineo-Congolian forest frog using demographic model selection. Molecular Ecology 26: 5245-5263. doi: 10.1111/mec.14266
+
+Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K., Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea, and forest islands: diversification in the African leaf-folding frog Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae). Journal of Biogeography 45: 1781-1794. doi: 10.1111/jbi.13365
+
+### STEP 1: Populations Modeled
+We modeled the demographic history of four pairs of populations, which represent admixed stream populations in the Neosho Bass native range and their corresponding Smallmouth Bass parent:
+
+  1. Elk River (ELK) and White River (WHITE)
+  2. Bayou River (BAYOU) and White River (WHITE)
+  3. Upper Arkansas Tributaries (UPPARK) and the White River (WHITE)
+  4. Illinois River (ILLI) and Skiatook Lake (SKIA)
+
+### STEP 2: Models Tested
+We reviewed the 'Models_2D.pdf' and chose 9 models to explicitly test for each of these four population pairs based on our knowledge of the Smallmouth Bass and Neosho system in the Central Interior Highlands. The models we tested are defined below:
+
+  1. no_mig: Divergence with no migration
+  2. sym_mig: Divdergence with continuous symmetric migration
+  3. asym_mig: Divergence with continuous asymmetric migration
+  4. sec_contact_sym_mig: Divergence in isolation, continuous symmetric secondary contact (recent symmetric admixture)
+  5. sec_contact_asym_mig: Divergence in isolation, continuous asymmetric secondary contact (recent asymmetric admixture)
+  6. anc_sym_mig: Divergence with ancient continuous symmetric migration, then isolation (ancient symmetric admixture)
+  7. anc_asym_mig: Divergence with ancient continuous asymmetric migration, then isolation (ancient asymmetric admixture)
+  8. sym_mig_twoepoch: Divergence with continuous symmetric migration that varies across two epochs
+  9. asym_mig_twoepoch: Divergence with continuous asymmetric migration that varies across two epochs
+
+We generated an adapted schematic of each of these models, which is the basis of Supplementary Figure 2 in our manuscript. We also included definitions of each model in Supplementary Table 2 and definitions of parameters estimated in each model Supplementary Table 3.
+
+### ----------------------- END OF PHASE 1: MODEL IDENTIFICATION AND DEFINITIONS ----------------------- ###
+
+## PHASE 2: Data preparation
+In this phase, we are preparing the fully filtered (thinned) VCF data and generating metadata population files for model testing in DADI. Since DADI assesses demographic history, we are only using neutral (non-outlier) SNP loci in all analyses. Thus, we begin with the neutral SNPs VCF generated for the species complex hierarchical level in Analysis 6 (outlier fst analysis): `outlier_fst_analysis/data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf`. We further manipulate this VCF dataset into four different files, one for each pair of populations as listed above in Phase 1. 
+
+### STEP 1: Prepare VCF input data for DADI
+In this step, we are using the software VCFTools to prepare all input data for the program DADI.
+
+#### 1a: Generate lists of samples based on population (for filtering VCF files)
+In this step, we are generating text files listing samples belonging to the four two-population pairs of interest (see Phase 1 above) for DADI analysis, as inferred in Analysis 4 (population inference). These lists are then used to filter the four VCF files for downstream analyses.
+
+##### 1a.1. Read in sample metadata and generate list of samples for the BAYOU and WHITE populations; run the Rmd chunk below:
+
+##### Generate population file: `data/filtering_data/bayou_white.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+# Get only BAYOU and White populations
+bayou_white <- metadata_populations_spb %>%
+  filter(population == "BAYOU" | population == "WHITE")
+
+# Select sample id column
+bayou_white <- bayou_white %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(bayou_white, 
+          file = "data/filtering_data/bayou_white.txt", 
+          col_names = FALSE)
+```
+
+##### 1a.2. Read in sample metadata and generate list of samples for the ELK and WHITE populations; run the Rmd chunk below:
+
+##### Generate population file: `data/filtering_data/elk_white.txt`
+```{r}
+# Get only BAYOU and White populations
+elk_white <- metadata_populations_spb %>%
+  filter(population == "ELK" | population == "WHITE")
+
+# Select sample id column
+elk_white <- elk_white %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(elk_white, 
+          file = "data/filtering_data/elk_white.txt", 
+          col_names = FALSE)
+```
+
+##### 1a.3. Read in sample metadata and generate list of samples for the ILLI and SKIA populations; run the Rmd chunk below:
+
+##### Generate population file: `data/filtering_data/illi_skia.txt`
+```{r}
+# Get only BAYOU and White populations
+illi_skia <- metadata_populations_spb %>%
+  filter(population == "ILLI" | population == "SKIA")
+
+# Select sample id column
+illi_skia <- illi_skia %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(illi_skia, 
+          file = "data/filtering_data/illi_skia.txt", 
+          col_names = FALSE)
+```
+
+##### 1a.2. Read in sample metadata and generate list of samples for the UPPARK and WHITE populations; run the Rmd chunk below:
+
+##### Generate population file: `data/filtering_data/uppark_white.txt`
+```{r}
+# Get only BAYOU and White populations
+uppark_white <- metadata_populations_spb %>%
+  filter(population == "UPPARK" | population == "WHITE")
+
+# Select sample id column
+uppark_white <- uppark_white %>%
+  select(sample_id)
+
+# Generate text file
+write_tsv(uppark_white, 
+          file = "data/filtering_data/uppark_white.txt", 
+          col_names = FALSE)
+```
+
+#### 1b: Filter VCF data to generate datasets for each pair of populations
+
+##### 1b.1. Generate a general bash shell script header for all VCF filtering steps commands
+In this step, we are generating a universal bash shell script to run all filtering commands in VCFTOOLS (See Phase 1 in Analysis 2 for programs needed and citation information). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each file conversion and the associated lines of code in Rmd chunks. The shell script for running all VCFTOOLS code is called "vcftools.sh".
+
+###### 1b.1.1. Copy and paste the code below in a new shell script file:
+
+##### Generate VCFTOOLS bash shell script: `code/shell_scripts/vcftools.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J filter_admixed  # give the job a custom name
+#SBATCH -o filtering_missing.out  # give the job output a custom name
+#SBATCH -t 0-02:00  # two hour time limit
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 1  # number of cores (AKA tasks)
+
+## UNCOMMENT LINES STARTING HERE 
+
+## Load VCFtools module
+# module load rss/rss-2020
+# module load vcftools/vcftools-v0.1.14
+```
+
+##### 1b.2. Filter VCF to retain BAYOU and WHITE population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 01: keep BAYOU and WHITE samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/bayou_white.txt --recode --recode-INFO-all --out ../../data/processed_vcf/01_popgen_bayou_white
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/01_popgen_bayou_white.vcf`.
+
+##### 1b.3. Filter VCF to retain ELK and WHITE population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 02: keep ELK and WHITE population samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/elk_white.txt --recode --recode-INFO-all --out ../../data/processed_vcf/02_popgen_elk_white
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/02_popgen_elk_white.vcf`.
+
+##### 1b.4. Filter VCF to retain ILLI and SKIA population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 03: keep ILLI and SKIA population samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/illi_skia.txt --recode --recode-INFO-all --out ../../data/processed_vcf/03_popgen_illi_skia
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/03_popgen_illi_skia.vcf`.
+
+##### 1b.5. Filter VCF to retain UPPARK and WHITE population samples; copy and paste the code below in the shell file generated in Step 1b.1.1 above, which will generate a filtered VCF:
+
+##### Command line code for filtering VCF. UNCOMMENT this code in the shell script:
+```{bash}
+## filter 04: keep UPPARK and WHITE population samples
+# vcftools --vcf ../../data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf --keep ../../data/filtering_data/uppark_white.txt --recode --recode-INFO-all --out ../../data/processed_vcf/04_popgen_uppark_white
+```
+
+Run: `sbatch vcftools.sh`
+
+This code generates the file: `data/processed_vcf/04_popgen_uppark_white.vcf`.
+  
+### ----------------------- END OF PHASE 2: DATA PREPARATION ----------------------- ###
+
+## PHASE 3: DADI ANALYSIS
+In this phase of the analysis, we are conducting demographic analysis of admixture in our four population pairs using folded joint site frequency spectra for neutral SNP loci in teh software program DADI. Specifically, we are comparing 9 distinct, previously developed models of demographic history (see Phase 1 for models run and corresponding definitions). DADI employs maximum likelihood model testing, wherein the likelihood of a given model is determined based on residuals calculated from comparing the empirical data to theoretical data based on population genetic theory. All model likelihoods are then compared to determine the best-fitting model (the model with the smallest average residual differences between empirical and theoretical data).
+
+DADI is written in Python and is compatible with Python Version 3. Below, we detail the steps taken to install DADI in a Python Anaconda virtual environment. We specifically used the compact version of Anaconda, Miniconda3, which only includes code for Conda, Python, and dependencies, rather than all of the software built into Anaconda (Anaconda is too large for our computing cluster disk quota). We then accessed all previously developed python scripts for running DADI on GitHub (see Phase 1 above for link to the GitHub code repository). 
+
+All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
+
+<b>Programs needed</b>: <br><br>
+
+DADI v.3.1.6 (Gutenkunst et al. 2009) <br>
+
+<b>Citation</b>:<br>
+
+Gutenkunst, R.N., Hernandez, R.D., Williamson, S.D., Bustamante, C.D. (2009). Inferring the joint demographic history of multiple populations from multidimensional SNP frequency data. PLoS Genetics 5: e1000695. doi:/10.1371/journal.pgen.1000695
+
+### STEP 1: Load in Miniconda software and set up a Python virtual environment with DADI installed.
+In this step, we are setting up a virtual Python working environment for running all Python analyses; we are using the software package Miniconda for Python v.3.7.
+
+#### 1a: Generate a general bash shell script header for running all DADI commands
+In this step, we are generating a universal bash shell script to run all commands in DADI. Here, we only generate the annotated header for the shell script, including loading in Miniconda3. In subsequent steps, we include and provide details on each step of the analysis and the associated lines of code in Rmd chunks. The shell script for running all DADI code is called "dadi.sh".
+
+##### 1a.1. Copy and paste the code below in a new shell script file:
+
+##### Generate DADI bash shell script: `code/shell_scripts/dadi.sh`
+```{bash}
+#! /bin/bash
+
+#SBATCH -p Lewis  # use the Lewis partition
+#SBATCH -J ILLI_SKIA  # give the job a custom name
+#SBATCH -o ILLI_SKIA-%j.out  # give the job output a custom name
+#SBATCH -t 2-00:00  # two day time limit
+#SBATCH --mem 100G
+
+#SBATCH -N 1  # number of nodes
+#SBATCH -n 14  # number of cores (AKA tasks)
+
+# UNCOMMENT STARTING HERE
+
+## Commands here run only on the first core
+# module load miniconda3
+```
+
+##### 1a.1. Create a Python virtual environment to run all DADI analysis, and install the DADI software library in this environment.
+
+###### 1a.1.1. Create a new virtual environment; copy and paste the code below on the command line:
+
+##### Command line code for generating virutal environment: `dadi_env`. UNCOMMENT this code in the shell script:
+```{bash}
+# conda create --name dadi_env
+```
+
+###### 1a.1.2. Activate the new conda environment; copy and past the code below on the command line:
+
+##### Command line code for activating the `dadi_env` virtual environment. UNCOMMENT this code in the shell script:
+```{bash}
+# conda activate dadi_env
+```
+
+###### 1a.1.3. Install DADI; copy and past the code below on the command line:
+
+##### Command line code for installing DADI. UNCOMMENT this code in the shell script:
+```{bash}
+# conda install -c conda-forge dadi
+```
+
+### STEP 2: Generate DADI input files for model testing.
+In this step, we are modifying previously developed Python scripts for analyzing multiple demographic models with DADI to run on each of our four population pairs.
+
+#### 2a: Clone and clean the 'dadi_pipeline' GitHub repository.
+
+##### 2a.1. Navigate to the `code/` directory and run the command: `git clone https://github.com/dportik/dadi_pipeline.git`
+
+##### 2a.2. Remove unnecessary directories and files. 
+For our analysis, we are only interested in the 'Two_Population_Pipeline'. We copied all required, generalized scripts to run this pipeline and placed them into renamed folders within the `/code` directory.
+
+###### 2a.2.1. Create a new directory for base scripts, and copy and paste all base scripts (unmodified) in the directory: `code/base_scripts`
+The following scripts were copied and placed in the `/base_scripts` directory: <br>
+
+1. README.md <br>
+3. dad_Run_2D_Set.py <br>
+4. Models_2D.py <br>
+5. Optimize_Functions.py <br>
+6. Summarize_Outputs.py <br>
+
+Of the original scripts, 'dadi_Run_Optimizations.py' (not listed above) was removed, because it is a general use version of the 'dadi_Run_2D_Set.py' script. We modified the 'dadi_Run_2D_Set.py' for all downstream analyses.
+
+###### 2a.2.2. Create a new directory for analysis scripts (modified for each population pair), and copy and paste the 'dadi_Run_2D_Set.py' file in the directory: `code/analysis_scripts`.
+
+###### 2a.2.3. Create four copies of the  'dadi_Run_2D_Set.py' script and rename for each population pair.
+After this step, there should be four distinct script files in the `/analysis_scripts` directory: <br>
+
+1. uppark_white.py <br>
+2. illi_skia.py <br>
+3. elk_white.py <br>
+4. bayou_white.py <br>
+
+###### 2a.2.4. Create a new directory for plotting scripts (unmodified) in the directory: `code/plotting_scripts`
+The following scripts were copied and placed in the `/base_scripts` directory: <br>
+
+1. README.md <br>
+3. Plotting_Functions.py <br>
+4. Make_Plots.py <br>
+
+#### 2b: Modify DADI 2D Set input files to run for each analysis.
+In this step, we are modifying each of the four two-population pair analysis scripts to run each analysis. Specifically, we included the input .vcf and population metadata (.txt; see Phase 2 above) for each population pair and input the 9 specific models to test from the 'Models_2D.py' script.
+
+In each analysis, we project the data down to the exact number of alleles per population, which is equal to the number of individuals*2 since each individual is diploid, meaning that there are 2<i>N</i> alleles:
+
+[BAYOU (<i>N</i> = 7), WHITE (<i>N</i> = 10)] = [14, 20]
+[ELK (<i>N</i> = 6), WHITE (<i>N</i> = 10)] = [12, 20]
+[ILLI (<i>N</i> = 9), SKIA (<i>N</i>  5)] = [18, 10]
+[UPPARK (<i>N</i> = 18), WHITE (<i>N</i> = 10)] = [36, 20]
+
+We run a four round perturbed optimization algorithm (built into the 'Two_Population_Pipeline' on each dataset. In the first round, the optimization algorithm employs a set of random starting settings and outputs likelihood estimates over a user-defined number of replicates over a user-defined number of iterations. Then, in each subsequent round (four rounds total), the parameter estimates of the model's best-scoring replicate are used to define the settings for the next round (making it 'perturbed" each round). We ran the optimization procedure with the following specs:
+
+<b>Optimization settings</b>: <br><br>
+
+Round1: 10 replicates, maxiter = 3, fold = 3 <br>
+Round2: 20 replicates, maxiter = 5, fold = 2 <br>
+Round3: 30 replicates, maxiter = 10, fold = 2 <br>
+Round4: 40 replicates, maxiter = 15, fold = 1 <br>
+
+We copied and pasted the comands to run each of our 9 chosen models in each two-population analysis script, which calls the 'Models.py' python script to run the appropriate models.
+
+##### 2b.1. Generate files with population information for each two-population dataset.
+
+###### 2b.1.1 Read in sample metadata and generate population data for BAYOU and WHITE individuals; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/bayou_white.txt`
+```{r}
+# Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
+load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+
+# Get only BAYOU and White populations
+bayou_white <- metadata_populations_spb %>%
+  filter(population == "BAYOU" | population == "WHITE")
+
+# Generate text file
+write_tsv(bayou_white, 
+          file = "data/pop_files/bayou_white.txt", 
+          col_names = FALSE)
+```
+
+###### 2b.1.2. Read in sample metadata and generate population data  for the ELK and WHITE individuals; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/elk_white.txt`
+```{r}
+# Get only BAYOU and White populations
+elk_white <- metadata_populations_spb %>%
+  filter(population == "ELK" | population == "WHITE")
+
+# Generate text file
+write_tsv(elk_white, 
+          file = "data/pop_files/elk_white.txt", 
+          col_names = FALSE)
+```
+
+##### 2b.1.3. Read in sample metadata and generate population data for the ILLI and SKIA individuals; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/illi_skia.txt`
+```{r}
+# Get only BAYOU and White populations
+illi_skia <- metadata_populations_spb %>%
+  filter(population == "ILLI" | population == "SKIA")
+
+# Generate text file
+write_tsv(illi_skia, 
+          file = "data/pop_files/illi_skia.txt", 
+          col_names = FALSE)
+```
+
+##### 2b.1.4. Read in sample metadata and generate population data for the UPPARK and WHITE individuals; run the Rmd chunk below:
+
+##### Generate population file: `data/pop_files/uppark_white.txt`
+```{r}
+# Get only BAYOU and White populations
+uppark_white <- metadata_populations_spb %>%
+  filter(population == "UPPARK" | population == "WHITE")
+
+# Generate text file
+write_tsv(uppark_white, 
+          file = "data/pop_files/uppark_white.txt", 
+          col_names = FALSE)
+```
+
+##### 2b.2. Modify previously developed Python Scripts for running DADI for each two-population dataset:
+
+###### 2b.2.1. Modify the 'bayou_white.py' script: the script should be as follows:
+
+##### bayou_white.py
+```{r, includ = FASLE}
+'''
+Usage: python dadi_Run_2D_Set.py
+
+This is a modified version of the 'dadi_Run_Optimizations.py' script in which
+we run optimizations for 2D comparisons for a large set of models that have been
+made available as part of published works. These models are stored in the
+Models_2D.py script, and will be called directly here. The user can delete or
+comment out models to analyze a subset of the models available. 
+
+This script must be in the same working directory as Optimize_Functions.py, which
+contains all the functions necessary, as well as the  Models_2D.py script, which
+has all the model definitions.
+
+
+General workflow:
+ The optimization routine runs a user-defined number of rounds, each with a user-defined
+ or predefined number of replicates. The starting parameters are initially random, but after
+ each round is complete the parameters of the best scoring replicate from that round are
+ used to generate perturbed starting parameters for the replicates of the subsequent round.
+ The arguments controlling steps of the optimization algorithm (maxiter) and perturbation
+ of starting parameters (fold) can be supplied by the user for more control across rounds.
+ The user can also supply their own set of initial parameters, or set custom bounds on the
+ parameters (upper_bound and lower_bound) to meet specific model needs. This flexibility
+ should allow these scripts to be generally useful for model-fitting with any data set.
+
+ 
+Outputs:
+ For each model run, there will be a log file showing the optimization steps per replicate
+ and a summary file that has all the important information. Here is an example of the output
+ from a summary file, which will be in tab-delimited format:
+ 
+ Model	Replicate	log-likelihood	AIC	chi-squared	theta	optimized_params(nu1, nu2, m, T)
+ sym_mig	Round_1_Replicate_1	-1684.99	3377.98	14628.4	383.04	0.2356,0.5311,0.8302,0.182
+ sym_mig	Round_1_Replicate_2	-2255.47	4518.94	68948.93	478.71	0.3972,0.2322,2.6093,0.611
+ sym_mig	Round_1_Replicate_3	-2837.96	5683.92	231032.51	718.25	0.1078,0.3932,4.2544,2.9936
+ sym_mig	Round_1_Replicate_4	-4262.29	8532.58	8907386.55	288.05	0.3689,0.8892,3.0951,2.8496
+ sym_mig	Round_1_Replicate_5	-4474.86	8957.72	13029301.84	188.94	2.9248,1.9986,0.2484,0.3688
+
+
+Notes/Caveats:
+ The likelihood and AIC returned represent the true likelihood only if the SNPs are
+ unlinked across loci. For ddRADseq data where a single SNP is selected per locus, this
+ is true, but if SNPs are linked across loci then the likelihood is actually a composite
+ likelihood and using something like AIC is no longer appropriate for model comparisons.
+ See the discussion group for more information on this subject. 
+
+Citations:
+ If you use these scripts or the main diversification models for your work, please
+ cite the following publication:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K. Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+ 
+ If you use the additional diversification models or the island models set please cite 
+ the following publication:
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+        
+ If you are interesting in contributing your models to this workflow, please email me!
+
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+
+import sys
+import os
+import numpy
+import dadi
+import pylab
+from datetime import datetime
+import Optimize_Functions
+import Models_2D
+
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+#Create python dictionary from snps file
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/01_popgen_bayou_white.vcf", "../../data/pop_files/bayou_white.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["BAYOU", "WHITE"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [14, 20]
+
+fs = dadi.Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+#================================================================================
+# Calling external 2D models from the Models_2D.py script
+#================================================================================
+'''
+ We will use a function from the Optimize_Functions.py script for our optimization routines:
+ 
+ Optimize_Routine(fs, pts, outfile, model_name, func, rounds, param_number, fs_folded=True, 
+                        reps=None, maxiters=None, folds=None, in_params=None, 
+                        in_upper=None, in_lower=None, param_labels=None, optimizer="log_fmin")
+ 
+   Mandatory Arguments =
+    fs:  spectrum object name
+    pts: grid size for extrapolation, list of three values
+    outfile:  prefix for output naming
+    model_name: a label to help label the output files; ex. "no_mig"
+    func: access the model function from within 'moments_Run_Optimizations.py' or from a separate python model script, 
+          ex. after importing Models_2D, calling Models_2D.no_mig
+    rounds: number of optimization rounds to perform
+    param_number: number of parameters in the model selected (can count in params line for the model)
+    fs_folded: A Boolean value (True or False) indicating whether the empirical fs is folded (True) or not (False).
+
+   Optional Arguments =
+     reps: a list of integers controlling the number of replicates in each of the optimization rounds
+     maxiters: a list of integers controlling the maxiter argument in each of the optimization rounds
+     folds: a list of integers controlling the fold argument when perturbing input parameter values
+     in_params: a list of parameter values 
+     in_upper: a list of upper bound values
+     in_lower: a list of lower bound values
+     param_labels: list of labels for parameters that will be written to the output file to keep track of their order
+     optimizer: a string, to select the optimizer. Choices include: "log" (BFGS method), "log_lbfgsb" (L-BFGS-B method), 
+                "log_fmin" (Nelder-Mead method), and "log_powell" (Powell's method).
+
+Below, I give all the necessary information to call each model available in the
+Models_2D.py script. I have set the optimization routine to be the same for each
+model using the optional lists below, which are included as optional arguments for
+each model. This particular configuration will run 4 rounds as follows:
+Round1 - 10 replicates, maxiter = 3, fold = 3
+Round2 - 20 replicates, maxiter = 5, fold = 2
+Round3 - 30 replicates, maxiter = 10, fold = 2
+Round4 - 40 replicates, maxiter = 15, fold = 1
+
+If this script was run as is, each model would be called and optimized sequentially;
+this could take a very long time. For your actual analyses, I strongly recommend
+creating multiple scripts with only a few models each and running them
+independently. It is also not a good idea to mix models from the Diversification Set
+and the Island Set, as each was meant to be mutually exclusive.
+
+'''
+
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+prefix = "_".join(pop_ids)
+
+#**************
+#make sure to define your extrapolation grid size (based on your projections)
+pts = [30,40,50]
+
+#**************
+#Set the number of rounds here
+rounds = 4
+
+#define the lists for optional arguments
+#you can change these to alter the settings of the optimization routine
+reps = [10,20,30,40]
+maxiters = [3,5,10,15]
+folds = [3,2,2,1]
+
+#**************
+#Indicate whether your frequency spectrum object is folded (True) or unfolded (False)
+fs_folded = True
+
+
+'''
+Diversification Model Set
+
+This first set of models come from the following publication:
+
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+
+'''
+
+# Split into two populations, no migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "no_mig", Models_2D.no_mig, rounds, 3, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, T")
+
+
+# Split into two populations, with continuous symmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig", Models_2D.sym_mig, rounds, 4, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T")
+
+
+# Split into two populations, with continuous asymmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig", Models_2D.asym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T")
+
+
+# Split with continuous symmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_sym_mig", Models_2D.anc_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with continuous asymmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_asym_mig", Models_2D.anc_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous symmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_sym_mig", Models_2D.sec_contact_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous asymmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_asym_mig", Models_2D.sec_contact_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+
+'''
+The following 6 models were added to the Diversification Model Set by:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+'''
+# Split into two populations, with continuous symmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig_twoepoch", Models_2D.sym_mig_twoepoch, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m1, m2, T1, T2")
+
+
+# Split into two populations, with continuous asymmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig_twoepoch", Models_2D.asym_mig_twoepoch, rounds, 8, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12a, m21a, m12b, m21b, T1, T2")
+
+
+
+
+'''
+Island Diversification Model Set
+
+This model set comes from the following publication:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+
+For all the following models, pop2 is assumed to be the 'island' population and pop1 is the 
+mainland population. Their sizes are based on the parameter s, where 0 < s < 1. Here, s 
+represents the fraction of Nref that enters a population, with pop2 = s, and pop1 = 1-s. 
+When these models are called the upper bound on s is set to 0.5, such that the island pop 
+(pop2) can never contain >50% of the ancestral population. The values of nu1 and nu2 are 
+therefore 1-s and s, unless there is a size change event. 
+
+The 'vicariance' models involve no population size change, whereas the 'founder' event 
+models always enforce exponential growth in pop2 (the island population).
+
+NOTE: For these models, we must include an optional upper bound argument in
+order to constrain the parameter 's' to be no more than 0.5, and we must also
+supply a starting parameter list to keep the initial value of s within these bounds. 
+For models with discrete admixture events, we need to constrain 'f' to between 0-1, 
+and do so in a similar fashion.
+
+'''
+```
+
+###### 2b.2.2 Modify the 'elk_white.py' script: the script should be as follows:
+
+##### elk_white.py
+```{r, include = FALSE}
+'''
+Usage: python dadi_Run_2D_Set.py
+
+This is a modified version of the 'dadi_Run_Optimizations.py' script in which
+we run optimizations for 2D comparisons for a large set of models that have been
+made available as part of published works. These models are stored in the
+Models_2D.py script, and will be called directly here. The user can delete or
+comment out models to analyze a subset of the models available. 
+
+This script must be in the same working directory as Optimize_Functions.py, which
+contains all the functions necessary, as well as the  Models_2D.py script, which
+has all the model definitions.
+
+
+General workflow:
+ The optimization routine runs a user-defined number of rounds, each with a user-defined
+ or predefined number of replicates. The starting parameters are initially random, but after
+ each round is complete the parameters of the best scoring replicate from that round are
+ used to generate perturbed starting parameters for the replicates of the subsequent round.
+ The arguments controlling steps of the optimization algorithm (maxiter) and perturbation
+ of starting parameters (fold) can be supplied by the user for more control across rounds.
+ The user can also supply their own set of initial parameters, or set custom bounds on the
+ parameters (upper_bound and lower_bound) to meet specific model needs. This flexibility
+ should allow these scripts to be generally useful for model-fitting with any data set.
+
+ 
+Outputs:
+ For each model run, there will be a log file showing the optimization steps per replicate
+ and a summary file that has all the important information. Here is an example of the output
+ from a summary file, which will be in tab-delimited format:
+ 
+ Model	Replicate	log-likelihood	AIC	chi-squared	theta	optimized_params(nu1, nu2, m, T)
+ sym_mig	Round_1_Replicate_1	-1684.99	3377.98	14628.4	383.04	0.2356,0.5311,0.8302,0.182
+ sym_mig	Round_1_Replicate_2	-2255.47	4518.94	68948.93	478.71	0.3972,0.2322,2.6093,0.611
+ sym_mig	Round_1_Replicate_3	-2837.96	5683.92	231032.51	718.25	0.1078,0.3932,4.2544,2.9936
+ sym_mig	Round_1_Replicate_4	-4262.29	8532.58	8907386.55	288.05	0.3689,0.8892,3.0951,2.8496
+ sym_mig	Round_1_Replicate_5	-4474.86	8957.72	13029301.84	188.94	2.9248,1.9986,0.2484,0.3688
+
+
+Notes/Caveats:
+ The likelihood and AIC returned represent the true likelihood only if the SNPs are
+ unlinked across loci. For ddRADseq data where a single SNP is selected per locus, this
+ is true, but if SNPs are linked across loci then the likelihood is actually a composite
+ likelihood and using something like AIC is no longer appropriate for model comparisons.
+ See the discussion group for more information on this subject. 
+
+Citations:
+ If you use these scripts or the main diversification models for your work, please
+ cite the following publication:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K. Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+ 
+ If you use the additional diversification models or the island models set please cite 
+ the following publication:
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+        
+ If you are interesting in contributing your models to this workflow, please email me!
+
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+
+import sys
+import os
+import numpy
+import dadi
+import pylab
+from datetime import datetime
+import Optimize_Functions
+import Models_2D
+
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+#Create python dictionary from snps file
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/01_popgen_elk_white.vcf", "../../data/pop_files/elk_white.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["ELK", "WHITE"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [12, 20]
+
+
+fs = dadi.Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+#================================================================================
+# Calling external 2D models from the Models_2D.py script
+#================================================================================
+'''
+ We will use a function from the Optimize_Functions.py script for our optimization routines:
+ 
+ Optimize_Routine(fs, pts, outfile, model_name, func, rounds, param_number, fs_folded=True, 
+                        reps=None, maxiters=None, folds=None, in_params=None, 
+                        in_upper=None, in_lower=None, param_labels=None, optimizer="log_fmin")
+ 
+   Mandatory Arguments =
+    fs:  spectrum object name
+    pts: grid size for extrapolation, list of three values
+    outfile:  prefix for output naming
+    model_name: a label to help label the output files; ex. "no_mig"
+    func: access the model function from within 'moments_Run_Optimizations.py' or from a separate python model script, 
+          ex. after importing Models_2D, calling Models_2D.no_mig
+    rounds: number of optimization rounds to perform
+    param_number: number of parameters in the model selected (can count in params line for the model)
+    fs_folded: A Boolean value (True or False) indicating whether the empirical fs is folded (True) or not (False).
+
+   Optional Arguments =
+     reps: a list of integers controlling the number of replicates in each of the optimization rounds
+     maxiters: a list of integers controlling the maxiter argument in each of the optimization rounds
+     folds: a list of integers controlling the fold argument when perturbing input parameter values
+     in_params: a list of parameter values 
+     in_upper: a list of upper bound values
+     in_lower: a list of lower bound values
+     param_labels: list of labels for parameters that will be written to the output file to keep track of their order
+     optimizer: a string, to select the optimizer. Choices include: "log" (BFGS method), "log_lbfgsb" (L-BFGS-B method), 
+                "log_fmin" (Nelder-Mead method), and "log_powell" (Powell's method).
+
+Below, I give all the necessary information to call each model available in the
+Models_2D.py script. I have set the optimization routine to be the same for each
+model using the optional lists below, which are included as optional arguments for
+each model. This particular configuration will run 4 rounds as follows:
+Round1 - 10 replicates, maxiter = 3, fold = 3
+Round2 - 20 replicates, maxiter = 5, fold = 2
+Round3 - 30 replicates, maxiter = 10, fold = 2
+Round4 - 40 replicates, maxiter = 15, fold = 1
+
+If this script was run as is, each model would be called and optimized sequentially;
+this could take a very long time. For your actual analyses, I strongly recommend
+creating multiple scripts with only a few models each and running them
+independently. It is also not a good idea to mix models from the Diversification Set
+and the Island Set, as each was meant to be mutually exclusive.
+
+'''
+
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+prefix = "_".join(pop_ids)
+
+#**************
+#make sure to define your extrapolation grid size (based on your projections)
+pts = [30,40,50]
+
+#**************
+#Set the number of rounds here
+rounds = 4
+
+#define the lists for optional arguments
+#you can change these to alter the settings of the optimization routine
+reps = [10,20,30,40]
+maxiters = [3,5,10,15]
+folds = [3,2,2,1]
+
+#**************
+#Indicate whether your frequency spectrum object is folded (True) or unfolded (False)
+fs_folded = True
+
+
+'''
+Diversification Model Set
+
+This first set of models come from the following publication:
+
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+
+'''
+
+# Split into two populations, no migration.
+#Optimize_Functions.Optimize_Routine(fs, pts, prefix, "no_mig", Models_2D.no_mig, rounds, 3, fs_folded=fs_folded,
+                                    #    reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, T")
+
+
+# Split into two populations, with continuous symmetric migration.
+#Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig", Models_2D.sym_mig, rounds, 4, fs_folded=fs_folded,
+                                    #    reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T")
+
+
+# Split into two populations, with continuous asymmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig", Models_2D.asym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T")
+
+
+# Split with continuous symmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_sym_mig", Models_2D.anc_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with continuous asymmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_asym_mig", Models_2D.anc_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous symmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_sym_mig", Models_2D.sec_contact_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous asymmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_asym_mig", Models_2D.sec_contact_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+
+'''
+The following 6 models were added to the Diversification Model Set by:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+'''
+# Split into two populations, with continuous symmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig_twoepoch", Models_2D.sym_mig_twoepoch, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m1, m2, T1, T2")
+
+
+# Split into two populations, with continuous asymmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig_twoepoch", Models_2D.asym_mig_twoepoch, rounds, 8, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12a, m21a, m12b, m21b, T1, T2")
+
+
+
+
+'''
+Island Diversification Model Set
+
+This model set comes from the following publication:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+
+For all the following models, pop2 is assumed to be the 'island' population and pop1 is the 
+mainland population. Their sizes are based on the parameter s, where 0 < s < 1. Here, s 
+represents the fraction of Nref that enters a population, with pop2 = s, and pop1 = 1-s. 
+When these models are called the upper bound on s is set to 0.5, such that the island pop 
+(pop2) can never contain >50% of the ancestral population. The values of nu1 and nu2 are 
+therefore 1-s and s, unless there is a size change event. 
+
+The 'vicariance' models involve no population size change, whereas the 'founder' event 
+models always enforce exponential growth in pop2 (the island population).
+
+NOTE: For these models, we must include an optional upper bound argument in
+order to constrain the parameter 's' to be no more than 0.5, and we must also
+supply a starting parameter list to keep the initial value of s within these bounds. 
+For models with discrete admixture events, we need to constrain 'f' to between 0-1, 
+and do so in a similar fashion.
+'''
+```
+
+###### 2b.2.3. Modify the 'illi_skia.py' script: the script should be as follows:
+
+##### illi_skia.py
+```{r, include = FALSE}
+'''
+Usage: python dadi_Run_2D_Set.py
+
+This is a modified version of the 'dadi_Run_Optimizations.py' script in which
+we run optimizations for 2D comparisons for a large set of models that have been
+made available as part of published works. These models are stored in the
+Models_2D.py script, and will be called directly here. The user can delete or
+comment out models to analyze a subset of the models available. 
+
+This script must be in the same working directory as Optimize_Functions.py, which
+contains all the functions necessary, as well as the  Models_2D.py script, which
+has all the model definitions.
+
+
+General workflow:
+ The optimization routine runs a user-defined number of rounds, each with a user-defined
+ or predefined number of replicates. The starting parameters are initially random, but after
+ each round is complete the parameters of the best scoring replicate from that round are
+ used to generate perturbed starting parameters for the replicates of the subsequent round.
+ The arguments controlling steps of the optimization algorithm (maxiter) and perturbation
+ of starting parameters (fold) can be supplied by the user for more control across rounds.
+ The user can also supply their own set of initial parameters, or set custom bounds on the
+ parameters (upper_bound and lower_bound) to meet specific model needs. This flexibility
+ should allow these scripts to be generally useful for model-fitting with any data set.
+
+ 
+Outputs:
+ For each model run, there will be a log file showing the optimization steps per replicate
+ and a summary file that has all the important information. Here is an example of the output
+ from a summary file, which will be in tab-delimited format:
+ 
+ Model	Replicate	log-likelihood	AIC	chi-squared	theta	optimized_params(nu1, nu2, m, T)
+ sym_mig	Round_1_Replicate_1	-1684.99	3377.98	14628.4	383.04	0.2356,0.5311,0.8302,0.182
+ sym_mig	Round_1_Replicate_2	-2255.47	4518.94	68948.93	478.71	0.3972,0.2322,2.6093,0.611
+ sym_mig	Round_1_Replicate_3	-2837.96	5683.92	231032.51	718.25	0.1078,0.3932,4.2544,2.9936
+ sym_mig	Round_1_Replicate_4	-4262.29	8532.58	8907386.55	288.05	0.3689,0.8892,3.0951,2.8496
+ sym_mig	Round_1_Replicate_5	-4474.86	8957.72	13029301.84	188.94	2.9248,1.9986,0.2484,0.3688
+
+
+Notes/Caveats:
+ The likelihood and AIC returned represent the true likelihood only if the SNPs are
+ unlinked across loci. For ddRADseq data where a single SNP is selected per locus, this
+ is true, but if SNPs are linked across loci then the likelihood is actually a composite
+ likelihood and using something like AIC is no longer appropriate for model comparisons.
+ See the discussion group for more information on this subject. 
+
+Citations:
+ If you use these scripts or the main diversification models for your work, please
+ cite the following publication:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K. Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+ 
+ If you use the additional diversification models or the island models set please cite 
+ the following publication:
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+        
+ If you are interesting in contributing your models to this workflow, please email me!
+
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+
+import sys
+import os
+import numpy
+import dadi
+import pylab
+from datetime import datetime
+import Optimize_Functions
+import Models_2D
+
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+#snps = "/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/raw_data/dadi_data/dadi_input/elk_white_dadi.fs"
+
+#Create python dictionary from snps file
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/03_popgen_illi_skia.vcf", "../../data/pop_files/illi_skia.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["ILLI", "SKIA"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [18, 10]
+
+#Convert this dictionary into folded AFS object
+#[polarized = False] creates folded spectrum object
+
+fs = dadi.Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+#================================================================================
+# Calling external 2D models from the Models_2D.py script
+#================================================================================
+'''
+ We will use a function from the Optimize_Functions.py script for our optimization routines:
+ 
+ Optimize_Routine(fs, pts, outfile, model_name, func, rounds, param_number, fs_folded=True, 
+                        reps=None, maxiters=None, folds=None, in_params=None, 
+                        in_upper=None, in_lower=None, param_labels=None, optimizer="log_fmin")
+ 
+   Mandatory Arguments =
+    fs:  spectrum object name
+    pts: grid size for extrapolation, list of three values
+    outfile:  prefix for output naming
+    model_name: a label to help label the output files; ex. "no_mig"
+    func: access the model function from within 'moments_Run_Optimizations.py' or from a separate python model script, 
+          ex. after importing Models_2D, calling Models_2D.no_mig
+    rounds: number of optimization rounds to perform
+    param_number: number of parameters in the model selected (can count in params line for the model)
+    fs_folded: A Boolean value (True or False) indicating whether the empirical fs is folded (True) or not (False).
+
+   Optional Arguments =
+     reps: a list of integers controlling the number of replicates in each of the optimization rounds
+     maxiters: a list of integers controlling the maxiter argument in each of the optimization rounds
+     folds: a list of integers controlling the fold argument when perturbing input parameter values
+     in_params: a list of parameter values 
+     in_upper: a list of upper bound values
+     in_lower: a list of lower bound values
+     param_labels: list of labels for parameters that will be written to the output file to keep track of their order
+     optimizer: a string, to select the optimizer. Choices include: "log" (BFGS method), "log_lbfgsb" (L-BFGS-B method), 
+                "log_fmin" (Nelder-Mead method), and "log_powell" (Powell's method).
+
+Below, I give all the necessary information to call each model available in the
+Models_2D.py script. I have set the optimization routine to be the same for each
+model using the optional lists below, which are included as optional arguments for
+each model. This particular configuration will run 4 rounds as follows:
+Round1 - 10 replicates, maxiter = 3, fold = 3
+Round2 - 20 replicates, maxiter = 5, fold = 2
+Round3 - 30 replicates, maxiter = 10, fold = 2
+Round4 - 40 replicates, maxiter = 15, fold = 1
+
+If this script was run as is, each model would be called and optimized sequentially;
+this could take a very long time. For your actual analyses, I strongly recommend
+creating multiple scripts with only a few models each and running them
+independently. It is also not a good idea to mix models from the Diversification Set
+and the Island Set, as each was meant to be mutually exclusive.
+
+'''
+
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+prefix = "_".join(pop_ids)
+
+#**************
+#make sure to define your extrapolation grid size (based on your projections)
+pts = [30,40,50]
+
+#**************
+#Set the number of rounds here
+rounds = 4
+
+#define the lists for optional arguments
+#you can change these to alter the settings of the optimization routine
+reps = [10,20,30,40]
+maxiters = [3,5,10,15]
+folds = [3,2,2,1]
+
+#**************
+#Indicate whether your frequency spectrum object is folded (True) or unfolded (False)
+fs_folded = True
+
+
+'''
+Diversification Model Set
+
+This first set of models come from the following publication:
+
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+
+'''
+
+# Split into two populations, no migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "no_mig", Models_2D.no_mig, rounds, 3, fs_folded=fs_folded,
+                                      reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, T")
+
+
+# Split into two populations, with continuous symmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig", Models_2D.sym_mig, rounds, 4, fs_folded=fs_folded,
+                                       reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T")
+
+
+# Split into two populations, with continuous asymmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig", Models_2D.asym_mig, rounds, 5, fs_folded=fs_folded,
+                                      reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T")
+
+
+# Split with continuous symmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_sym_mig", Models_2D.anc_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                      reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with continuous asymmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_asym_mig", Models_2D.anc_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                     reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous symmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_sym_mig", Models_2D.sec_contact_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous asymmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_asym_mig", Models_2D.sec_contact_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+
+'''
+The following 6 models were added to the Diversification Model Set by:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+'''
+# Split into two populations, with continuous symmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig_twoepoch", Models_2D.sym_mig_twoepoch, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m1, m2, T1, T2")
+
+
+# Split into two populations, with continuous asymmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig_twoepoch", Models_2D.asym_mig_twoepoch, rounds, 8, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12a, m21a, m12b, m21b, T1, T2")
+
+
+
+
+'''
+Island Diversification Model Set
+
+This model set comes from the following publication:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+
+For all the following models, pop2 is assumed to be the 'island' population and pop1 is the 
+mainland population. Their sizes are based on the parameter s, where 0 < s < 1. Here, s 
+represents the fraction of Nref that enters a population, with pop2 = s, and pop1 = 1-s. 
+When these models are called the upper bound on s is set to 0.5, such that the island pop 
+(pop2) can never contain >50% of the ancestral population. The values of nu1 and nu2 are 
+therefore 1-s and s, unless there is a size change event. 
+
+The 'vicariance' models involve no population size change, whereas the 'founder' event 
+models always enforce exponential growth in pop2 (the island population).
+
+NOTE: For these models, we must include an optional upper bound argument in
+order to constrain the parameter 's' to be no more than 0.5, and we must also
+supply a starting parameter list to keep the initial value of s within these bounds. 
+For models with discrete admixture events, we need to constrain 'f' to between 0-1, 
+and do so in a similar fashion.
+'''
+```
+
+###### 2b.2.4. Modify the uppark_white.py' script: the script should be as follows:
+
+##### uppark_white.py
+```{r, include = FALSE}
+'''
+Usage: python dadi_Run_2D_Set.py
+
+This is a modified version of the 'dadi_Run_Optimizations.py' script in which
+we run optimizations for 2D comparisons for a large set of models that have been
+made available as part of published works. These models are stored in the
+Models_2D.py script, and will be called directly here. The user can delete or
+comment out models to analyze a subset of the models available. 
+
+This script must be in the same working directory as Optimize_Functions.py, which
+contains all the functions necessary, as well as the  Models_2D.py script, which
+has all the model definitions.
+
+
+General workflow:
+ The optimization routine runs a user-defined number of rounds, each with a user-defined
+ or predefined number of replicates. The starting parameters are initially random, but after
+ each round is complete the parameters of the best scoring replicate from that round are
+ used to generate perturbed starting parameters for the replicates of the subsequent round.
+ The arguments controlling steps of the optimization algorithm (maxiter) and perturbation
+ of starting parameters (fold) can be supplied by the user for more control across rounds.
+ The user can also supply their own set of initial parameters, or set custom bounds on the
+ parameters (upper_bound and lower_bound) to meet specific model needs. This flexibility
+ should allow these scripts to be generally useful for model-fitting with any data set.
+
+ 
+Outputs:
+ For each model run, there will be a log file showing the optimization steps per replicate
+ and a summary file that has all the important information. Here is an example of the output
+ from a summary file, which will be in tab-delimited format:
+ 
+ Model	Replicate	log-likelihood	AIC	chi-squared	theta	optimized_params(nu1, nu2, m, T)
+ sym_mig	Round_1_Replicate_1	-1684.99	3377.98	14628.4	383.04	0.2356,0.5311,0.8302,0.182
+ sym_mig	Round_1_Replicate_2	-2255.47	4518.94	68948.93	478.71	0.3972,0.2322,2.6093,0.611
+ sym_mig	Round_1_Replicate_3	-2837.96	5683.92	231032.51	718.25	0.1078,0.3932,4.2544,2.9936
+ sym_mig	Round_1_Replicate_4	-4262.29	8532.58	8907386.55	288.05	0.3689,0.8892,3.0951,2.8496
+ sym_mig	Round_1_Replicate_5	-4474.86	8957.72	13029301.84	188.94	2.9248,1.9986,0.2484,0.3688
+
+
+Notes/Caveats:
+ The likelihood and AIC returned represent the true likelihood only if the SNPs are
+ unlinked across loci. For ddRADseq data where a single SNP is selected per locus, this
+ is true, but if SNPs are linked across loci then the likelihood is actually a composite
+ likelihood and using something like AIC is no longer appropriate for model comparisons.
+ See the discussion group for more information on this subject. 
+
+Citations:
+ If you use these scripts or the main diversification models for your work, please
+ cite the following publication:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K. Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+ 
+ If you use the additional diversification models or the island models set please cite 
+ the following publication:
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+        
+ If you are interesting in contributing your models to this workflow, please email me!
+
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+
+import sys
+import os
+import numpy
+import dadi
+import pylab
+from datetime import datetime
+import Optimize_Functions
+import Models_2D
+
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+#snps = "/Users/joegunn/Desktop/Grad_School_Stuff/Research/Projects/Smallmouth_Bass_Genomics/raw_data/dadi_data/dadi_input/elk_white_dadi.fs"
+
+#Create python dictionary from snps file
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/04_popgen_uppark_white.vcf", "../../data/pop_files/uppark_white.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["UPPARK", "WHITE"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [36, 20]
+
+#Convert this dictionary into folded AFS object
+#[polarized = False] creates folded spectrum object
+
+fs = dadi.Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+#================================================================================
+# Calling external 2D models from the Models_2D.py script
+#================================================================================
+'''
+ We will use a function from the Optimize_Functions.py script for our optimization routines:
+ 
+ Optimize_Routine(fs, pts, outfile, model_name, func, rounds, param_number, fs_folded=True, 
+                        reps=None, maxiters=None, folds=None, in_params=None, 
+                        in_upper=None, in_lower=None, param_labels=None, optimizer="log_fmin")
+ 
+   Mandatory Arguments =
+    fs:  spectrum object name
+    pts: grid size for extrapolation, list of three values
+    outfile:  prefix for output naming
+    model_name: a label to help label the output files; ex. "no_mig"
+    func: access the model function from within 'moments_Run_Optimizations.py' or from a separate python model script, 
+          ex. after importing Models_2D, calling Models_2D.no_mig
+    rounds: number of optimization rounds to perform
+    param_number: number of parameters in the model selected (can count in params line for the model)
+    fs_folded: A Boolean value (True or False) indicating whether the empirical fs is folded (True) or not (False).
+
+   Optional Arguments =
+     reps: a list of integers controlling the number of replicates in each of the optimization rounds
+     maxiters: a list of integers controlling the maxiter argument in each of the optimization rounds
+     folds: a list of integers controlling the fold argument when perturbing input parameter values
+     in_params: a list of parameter values 
+     in_upper: a list of upper bound values
+     in_lower: a list of lower bound values
+     param_labels: list of labels for parameters that will be written to the output file to keep track of their order
+     optimizer: a string, to select the optimizer. Choices include: "log" (BFGS method), "log_lbfgsb" (L-BFGS-B method), 
+                "log_fmin" (Nelder-Mead method), and "log_powell" (Powell's method).
+
+Below, I give all the necessary information to call each model available in the
+Models_2D.py script. I have set the optimization routine to be the same for each
+model using the optional lists below, which are included as optional arguments for
+each model. This particular configuration will run 4 rounds as follows:
+Round1 - 10 replicates, maxiter = 3, fold = 3
+Round2 - 20 replicates, maxiter = 5, fold = 2
+Round3 - 30 replicates, maxiter = 10, fold = 2
+Round4 - 40 replicates, maxiter = 15, fold = 1
+
+If this script was run as is, each model would be called and optimized sequentially;
+this could take a very long time. For your actual analyses, I strongly recommend
+creating multiple scripts with only a few models each and running them
+independently. It is also not a good idea to mix models from the Diversification Set
+and the Island Set, as each was meant to be mutually exclusive.
+
+'''
+
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+prefix = "_".join(pop_ids)
+
+#**************
+#make sure to define your extrapolation grid size (based on your projections)
+pts = [50,60,70]
+
+#**************
+#Set the number of rounds here
+rounds = 4
+
+#define the lists for optional arguments
+#you can change these to alter the settings of the optimization routine
+reps = [10,20,30,40]
+maxiters = [3,5,10,15]
+folds = [3,2,2,1]
+
+#**************
+#Indicate whether your frequency spectrum object is folded (True) or unfolded (False)
+fs_folded = True
+
+
+'''
+Diversification Model Set
+
+This first set of models come from the following publication:
+
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 5245-5263.
+    doi: 10.1111/mec.14266
+
+'''
+
+# Split into two populations, no migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "no_mig", Models_2D.no_mig, rounds, 3, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, T")
+
+
+# Split into two populations, with continuous symmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig", Models_2D.sym_mig, rounds, 4, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T")
+
+
+# Split into two populations, with continuous asymmetric migration.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig", Models_2D.asym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T")
+
+
+# Split with continuous symmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_sym_mig", Models_2D.anc_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with continuous asymmetric migration, followed by isolation.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "anc_asym_mig", Models_2D.anc_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous symmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_sym_mig", Models_2D.sec_contact_sym_mig, rounds, 5, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m, T1, T2")
+
+
+# Split with no gene flow, followed by period of continuous asymmetrical gene flow.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sec_contact_asym_mig", Models_2D.sec_contact_asym_mig, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12, m21, T1, T2")
+
+
+
+'''
+The following 6 models were added to the Diversification Model Set by:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+'''
+# Split into two populations, with continuous symmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "sym_mig_twoepoch", Models_2D.sym_mig_twoepoch, rounds, 6, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m1, m2, T1, T2")
+
+
+# Split into two populations, with continuous asymmetric migration, rate varying across two epochs.
+Optimize_Functions.Optimize_Routine(fs, pts, prefix, "asym_mig_twoepoch", Models_2D.asym_mig_twoepoch, rounds, 8, fs_folded=fs_folded,
+                                        reps=reps, maxiters=maxiters, folds=folds, param_labels = "nu1, nu2, m12a, m21a, m12b, m21b, T1, T2")
+
+
+
+
+'''
+Island Diversification Model Set
+
+This model set comes from the following publication:
+
+    Charles, K.C., Bell, R.C., Blackburn, D.C., Burger, M., Fujita, M.K.,
+    Gvozdik, V., Jongsma, G.F.M., Leache, A.D., and D.M. Portik. Sky, sea,
+    and forest islands: diversification in the African leaf-folding frog
+    Afrixalus paradorsalis (Order: Anura, Family: Hyperoliidae).
+    Journal of Biogeography 45: 1781-1794. 
+    doi: 10.1111/jbi.13365
+
+For all the following models, pop2 is assumed to be the 'island' population and pop1 is the 
+mainland population. Their sizes are based on the parameter s, where 0 < s < 1. Here, s 
+represents the fraction of Nref that enters a population, with pop2 = s, and pop1 = 1-s. 
+When these models are called the upper bound on s is set to 0.5, such that the island pop 
+(pop2) can never contain >50% of the ancestral population. The values of nu1 and nu2 are 
+therefore 1-s and s, unless there is a size change event. 
+
+The 'vicariance' models involve no population size change, whereas the 'founder' event 
+models always enforce exponential growth in pop2 (the island population).
+
+NOTE: For these models, we must include an optional upper bound argument in
+order to constrain the parameter 's' to be no more than 0.5, and we must also
+supply a starting parameter list to keep the initial value of s within these bounds. 
+For models with discrete admixture events, we need to constrain 'f' to between 0-1, 
+and do so in a similar fashion.
+
+'''
+```
+
+#### 2c: Run DADI on all population pairs.
+In this step, we are executing the DADI program for all population pairs.
+
+##### 2c.1. Run DADI on BAYOU and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate output files from DADI:
+
+##### Command line code for running DADI on BAYOU and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## DADI run 01:	Run DADI on BAYOU and WHITE populations
+#python3 ../analysis_scripts/illi_skia.py
+```
+
+This code produces output files for each model tested for the BAYOU and WHITE populations. For each model, there are two files, each beginning with "BAYOU_WHITE.", followed by [name_of_model]. One is `.optimized.txt`, and the other is `.log.txt`. These files were moved into their own directory here: `data/dadi_output/bayou_white_output/`
+
+##### 2c.2. Run DADI on ELK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate output files from DADI:
+
+##### Command line code for running DADI on ELK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## DADI run 02:	Run DADI on ELK and WHITE populations
+#python3 ../analysis_scripts/elk_white.py
+```
+
+This code produces output files for each model tested for the ELK and WHITE populations. For each model, there are two files, each beginning with "ELK_WHITE.", followed by [name_of_model]. One is `.optimized.txt`, and the other is `.log.txt`. These files were moved into their own directory here: `data/dadi_output/elk_white_output/`
+
+##### 2c.3. Run DADI on ILLI and SKIA populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate output files from DADI:
+
+##### Command line code for running DADI on ILLI and SKIA populations. UNCOMMENT this code in the shell script:
+```{r}
+## DADI run 03:	Run DADI on ILLI and SKIA populations
+#python3 ../analysis_scripts/illi_skia.py
+```
+
+This code produces output files for each model tested for the ILLI and SKIA populations. For each model, there are two files, each beginning with "ILLI_SKIA.", followed by [name_of_model]. One is `.optimized.txt`, and the other is `.log.txt`. These files were moved into their own directory here: `data/dadi_output/illi_skia_output/`
+
+##### 2c.4. Run DADI on ILLI and SKIA populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate output files from DADI:
+
+##### Command line code for running DADI on ILLI and SKIA populations. UNCOMMENT this code in the shell script:
+```{r}
+## DADI run 04:	Run DADI on UPPARK and WHITE populations
+#python3 ../analysis_scripts/uppark_white.py
+```
+
+This code produces output files for each model tested for the UPPARK and WHITE populations. For each model, there are two files, each beginning with "UPPARK_WHITE.", followed by [name_of_model]. One is `.optimized.txt`, and the other is `.log.txt`. These files were moved into their own directory here: `data/dadi_output/uppark_white_output/`
+
+#### 2d: Summarize output data for all population pairs.
+In this step, we are employing the 'Summarize_Outputs.py' base script to generate two summary .txt files for each population pair, which collates the information from the `.log.txt` and `.optimized.txt` and presents it in a more easily interpretable format. Most importantly, the output of the file 'Results_Summary_Short' gives the best scoring replicate for each model, and from this information, we can determine the best scoring model overall through model comparison.
+
+##### 2d.1. Summarize outputs for BAYOU and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for BAYOU and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 01: Summarize DADI results for BAYOU and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/bayou_white/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+##### 2d.2. Summarize outputs for ELK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for ELK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 02: Summarize DADI results for ELK and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/elk_white/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+##### 2d.3. Summarize outputs for ILLI and SKIA populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for ILLI and SKIA populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 03: Summarize DADI results for ILLI and SKIA populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/illi_skia/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+##### 2d.4. Summarize outputs for UPPARK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for UPPARK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 04:	Summarize DADI results for UPPARK and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/uppark_white/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+### ----------------------- END OF PHASE 3: DADI ANALYSIS ----------------------- ###
+
+## PHASE 4: DATA SUMMARIZATION AND PLOTTING
+In this phase of the analysis, we are summarizing all output from DADI for all population pairs, determining the best-fitting model for each pair, and plotting model results.
+
+### STEP 1: Summarize full (extended) DADI output for each population pair and plot results of optimization
+In this step, we are reading in the raw, extended (Results_Summary_Extended.txt) DADI output data for each population pair and plotting the results of the four round optimization procedure.
+
+#### 1a: Read in and clean data from each population pair.
+
+##### 1a.1. Read in and clean data for all models for BAYOU and WHITE populations; run the Rmd chunk below:
+
+##### Read in and clean data for BAYOU and WHITE populations:
+```{r}
+## Read in and clean data for ANC_ASYM_MIG model
+
+# Read in raw optimization data
+bayou_white_anc_asym_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.anc_asym_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_anc_asym_mig <- as.data.frame(bayou_white_anc_asym_mig)
+
+# Separate Round_Replicate column
+bayou_white_anc_asym_mig <- bayou_white_anc_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_anc_asym_mig <- bayou_white_anc_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_anc_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_anc_asym_mig <- bayou_white_anc_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+bayou_white_anc_sym_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.anc_sym_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_anc_sym_mig <- as.data.frame(bayou_white_anc_sym_mig)
+
+# Separate Round_Replicate column
+bayou_white_anc_sym_mig <- bayou_white_anc_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_anc_sym_mig <- bayou_white_anc_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_anc_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_anc_sym_mig <- bayou_white_anc_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+bayou_white_asym_mig_twoepoch <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.asym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+bayou_white_asym_mig_twoepoch <- as.data.frame(bayou_white_asym_mig_twoepoch)
+
+# Separate Round_Replicate column
+bayou_white_asym_mig_twoepoch <- bayou_white_asym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_asym_mig_twoepoch <- bayou_white_asym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+
+# Modify column names
+colnames(bayou_white_asym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_asym_mig_twoepoch <- bayou_white_asym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ASYM_MIG model
+
+# Read in raw optimization data
+bayou_white_asym_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.asym_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_asym_mig <- as.data.frame(bayou_white_asym_mig)
+
+# Separate Round_Replicate column
+bayou_white_asym_mig <- bayou_white_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_asym_mig <- bayou_white_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_asym_mig <- bayou_white_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for NO_MIG model
+
+# Read in raw optimization data
+bayou_white_no_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.no_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_no_mig <- as.data.frame(bayou_white_no_mig)
+
+# Separate Round_Replicate column
+bayou_white_no_mig <- bayou_white_no_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_no_mig <- bayou_white_no_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_no_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_no_mig <- bayou_white_no_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_ASYM_MIG model
+
+# Read in raw optimization data
+bayou_white_sec_contact_asym_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.sec_contact_asym_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_sec_contact_asym_mig <- as.data.frame(bayou_white_sec_contact_asym_mig)
+
+# Separate Round_Replicate column
+bayou_white_sec_contact_asym_mig <- bayou_white_sec_contact_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_sec_contact_asym_mig <- bayou_white_sec_contact_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_sec_contact_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_sec_contact_asym_mig <- bayou_white_sec_contact_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_SYM_MIG model
+
+# Read in raw optimization data
+bayou_white_sec_contact_sym_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.sec_contact_sym_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_sec_contact_sym_mig <- as.data.frame(bayou_white_sec_contact_sym_mig)
+
+# Separate Round_Replicate column
+bayou_white_sec_contact_sym_mig <- bayou_white_sec_contact_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_sec_contact_sym_mig <- bayou_white_sec_contact_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_sec_contact_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_sec_contact_sym_mig <- bayou_white_sec_contact_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG_twoepoch model
+
+# Read in raw optimization data
+bayou_white_sym_mig_twoepoch <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.sym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+bayou_white_sym_mig_twoepoch <- as.data.frame(bayou_white_sym_mig_twoepoch)
+
+# Separate Round_Replicate column
+bayou_white_sym_mig_twoepoch <- bayou_white_sym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_sym_mig_twoepoch <- bayou_white_sym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_sym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_sym_mig_twoepoch <- bayou_white_sym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG model
+
+# Read in raw optimization data
+bayou_white_sym_mig <- read_tsv("data/dadi_output/bayou_white_output/BAYOU_WHITE.sym_mig.optimized.txt")
+
+# Convert to dataframe
+bayou_white_sym_mig <- as.data.frame(bayou_white_sym_mig)
+
+# Separate Round_Replicate column
+bayou_white_sym_mig <- bayou_white_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+bayou_white_sym_mig <- bayou_white_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(bayou_white_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+bayou_white_sym_mig <- bayou_white_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+```
+
+##### 1a.2. Read in and clean data for all models for ELK and WHITE populations; run the Rmd chunk below:
+
+##### Read in and clean data for ELK and WHITE populations:
+```{r}
+## Read in and clean data for ANC_ASYM_MIG model
+
+# Read in raw optimization data
+elk_white_anc_asym_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.anc_asym_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_anc_asym_mig <- as.data.frame(elk_white_anc_asym_mig)
+
+# Separate Round_Replicate column
+elk_white_anc_asym_mig <- elk_white_anc_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_anc_asym_mig <- elk_white_anc_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_anc_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_anc_asym_mig <- elk_white_anc_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+elk_white_anc_sym_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.anc_sym_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_anc_sym_mig <- as.data.frame(elk_white_anc_sym_mig)
+
+# Separate Round_Replicate column
+elk_white_anc_sym_mig <- elk_white_anc_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_anc_sym_mig <- elk_white_anc_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_anc_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_anc_sym_mig <- elk_white_anc_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+elk_white_asym_mig_twoepoch <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.asym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+elk_white_asym_mig_twoepoch <- as.data.frame(elk_white_asym_mig_twoepoch)
+
+# Separate Round_Replicate column
+elk_white_asym_mig_twoepoch <- elk_white_asym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_asym_mig_twoepoch <- elk_white_asym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_asym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_asym_mig_twoepoch <- elk_white_asym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ASYM_MIG model
+
+# Read in raw optimization data
+elk_white_asym_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.asym_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_asym_mig <- as.data.frame(elk_white_asym_mig)
+
+# Separate Round_Replicate column
+elk_white_asym_mig <- elk_white_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_asym_mig <- elk_white_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_asym_mig <- elk_white_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for NO_MIG model
+
+# Read in raw optimization data
+elk_white_no_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.no_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_no_mig <- as.data.frame(elk_white_no_mig)
+
+# Separate Round_Replicate column
+elk_white_no_mig <- elk_white_no_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_no_mig <- elk_white_no_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_no_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_no_mig <- elk_white_no_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_ASYM_MIG model
+
+# Read in raw optimization data
+elk_white_sec_contact_asym_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.sec_contact_asym_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_sec_contact_asym_mig <- as.data.frame(elk_white_sec_contact_asym_mig)
+
+# Separate Round_Replicate column
+elk_white_sec_contact_asym_mig <- elk_white_sec_contact_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_sec_contact_asym_mig <- elk_white_sec_contact_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_sec_contact_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_sec_contact_asym_mig <- elk_white_sec_contact_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_SYM_MIG model
+
+# Read in raw optimization data
+elk_white_sec_contact_sym_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.sec_contact_sym_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_sec_contact_sym_mig <- as.data.frame(elk_white_sec_contact_sym_mig)
+
+# Separate Round_Replicate column
+elk_white_sec_contact_sym_mig <- elk_white_sec_contact_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_sec_contact_sym_mig <- elk_white_sec_contact_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_sec_contact_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_sec_contact_sym_mig <- elk_white_sec_contact_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG_twoepoch model
+
+# Read in raw optimization data
+elk_white_sym_mig_twoepoch <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.sym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+elk_white_sym_mig_twoepoch <- as.data.frame(elk_white_sym_mig_twoepoch)
+
+# Separate Round_Replicate column
+elk_white_sym_mig_twoepoch <- elk_white_sym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_sym_mig_twoepoch <- elk_white_sym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_sym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_sym_mig_twoepoch <- elk_white_sym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG model
+
+# Read in raw optimization data
+elk_white_sym_mig <- read_tsv("data/dadi_output/elk_white_output/ELK_WHITE.sym_mig.optimized.txt")
+
+# Convert to dataframe
+elk_white_sym_mig <- as.data.frame(elk_white_sym_mig)
+
+# Separate Round_Replicate column
+elk_white_sym_mig <- elk_white_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+elk_white_sym_mig <- elk_white_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(elk_white_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+elk_white_sym_mig <- elk_white_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+```
+
+##### 1a.3. Read in and clean data for all models for ILLI and SKIA populations; run the Rmd chunk below:
+
+##### Read in and clean data for ILLI and SKIA populations:
+```{r}
+## Read in and clean data for ANC_ASYM_MIG model
+
+# Read in raw optimization data
+illi_skia_anc_asym_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.anc_asym_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_anc_asym_mig <- as.data.frame(illi_skia_anc_asym_mig)
+
+# Separate Round_Replicate column
+illi_skia_anc_asym_mig <- illi_skia_anc_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_anc_asym_mig <- illi_skia_anc_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_anc_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_anc_asym_mig <- illi_skia_anc_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+illi_skia_anc_sym_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.anc_sym_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_anc_sym_mig <- as.data.frame(illi_skia_anc_sym_mig)
+
+# Separate Round_Replicate column
+illi_skia_anc_sym_mig <- illi_skia_anc_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_anc_sym_mig <- illi_skia_anc_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_anc_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_anc_sym_mig <- illi_skia_anc_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+illi_skia_asym_mig_twoepoch <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.asym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+illi_skia_asym_mig_twoepoch <- as.data.frame(illi_skia_asym_mig_twoepoch)
+
+# Separate Round_Replicate column
+illi_skia_asym_mig_twoepoch <- illi_skia_asym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_asym_mig_twoepoch <- illi_skia_asym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_asym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_asym_mig_twoepoch <- illi_skia_asym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ASYM_MIG model
+
+# Read in raw optimization data
+illi_skia_asym_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.asym_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_asym_mig <- as.data.frame(illi_skia_asym_mig)
+
+# Separate Round_Replicate column
+illi_skia_asym_mig <- illi_skia_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_asym_mig <- illi_skia_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_asym_mig <- illi_skia_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for NO_MIG model
+
+# Read in raw optimization data
+illi_skia_no_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.no_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_no_mig <- as.data.frame(illi_skia_no_mig)
+
+# Separate Round_Replicate column
+illi_skia_no_mig <- illi_skia_no_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_no_mig <- illi_skia_no_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_no_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_no_mig <- illi_skia_no_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_ASYM_MIG model
+
+# Read in raw optimization data
+illi_skia_sec_contact_asym_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.sec_contact_asym_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_sec_contact_asym_mig <- as.data.frame(illi_skia_sec_contact_asym_mig)
+
+# Separate Round_Replicate column
+illi_skia_sec_contact_asym_mig <- illi_skia_sec_contact_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_sec_contact_asym_mig <- illi_skia_sec_contact_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_sec_contact_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_sec_contact_asym_mig <- illi_skia_sec_contact_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_SYM_MIG model
+
+# Read in raw optimization data
+illi_skia_sec_contact_sym_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.sec_contact_sym_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_sec_contact_sym_mig <- as.data.frame(illi_skia_sec_contact_sym_mig)
+
+# Separate Round_Replicate column
+illi_skia_sec_contact_sym_mig <- illi_skia_sec_contact_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_sec_contact_sym_mig <- illi_skia_sec_contact_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_sec_contact_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_sec_contact_sym_mig <- illi_skia_sec_contact_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG_twoepoch model
+
+# Read in raw optimization data
+illi_skia_sym_mig_twoepoch <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.sym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+illi_skia_sym_mig_twoepoch <- as.data.frame(illi_skia_sym_mig_twoepoch)
+
+# Separate Round_Replicate column
+illi_skia_sym_mig_twoepoch <- illi_skia_sym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_sym_mig_twoepoch <- illi_skia_sym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_sym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_sym_mig_twoepoch <- illi_skia_sym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG model
+
+# Read in raw optimization data
+illi_skia_sym_mig <- read_tsv("data/dadi_output/illi_skia_output/ILLI_SKIA.sym_mig.optimized.txt")
+
+# Convert to dataframe
+illi_skia_sym_mig <- as.data.frame(illi_skia_sym_mig)
+
+# Separate Round_Replicate column
+illi_skia_sym_mig <- illi_skia_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+illi_skia_sym_mig <- illi_skia_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(illi_skia_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+illi_skia_sym_mig <- illi_skia_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+```
+
+##### 1a.3. Read in and clean data for all models for UPPARK and WHITE populations; run the Rmd chunk below:
+
+##### Read in and clean data for UPPARK and WHITE populations:
+```{r}
+## Read in and clean data for ANC_ASYM_MIG model
+
+# Read in raw optimization data
+uppark_white_anc_asym_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.anc_asym_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_anc_asym_mig <- as.data.frame(uppark_white_anc_asym_mig)
+
+# Separate Round_Replicate column
+uppark_white_anc_asym_mig <- uppark_white_anc_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_anc_asym_mig <- uppark_white_anc_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_anc_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_anc_asym_mig <- uppark_white_anc_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+uppark_white_anc_sym_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.anc_sym_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_anc_sym_mig <- as.data.frame(uppark_white_anc_sym_mig)
+
+# Separate Round_Replicate column
+uppark_white_anc_sym_mig <- uppark_white_anc_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_anc_sym_mig <- uppark_white_anc_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_anc_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_anc_sym_mig <- uppark_white_anc_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ANC_SYM_MIG model
+
+# Read in raw optimization data
+uppark_white_asym_mig_twoepoch <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.asym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+uppark_white_asym_mig_twoepoch <- as.data.frame(uppark_white_asym_mig_twoepoch)
+
+# Separate Round_Replicate column
+uppark_white_asym_mig_twoepoch <- uppark_white_asym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_asym_mig_twoepoch <- uppark_white_asym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_asym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_asym_mig_twoepoch <- uppark_white_asym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for ASYM_MIG model
+
+# Read in raw optimization data
+uppark_white_asym_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.asym_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_asym_mig <- as.data.frame(uppark_white_asym_mig)
+
+# Separate Round_Replicate column
+uppark_white_asym_mig <- uppark_white_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_asym_mig <- uppark_white_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_asym_mig <- uppark_white_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for NO_MIG model
+
+# Read in raw optimization data
+uppark_white_no_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.no_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_no_mig <- as.data.frame(uppark_white_no_mig)
+
+# Separate Round_Replicate column
+uppark_white_no_mig <- uppark_white_no_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_no_mig <- uppark_white_no_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_no_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_no_mig <- uppark_white_no_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_ASYM_MIG model
+
+# Read in raw optimization data
+uppark_white_sec_contact_asym_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.sec_contact_asym_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_sec_contact_asym_mig <- as.data.frame(uppark_white_sec_contact_asym_mig)
+
+# Separate Round_Replicate column
+uppark_white_sec_contact_asym_mig <- uppark_white_sec_contact_asym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_sec_contact_asym_mig <- uppark_white_sec_contact_asym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_sec_contact_asym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_sec_contact_asym_mig <- uppark_white_sec_contact_asym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SEC_CONTAT_SYM_MIG model
+
+# Read in raw optimization data
+uppark_white_sec_contact_sym_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.sec_contact_sym_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_sec_contact_sym_mig <- as.data.frame(uppark_white_sec_contact_sym_mig)
+
+# Separate Round_Replicate column
+uppark_white_sec_contact_sym_mig <- uppark_white_sec_contact_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_sec_contact_sym_mig <- uppark_white_sec_contact_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_sec_contact_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_sec_contact_sym_mig <- uppark_white_sec_contact_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG_twoepoch model
+
+# Read in raw optimization data
+uppark_white_sym_mig_twoepoch <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.sym_mig_twoepoch.optimized.txt")
+
+# Convert to dataframe
+uppark_white_sym_mig_twoepoch <- as.data.frame(uppark_white_sym_mig_twoepoch)
+
+# Separate Round_Replicate column
+uppark_white_sym_mig_twoepoch <- uppark_white_sym_mig_twoepoch %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_sym_mig_twoepoch <- uppark_white_sym_mig_twoepoch %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_sym_mig_twoepoch) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_sym_mig_twoepoch <- uppark_white_sym_mig_twoepoch %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+
+## Read in and clean data for SYM_MIG model
+
+# Read in raw optimization data
+uppark_white_sym_mig <- read_tsv("data/dadi_output/uppark_white_output/UPPARK_WHITE.sym_mig.optimized.txt")
+
+# Convert to dataframe
+uppark_white_sym_mig <- as.data.frame(uppark_white_sym_mig)
+
+# Separate Round_Replicate column
+uppark_white_sym_mig <- uppark_white_sym_mig %>%
+  separate(Replicate, into = c("Round_", "Round", "Replicate_", "Replicate", sep = "_"))
+
+# Select columns wanted for plotting
+uppark_white_sym_mig <- uppark_white_sym_mig %>%
+  select(Model, Round, Replicate, `log-likelihood`, AIC, `chi-squared`, theta)
+
+# Modify column names
+colnames(uppark_white_sym_mig) <- c("Model", "Round", "Replicate", "likelihood", "AIC", "chisquared", "theta")
+
+# Convert to factors
+uppark_white_sym_mig <- uppark_white_sym_mig %>%
+  mutate(Model = factor(Model),
+         Round = factor(Round),
+         Replicate = factor(Replicate))
+```
+
+### STEP 2: Plot results of the optimization procedure.
+In this step, we are plotting results of the optimization procedure summarized in Step 2 above. We have chosen to create four different plots, one for each population pair and each having 9 distinct panels, each panel representing a demographic model tested and the corresopnding optimization procedure results.
+
+#### 2a: Plot model optimizations for BAYOU and WHITE populations; run the Rmd chunk below:
+
+##### Plot optimizaiton results for BAYOU and WHITE populations: `figures/dadi_optimization_figures/bayou_white.pdf`
+```{r}
+# Model 1: NO_MIG
+mod_1 <- ggplot(bayou_white_no_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "NM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 2: SYM_MIG
+mod_2 <- ggplot(bayou_white_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 3: ASYM_MIG
+mod_3 <- ggplot(bayou_white_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 4: SEC_CONTACT_SYM_MIG
+mod_4 <- ggplot(bayou_white_sec_contact_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCSM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 5: SEC_CONTACT_ASYM_MIG
+mod_5 <- ggplot(bayou_white_sec_contact_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 6: ANC_SYM_MIG
+mod_6 <- ggplot(bayou_white_anc_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "ASM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 7: ANC_ASYM_MIG
+mod_7 <- ggplot(bayou_white_anc_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 8: SYM_MIG_TWOEPOCH
+mod_8 <- ggplot(bayou_white_sym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 9: ASYM_MIG_TWOEPOCH
+mod_9 <- ggplot(bayou_white_asym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Combine all plots into a single multi-panel figure
+pdf("figures/dadi_optimization_figures/bayou_white.pdf", height = 20, width = 20)
+
+plot_grid(mod_1, 
+          mod_2, 
+          mod_3, 
+          mod_4, 
+          mod_5, 
+          mod_6, 
+          mod_7, 
+          mod_8, 
+          mod_9,
+          nrow = 3,
+          ncol = 3, 
+          labels = c("a","b","c","d","e","f","g","h","i"),
+          label_size = 25,
+          label_y = 1.02)
+
+dev.off()
+```
+
+This figure is the basis for Supplementary Figure 10 in the manuscript.
+
+#### 2b: Plot model optimizations for ELK and WHITE populations; run the Rmd chunk below:
+
+##### Plot optimizaiton results for ELK and WHITE populations: `figures/dadi_optimization_figures/elk_white.pdf`
+```{r}
+# Model 1: NO_MIG
+mod_1 <- ggplot(elk_white_no_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "NM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 2: SYM_MIG
+mod_2 <- ggplot(elk_white_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 3: ASYM_MIG
+mod_3 <- ggplot(elk_white_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 4: SEC_CONTACT_SYM_MIG
+mod_4 <- ggplot(elk_white_sec_contact_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCSM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 5: SEC_CONTACT_ASYM_MIG
+mod_5 <- ggplot(elk_white_sec_contact_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 6: ANC_SYM_MIG
+mod_6 <- ggplot(elk_white_anc_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "ASM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 7: ANC_ASYM_MIG
+mod_7 <- ggplot(elk_white_anc_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 8: SYM_MIG_TWOEPOCH
+mod_8 <- ggplot(elk_white_sym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 9: ASYM_MIG_TWOEPOCH
+mod_9 <- ggplot(elk_white_asym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Combine all plots into a single multi-panel figure
+pdf("figures/dadi_optimization_figures/elk_white.pdf", height = 20, width = 20)
+
+plot_grid(mod_1, 
+          mod_2, 
+          mod_3, 
+          mod_4, 
+          mod_5, 
+          mod_6, 
+          mod_7, 
+          mod_8, 
+          mod_9,
+          nrow = 3,
+          ncol = 3, 
+          labels = c("a","b","c","d","e","f","g","h","i"),
+          label_size = 25,
+          label_y = 1.02)
+
+dev.off()
+```
+
+This figure is the basis for Supplementary Figure 11 in the manuscript.
+
+#### 2c: Plot model optimizations for ILLI and SKIA populations; run the Rmd chunk below:
+
+##### Plot optimizaiton results for ILLI and SKIA populations: `figures/dadi_optimization_figures/illi_skia.pdf`
+```{r}
+# Model 1: NO_MIG
+mod_1 <- ggplot(illi_skia_no_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "NM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 2: SYM_MIG
+mod_2 <- ggplot(illi_skia_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 3: ASYM_MIG
+mod_3 <- ggplot(illi_skia_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 4: SEC_CONTACT_SYM_MIG
+mod_4 <- ggplot(illi_skia_sec_contact_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCSM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 5: SEC_CONTACT_ASYM_MIG
+mod_5 <- ggplot(illi_skia_sec_contact_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 6: ANC_SYM_MIG
+mod_6 <- ggplot(illi_skia_anc_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "ASM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 7: ANC_ASYM_MIG
+mod_7 <- ggplot(illi_skia_anc_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 8: SYM_MIG_TWOEPOCH
+mod_8 <- ggplot(illi_skia_sym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 9: ASYM_MIG_TWOEPOCH
+mod_9 <- ggplot(illi_skia_asym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Combine all plots into a single multi-panel figure
+pdf("figures/dadi_optimization_figures/illi_skia.pdf", height = 20, width = 20)
+
+plot_grid(mod_1, 
+          mod_2, 
+          mod_3, 
+          mod_4, 
+          mod_5, 
+          mod_6, 
+          mod_7, 
+          mod_8, 
+          mod_9,
+          nrow = 3,
+          ncol = 3, 
+          labels = c("a","b","c","d","e","f","g","h","i"),
+          label_size = 25,
+          label_y = 1.02)
+
+dev.off()
+```
+
+This figure is the basis for Supplementary Figure 12 in the manuscript.
+
+#### 2d: Plot model optimizations for UPPARK and WHITE populations; run the Rmd chunk below:
+
+##### Plot optimizaiton results for UPPARK and WHITE populations: `figures/dadi_optimization_figures/uppark_white.pdf`
+```{r}
+# Model 1: NO_MIG
+mod_1 <- ggplot(uppark_white_no_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "NM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 2: SYM_MIG
+mod_2 <- ggplot(uppark_white_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 3: ASYM_MIG
+mod_3 <- ggplot(uppark_white_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 4: SEC_CONTACT_SYM_MIG
+mod_4 <- ggplot(uppark_white_sec_contact_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCSM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 5: SEC_CONTACT_ASYM_MIG
+mod_5 <- ggplot(uppark_white_sec_contact_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SCAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 6: ANC_SYM_MIG
+mod_6 <- ggplot(uppark_white_anc_sym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "ASM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(axis.title.x = element_blank()) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 7: ANC_ASYM_MIG
+mod_7 <- ggplot(uppark_white_anc_asym_mig, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AAM") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 8: SYM_MIG_TWOEPOCH
+mod_8 <- ggplot(uppark_white_sym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "SM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Model 9: ASYM_MIG_TWOEPOCH
+mod_9 <- ggplot(uppark_white_asym_mig_twoepoch, aes(x = Round, y = likelihood, fill = Round)) + 
+  geom_boxplot(show.legend = F, outlier.shape = NA, alpha = 0.6) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.6, color = "black", pch = 21, show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Optimization Round", y = "Log-likelihood Score", title = "AM2E") +
+  theme(axis.text = element_text(size = 15)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+  scale_fill_manual(values = c("grey","grey","grey","grey")) + 
+  theme(axis.title.y = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Combine all plots into a single multi-panel figure
+pdf("figures/dadi_optimization_figures/uppark_white.pdf", height = 20, width = 20)
+
+plot_grid(mod_1, 
+          mod_2, 
+          mod_3, 
+          mod_4, 
+          mod_5, 
+          mod_6, 
+          mod_7, 
+          mod_8, 
+          mod_9,
+          nrow = 3,
+          ncol = 3, 
+          labels = c("a","b","c","d","e","f","g","h","i"),
+          label_size = 25,
+          label_y = 1.02)
+
+dev.off()
+```
+
+This figure is the basis for Supplementary Figure 13 in the manuscript.
+
+### STEP 3: Plot results of model selection.
+In this step, we are using the previously developed plotting scripts (`code/plotting_scripts/`) to generate plots of model performance and residual distributions in our best-fitting model from each population pair. We are using the 'Results_Summary_Short.txt' file to extract information from the each model for each population pair to build manuscript figures.
+
+#### 3a: Get best-fitting model and data for all models for each population pair; run the Rmd chunk below:
+
+##### Get model output data for each population pair:
+```{r}
+## Get information for BAYOU and WHITE populations
+bayou_white_data <- read_tsv("data/dadi_output/bayou_white_output/Results_Summary_Short.txt")
+
+## BEST MODEL: SEC_CONTACT_ASYM_MIG
+
+## Get information for ELK and WHITE populations
+elk_white_data <- read_tsv("data/dadi_output/elk_white_output/Results_Summary_Short.txt")
+
+## BEST MODEL: ASYM_MIG
+
+## Get information for ILLI and SKIA populations
+illi_skia_data <- read_tsv("data/dadi_output/illi_skia_output/Results_Summary_Short.txt")
+
+## BEST MODEL: SEC_CONTACT_ASYM_MIG
+
+## Get information for UPPARK and WHITE populations
+uppark_white_data <- read_tsv("data/dadi_output/uppark_white_output/Results_Summary_Short.txt")
+
+## BEST MODEL: ASYM_MIG_TWOEPOCH
+```
+
+These data were used as the basis for Table 2 in the main text and Supplementary Table 5 in our manuscript.
+
+#### 3b: Modify plotting input files to generate model results and residual distributions for each analysis.
+In this step, we are modifying each of the four two-population pair plotting scripts (base_script: `Make_Plots.py`) to generate plots each analysis. As in Step 2b above, we included the input .vcf and population metadata (.txt; see Phase 2 above) for each population pair and input the corresponding model output data into the 'Make_Plots.py' script.
+
+##### 3b.1. Modify the 'Make_Plots_bayou_white.py' script: the script should be as follows:
+
+##### Make_Plots_bayou_white.py
+```{r}
+'''
+Usage: python Make_Plots.py
+
+This is meant to be a general use script to fit a demographic model and create
+plots of the data and model sfs. The user will have to edit information about
+their allele frequency spectrum and provide a custom model. The instructions
+are annotated below, with a #************** marking sections that will have to
+be edited.
+
+This script must be in the same working directory as Plotting_Functions.py, which
+contains all the functions necessary for generating simulations and optimizing the model.
+
+General workflow:
+ The user provides a model and the previously optimized parameters for their empirical 
+ data. The model is fit using these parameters, and the resulting model SFS is used to
+ create the plot comparing the data to the model. 
+ 
+Outputs:
+ A summary file of the model fit will be created, along with a pdf of the plot.
+ 
+Notes/Caveats:
+ Sometimes you may see the following error when plotting 2D or 3D:
+ 
+ "ValueError: Data has no positive values, and therefore can not be log-scaled."
+ 
+ To deal with this, you can change the optional argument vmin_val to a value
+ between 0 and 0.05 (0.05 is the default). I have used values from 0.005-0.01
+ with good visual results.
+
+Citations:
+ If you use these scripts for your work, please cite the following publications.
+ 
+ For the general optimization routine:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 52455263.
+    doi: 10.1111/mec.14266
+    
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+import os
+import numpy
+import dadi
+import Plotting_Functions
+from dadi import Numerics, PhiManip, Integration, Misc
+from dadi.Spectrum_mod import Spectrum
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/01_popgen_bayou_white.vcf", "../../data/pop_files/bayou_white.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["BAYOU", "WHITE"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [14, 20]
+
+#Convert this dictionary into folded AFS object
+#[polarized = False] creates folded spectrum object
+fs = Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+
+#================================================================================
+# Fit the empirical data based on prior optimization results, obtain model SFS
+#================================================================================
+''' 
+ We will use a function from the Plotting_Functions.py script:
+ 	Fit_Empirical(fs, pts, outfile, model_name, func, in_params, fs_folded)
+
+Mandatory Arguments =
+ 	fs:  spectrum object name
+ 	pts: grid size for extrapolation, list of three values
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+ 	func: access the model function from within script
+ 	in_params: the previously optimized parameters to use
+    fs_folded: A Boolean value indicating whether the empirical fs is folded (True) or not (False).
+'''
+
+#**************
+#COPY AND PASTE YOUR MODEL HERE, do not use this one!
+#you can copy/paste directly from the Models_2D.py or Models_3D.py scripts
+
+def sym_mig(params, ns, pts):
+    """
+    Split into two populations, with symmetric migration.
+
+    nu1: Size of population 1 after split.
+    nu2: Size of population 2 after split.
+    T: Time in the past of split (in units of 2*Na generations) 
+    m: Migration rate between populations (2*Na*m)
+    """
+    nu1, nu2, m, T = params
+
+    xx = Numerics.default_grid(pts)
+    phi = PhiManip.phi_1D(xx)
+    phi = PhiManip.phi_1D_to_2D(xx, phi)
+    phi = Integration.two_pops(phi, xx, T, nu1, nu2, m12=m, m21=m)
+    fs = Spectrum.from_phi(phi, ns, (xx,xx))
+    return fs
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+#DO NOT EDIT THIS
+prefix = "_".join(pop_ids)
+
+#**************
+#Make sure to define your extrapolation grid size.
+pts = [50,60,70]
+
+#**************
+#Provide best optimized parameter set for empirical data.
+#These will come from previous analyses you have already completed.
+emp_params = [0.1487,0.1352,0.2477,0.1877]
+
+#**************
+#Fit the model using these parameters and return the model SFS.
+#Here, you will want to change the "sym_mig" and sym_mig arguments to match your model, but
+#everything else can stay as it is. See above for argument explanations.
+model_fit = Plotting_Functions.Fit_Empirical(fs, pts, prefix, "sym_mig", sym_mig, emp_params, fs_folded=True)
+
+
+#================================================================================
+# Plotting a 2D spectrum
+#================================================================================
+'''
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_2D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+#**************
+#Now we simply call the function with the correct arguments (notice many are the same from the
+#empirical fit).
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig")
+
+#**************
+#Although the above function does not produce an error, let's pretend it did and
+#change the vmin value. You can see the effect on the colors in the plot. We will
+#edit the "model_name" string so the output file will be called something different.  
+vmin = float(0.01)
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig_vmin", vmin_val = vmin)
+
+
+
+#================================================================================
+# Plotting a 1D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots for a 1D spectrum in much the same way.
+ 
+'''
+For a 1D sfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_1D(fs, model_fit, outfile, model_name)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+'''
+
+#Example 1D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_1D(fs, model_fit, prefix, "something")
+
+
+#================================================================================
+# Plotting a 3D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots a 3D spectrum in much the same way.
+
+'''
+For a 3D jsfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_3D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+ Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+
+#Example 3D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_3D(fs, model_fit, prefix, "something")
+```
+
+##### 3b.1. Modify the 'Make_Plots_elk_white.py' script: the script should be as follows:
+
+##### Make_Plots_elk_white.py
+```{r}
+'''
+Usage: python Make_Plots.py
+
+This is meant to be a general use script to fit a demographic model and create
+plots of the data and model sfs. The user will have to edit information about
+their allele frequency spectrum and provide a custom model. The instructions
+are annotated below, with a #************** marking sections that will have to
+be edited.
+
+This script must be in the same working directory as Plotting_Functions.py, which
+contains all the functions necessary for generating simulations and optimizing the model.
+
+General workflow:
+ The user provides a model and the previously optimized parameters for their empirical 
+ data. The model is fit using these parameters, and the resulting model SFS is used to
+ create the plot comparing the data to the model. 
+ 
+Outputs:
+ A summary file of the model fit will be created, along with a pdf of the plot.
+ 
+Notes/Caveats:
+ Sometimes you may see the following error when plotting 2D or 3D:
+ 
+ "ValueError: Data has no positive values, and therefore can not be log-scaled."
+ 
+ To deal with this, you can change the optional argument vmin_val to a value
+ between 0 and 0.05 (0.05 is the default). I have used values from 0.005-0.01
+ with good visual results.
+
+Citations:
+ If you use these scripts for your work, please cite the following publications.
+ 
+ For the general optimization routine:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 52455263.
+    doi: 10.1111/mec.14266
+    
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+import os
+import numpy
+import dadi
+import Plotting_Functions
+from dadi import Numerics, PhiManip, Integration, Misc
+from dadi.Spectrum_mod import Spectrum
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/02_popgen_elk_white.vcf", "../../data/pop_files/elk_white.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["BAYOU", "ELK"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [12, 20]
+
+#Convert this dictionary into folded AFS object
+#[polarized = False] creates folded spectrum object
+fs = Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+
+#================================================================================
+# Fit the empirical data based on prior optimization results, obtain model SFS
+#================================================================================
+''' 
+ We will use a function from the Plotting_Functions.py script:
+ 	Fit_Empirical(fs, pts, outfile, model_name, func, in_params, fs_folded)
+
+Mandatory Arguments =
+ 	fs:  spectrum object name
+ 	pts: grid size for extrapolation, list of three values
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+ 	func: access the model function from within script
+ 	in_params: the previously optimized parameters to use
+    fs_folded: A Boolean value indicating whether the empirical fs is folded (True) or not (False).
+'''
+
+#**************
+#COPY AND PASTE YOUR MODEL HERE, do not use this one!
+#you can copy/paste directly from the Models_2D.py or Models_3D.py scripts
+
+def sym_mig(params, ns, pts):
+    """
+    Split into two populations, with symmetric migration.
+
+    nu1: Size of population 1 after split.
+    nu2: Size of population 2 after split.
+    T: Time in the past of split (in units of 2*Na generations) 
+    m: Migration rate between populations (2*Na*m)
+    """
+    nu1, nu2, m, T = params
+
+    xx = Numerics.default_grid(pts)
+    phi = PhiManip.phi_1D(xx)
+    phi = PhiManip.phi_1D_to_2D(xx, phi)
+    phi = Integration.two_pops(phi, xx, T, nu1, nu2, m12=m, m21=m)
+    fs = Spectrum.from_phi(phi, ns, (xx,xx))
+    return fs
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+#DO NOT EDIT THIS
+prefix = "_".join(pop_ids)
+
+#**************
+#Make sure to define your extrapolation grid size.
+pts = [50,60,70]
+
+#**************
+#Provide best optimized parameter set for empirical data.
+#These will come from previous analyses you have already completed.
+emp_params = [0.1487,0.1352,0.2477,0.1877]
+
+#**************
+#Fit the model using these parameters and return the model SFS.
+#Here, you will want to change the "sym_mig" and sym_mig arguments to match your model, but
+#everything else can stay as it is. See above for argument explanations.
+model_fit = Plotting_Functions.Fit_Empirical(fs, pts, prefix, "sym_mig", sym_mig, emp_params, fs_folded=True)
+
+
+#================================================================================
+# Plotting a 2D spectrum
+#================================================================================
+'''
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_2D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+#**************
+#Now we simply call the function with the correct arguments (notice many are the same from the
+#empirical fit).
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig")
+
+#**************
+#Although the above function does not produce an error, let's pretend it did and
+#change the vmin value. You can see the effect on the colors in the plot. We will
+#edit the "model_name" string so the output file will be called something different.  
+vmin = float(0.01)
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig_vmin", vmin_val = vmin)
+
+
+
+#================================================================================
+# Plotting a 1D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots for a 1D spectrum in much the same way.
+ 
+'''
+For a 1D sfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_1D(fs, model_fit, outfile, model_name)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+'''
+
+#Example 1D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_1D(fs, model_fit, prefix, "something")
+
+
+#================================================================================
+# Plotting a 3D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots a 3D spectrum in much the same way.
+
+'''
+For a 3D jsfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_3D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+ Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+
+#Example 3D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_3D(fs, model_fit, prefix, "something")
+```
+
+##### 3b.3. Modify the 'Make_Plots_illi_skia.py' script: the script should be as follows:
+
+##### Make_Plots_illi_skia.py
+```{r}
+'''
+Usage: python Make_Plots.py
+
+This is meant to be a general use script to fit a demographic model and create
+plots of the data and model sfs. The user will have to edit information about
+their allele frequency spectrum and provide a custom model. The instructions
+are annotated below, with a #************** marking sections that will have to
+be edited.
+
+This script must be in the same working directory as Plotting_Functions.py, which
+contains all the functions necessary for generating simulations and optimizing the model.
+
+General workflow:
+ The user provides a model and the previously optimized parameters for their empirical 
+ data. The model is fit using these parameters, and the resulting model SFS is used to
+ create the plot comparing the data to the model. 
+ 
+Outputs:
+ A summary file of the model fit will be created, along with a pdf of the plot.
+ 
+Notes/Caveats:
+ Sometimes you may see the following error when plotting 2D or 3D:
+ 
+ "ValueError: Data has no positive values, and therefore can not be log-scaled."
+ 
+ To deal with this, you can change the optional argument vmin_val to a value
+ between 0 and 0.05 (0.05 is the default). I have used values from 0.005-0.01
+ with good visual results.
+
+Citations:
+ If you use these scripts for your work, please cite the following publications.
+ 
+ For the general optimization routine:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 52455263.
+    doi: 10.1111/mec.14266
+    
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+import os
+import numpy
+import dadi
+import Plotting_Functions
+from dadi import Numerics, PhiManip, Integration, Misc
+from dadi.Spectrum_mod import Spectrum
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/03_popgen_illi_skia.vcf", "../../data/pop_files/illi_skia.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["ILLI", "SKIA"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [18, 10]
+
+#Convert this dictionary into folded AFS object
+#[polarized = False] creates folded spectrum object
+fs = Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+
+#================================================================================
+# Fit the empirical data based on prior optimization results, obtain model SFS
+#================================================================================
+''' 
+ We will use a function from the Plotting_Functions.py script:
+ 	Fit_Empirical(fs, pts, outfile, model_name, func, in_params, fs_folded)
+
+Mandatory Arguments =
+ 	fs:  spectrum object name
+ 	pts: grid size for extrapolation, list of three values
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+ 	func: access the model function from within script
+ 	in_params: the previously optimized parameters to use
+    fs_folded: A Boolean value indicating whether the empirical fs is folded (True) or not (False).
+'''
+
+#**************
+#COPY AND PASTE YOUR MODEL HERE, do not use this one!
+#you can copy/paste directly from the Models_2D.py or Models_3D.py scripts
+
+def sym_mig(params, ns, pts):
+    """
+    Split into two populations, with symmetric migration.
+
+    nu1: Size of population 1 after split.
+    nu2: Size of population 2 after split.
+    T: Time in the past of split (in units of 2*Na generations) 
+    m: Migration rate between populations (2*Na*m)
+    """
+    nu1, nu2, m, T = params
+
+    xx = Numerics.default_grid(pts)
+    phi = PhiManip.phi_1D(xx)
+    phi = PhiManip.phi_1D_to_2D(xx, phi)
+    phi = Integration.two_pops(phi, xx, T, nu1, nu2, m12=m, m21=m)
+    fs = Spectrum.from_phi(phi, ns, (xx,xx))
+    return fs
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+#DO NOT EDIT THIS
+prefix = "_".join(pop_ids)
+
+#**************
+#Make sure to define your extrapolation grid size.
+pts = [50,60,70]
+
+#**************
+#Provide best optimized parameter set for empirical data.
+#These will come from previous analyses you have already completed.
+emp_params = [0.1487,0.1352,0.2477,0.1877]
+
+#**************
+#Fit the model using these parameters and return the model SFS.
+#Here, you will want to change the "sym_mig" and sym_mig arguments to match your model, but
+#everything else can stay as it is. See above for argument explanations.
+model_fit = Plotting_Functions.Fit_Empirical(fs, pts, prefix, "sym_mig", sym_mig, emp_params, fs_folded=True)
+
+
+#================================================================================
+# Plotting a 2D spectrum
+#================================================================================
+'''
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_2D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+#**************
+#Now we simply call the function with the correct arguments (notice many are the same from the
+#empirical fit).
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig")
+
+#**************
+#Although the above function does not produce an error, let's pretend it did and
+#change the vmin value. You can see the effect on the colors in the plot. We will
+#edit the "model_name" string so the output file will be called something different.  
+vmin = float(0.01)
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig_vmin", vmin_val = vmin)
+
+
+
+#================================================================================
+# Plotting a 1D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots for a 1D spectrum in much the same way.
+ 
+'''
+For a 1D sfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_1D(fs, model_fit, outfile, model_name)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+'''
+
+#Example 1D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_1D(fs, model_fit, prefix, "something")
+
+
+#================================================================================
+# Plotting a 3D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots a 3D spectrum in much the same way.
+
+'''
+For a 3D jsfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_3D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+ Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+
+#Example 3D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_3D(fs, model_fit, prefix, "something")
+```
+
+##### 3b.1. Modify the 'Make_Plots_uppark_white.py' script: the script should be as follows:
+
+##### Make_Plots_uppark_white.py
+```{r}
+'''
+Usage: python Make_Plots.py
+
+This is meant to be a general use script to fit a demographic model and create
+plots of the data and model sfs. The user will have to edit information about
+their allele frequency spectrum and provide a custom model. The instructions
+are annotated below, with a #************** marking sections that will have to
+be edited.
+
+This script must be in the same working directory as Plotting_Functions.py, which
+contains all the functions necessary for generating simulations and optimizing the model.
+
+General workflow:
+ The user provides a model and the previously optimized parameters for their empirical 
+ data. The model is fit using these parameters, and the resulting model SFS is used to
+ create the plot comparing the data to the model. 
+ 
+Outputs:
+ A summary file of the model fit will be created, along with a pdf of the plot.
+ 
+Notes/Caveats:
+ Sometimes you may see the following error when plotting 2D or 3D:
+ 
+ "ValueError: Data has no positive values, and therefore can not be log-scaled."
+ 
+ To deal with this, you can change the optional argument vmin_val to a value
+ between 0 and 0.05 (0.05 is the default). I have used values from 0.005-0.01
+ with good visual results.
+
+Citations:
+ If you use these scripts for your work, please cite the following publications.
+ 
+ For the general optimization routine:
+    Portik, D.M., Leache, A.D., Rivera, D., Blackburn, D.C., Rodel, M.-O.,
+    Barej, M.F., Hirschfeld, M., Burger, M., and M.K.Fujita. 2017.
+    Evaluating mechanisms of diversification in a Guineo-Congolian forest
+    frog using demographic model selection. Molecular Ecology 26: 52455263.
+    doi: 10.1111/mec.14266
+    
+-------------------------
+Written for Python 2.7 and 3.7
+Python modules required:
+-Numpy
+-Scipy
+-dadi
+-------------------------
+
+Daniel Portik
+daniel.portik@gmail.com
+https://github.com/dportik
+Updated September 2019
+'''
+import os
+import numpy
+import dadi
+import Plotting_Functions
+from dadi import Numerics, PhiManip, Integration, Misc
+from dadi.Spectrum_mod import Spectrum
+
+#===========================================================================
+# Import data to create joint-site frequency spectrum
+#===========================================================================
+
+#**************
+dd = dadi.Misc.make_data_dict_vcf("../../data/processed_vcf/04_popgen_uppark_white.vcf", "../../data/pop_files/uppark_white.txt")
+
+
+#**************
+#pop_ids is a list which should match the populations headers of your SNPs file columns
+pop_ids=["UPPARK", "WHITE"]
+
+#**************
+#projection sizes, in ALLELES not individuals
+proj = [36, 20]
+
+#Convert this dictionary into folded AFS object
+#[polarized = False] creates folded spectrum object
+fs = Spectrum.from_data_dict(dd, pop_ids=pop_ids, projections = proj, polarized = False)
+
+#print some useful information about the afs or jsfs
+print("\n\n============================================================================")
+print("\nData for site frequency spectrum:\n")
+print("Projection: {}".format(proj))
+print("Sample sizes: {}".format(fs.sample_sizes))
+print("Sum of SFS: {}".format(numpy.around(fs.S(), 2)))
+print("\n============================================================================\n")
+
+
+#================================================================================
+# Fit the empirical data based on prior optimization results, obtain model SFS
+#================================================================================
+''' 
+ We will use a function from the Plotting_Functions.py script:
+ 	Fit_Empirical(fs, pts, outfile, model_name, func, in_params, fs_folded)
+
+Mandatory Arguments =
+ 	fs:  spectrum object name
+ 	pts: grid size for extrapolation, list of three values
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+ 	func: access the model function from within script
+ 	in_params: the previously optimized parameters to use
+    fs_folded: A Boolean value indicating whether the empirical fs is folded (True) or not (False).
+'''
+
+#**************
+#COPY AND PASTE YOUR MODEL HERE, do not use this one!
+#you can copy/paste directly from the Models_2D.py or Models_3D.py scripts
+
+def sym_mig(params, ns, pts):
+    """
+    Split into two populations, with symmetric migration.
+
+    nu1: Size of population 1 after split.
+    nu2: Size of population 2 after split.
+    T: Time in the past of split (in units of 2*Na generations) 
+    m: Migration rate between populations (2*Na*m)
+    """
+    nu1, nu2, m, T = params
+
+    xx = Numerics.default_grid(pts)
+    phi = PhiManip.phi_1D(xx)
+    phi = PhiManip.phi_1D_to_2D(xx, phi)
+    phi = Integration.two_pops(phi, xx, T, nu1, nu2, m12=m, m21=m)
+    fs = Spectrum.from_phi(phi, ns, (xx,xx))
+    return fs
+
+#create a prefix based on the population names to label the output files
+#ex. Pop1_Pop2
+#DO NOT EDIT THIS
+prefix = "_".join(pop_ids)
+
+#**************
+#Make sure to define your extrapolation grid size.
+pts = [50,60,70]
+
+#**************
+#Provide best optimized parameter set for empirical data.
+#These will come from previous analyses you have already completed.
+emp_params = [0.1487,0.1352,0.2477,0.1877]
+
+#**************
+#Fit the model using these parameters and return the model SFS.
+#Here, you will want to change the "sym_mig" and sym_mig arguments to match your model, but
+#everything else can stay as it is. See above for argument explanations.
+model_fit = Plotting_Functions.Fit_Empirical(fs, pts, prefix, "sym_mig", sym_mig, emp_params, fs_folded=True)
+
+
+#================================================================================
+# Plotting a 2D spectrum
+#================================================================================
+'''
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_2D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+#**************
+#Now we simply call the function with the correct arguments (notice many are the same from the
+#empirical fit).
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig")
+
+#**************
+#Although the above function does not produce an error, let's pretend it did and
+#change the vmin value. You can see the effect on the colors in the plot. We will
+#edit the "model_name" string so the output file will be called something different.  
+vmin = float(0.01)
+Plotting_Functions.Plot_2D(fs, model_fit, prefix, "sym_mig_vmin", vmin_val = vmin)
+
+
+
+#================================================================================
+# Plotting a 1D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots for a 1D spectrum in much the same way.
+ 
+'''
+For a 1D sfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_1D(fs, model_fit, outfile, model_name)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+'''
+
+#Example 1D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_1D(fs, model_fit, prefix, "something")
+
+
+#================================================================================
+# Plotting a 3D spectrum
+#================================================================================
+
+#Although we've used the script to plot a 2D jsfs, it can also be used to create
+#plots a 3D spectrum in much the same way.
+
+'''
+For a 3D jsfs:
+ We will use a function from the Plotting_Functions.py script to plot:
+ 	Plot_3D(fs, model_fit, outfile, model_name, vmin_val=None)
+
+ Mandatory Arguments =
+	fs:  spectrum object name
+    model_fit:  the model spectrum object name
+ 	outfile: prefix for output naming
+ 	model_name: a label to help name the output files; ex. "sym_mig"
+
+ Optional Arguments =
+     vmin_val: Minimum values plotted for sfs, default is 0.05 and to fix the common error this should
+               be changed to something between 0 and 0.05.
+'''
+
+#Example 3D plot call (will not work with the example 2D sfs!):
+#**************
+#Unhash the command below to run the 1D plot, make sure to change
+#the 'prefix' and 'something' args to fit your dataset 
+
+#Plotting_Functions.Plot_3D(fs, model_fit, prefix, "something")
+```
+
+#### 3c: Run Plotting code for all population pairs.
+In this step, we are executing the plotting scripts for all population pairs.
+
+##### 3c.1. Plot data for BAYOU and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate plots from DADI:
+
+##### Command line code for generating plots for BAYOU and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Plot DADI 01:	Plot DADI on BAYOU and WHITE populations
+#python3 ../plotting_scripts/bayou_white.py
+```
+
+This code produces the figure `BAYOU_WHITE_dadi_plots.png`, which showing model comparison between theoretical and empirical datat and corresponding model residuals. This file was moved into its own directory here: `figures/dadi_model_figures/`
+
+##### 3c.2. Plot data for ELK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate plots from DADI:
+
+##### Command line code for generating plots for ELK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Plot DADI 02:	Plot DADI on ELK and WHITE populations
+#python3 ../plotting_scripts/elk_white.py
+```
+
+This code produces the figure `ELK_WHITE_dadi_plots.png`, which showing model comparison between theoretical and empirical datat and corresponding model residuals. This file was moved into its own directory here: `figures/dadi_model_figures/`
+
+##### 3c.3. Plot data for ILLI and SKIA populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate plots from DADI:
+
+##### Command line code for generating plots for ILLI and SKIA populations. UNCOMMENT this code in the shell script:
+```{r}
+## Plot DADI 03:	Plot DADI on ILLI and SKIA populations
+#python3 ../plotting_scripts/illi_skia.py
+```
+
+This code produces the figure `ILLI_SKIA_dadi_plots.png`, which showing model comparison between theoretical and empirical datat and corresponding model residuals. This file was moved into its own directory here: `figures/dadi_model_figures/`
+
+##### 3c.4. Plot data for UPPARK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will generate plots from DADI:
+
+##### Command line code for generating plots for UPPARK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Plot DADI 04:	Plot DADI on UPPARK and WHITE populations
+#python3 ../plotting_scripts/uppark_white.py
+```
+
+This code produces the figure `UPPARK_WHITE_dadi_plots.png`, which showing model comparison between theoretical and empirical datat and corresponding model residuals. This file was moved into its own directory here: `figures/dadi_model_figures/`
+
+These figures were all used as the basis for Supplementary Figure 14 in our manuscript.
+
+### ----------------------- END OF PHASE 4: DATA SUMMARIZATION AND PLOTTING ----------------------- ###

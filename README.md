@@ -1,11 +1,11 @@
-# Reproduce analyses for Gunn et al. (<i>in revision</i>)
-<font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for Gunn et al. (<i>in revision</i>). Each step below gives a summary of the analysis and directs you to a general code file which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts. Each analysis is contained within subdirectories of the same name in the main R project directory.</font>
+# Reproduce analyses for Gunn et al. 2022
+<font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for Gunn et al. (2022). Each step below gives a summary of the analysis and directs you to a general code file which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts. Each analysis is contained within subdirectories of the same name in the main R project directory.</font>
 
 ## Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
 We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
 
 ## General information on repository structure
-This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage ing GitHub) for Gunn et al. (in revision). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and 7 different "analysis" files, each of which corresponds with a specific  analysis conducted in our study:
+This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage ing GitHub) for Gunn et al. (2022). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and 7 different "analysis" files, each of which corresponds with a specific  analysis conducted in our study:
 
 1) map_analysis
 2) filtering_processing_analysis
@@ -23,8 +23,31 @@ Within each analysis directory, you will find an R markdown script (.Rmd) with t
 
 The code directory will store all source code, shell scripts, lists of bash commands, and software packages needed for analysis. The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up to read all data and scripts and generate figures seamlessly.
 
+## Using the code: 
+To reproduce all analyses in Gunn et al. (2022), download this data repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
+
+Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called "/raw_data". This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
+
 ## Data
-Raw .fastq sequence files from ddRADseq and accompanying metadata are available on ZENODO (LINK TO DATA HERE). You will not need any of the raw .fastq files for these analyses; all bioinformatic processing, i.e., alignment, assembly, etc., was completed at Floragenex, Inc. For these analyses, you will only need the full VCF file for the stringent filtering protocol: `AR21_Aligned_Genotypes_stringent.vcf`. When you download these data, place the the .vcf file and metadata together in a directory within the home directory (same level as the seven analysis directories) called "raw_data". You should be good to start analyzing.
+Raw .fastq sequence files from ddRADseq and accompanying metadata are available at Zenodo.org: (LINK TO DATA HERE). 
+
+The genomic data, including raw .fastq.gz, intermediate conversion files (e.g., .bam etc...), .vcf files, and associated data summaries, are compressed as a .tar file (`SMB_ddRAD_rawdata.tar`).
+
+Download these data to your working directory and run the unzipping code: `tar -xvf SMB_ddRAD_rawdata.tar`
+
+You should have 7 new items in the directory: <br> <br>
+
+1. BAM_mpileups directory <br>
+2. FASTQ_Sequence_Files directory <br>
+3. Genome_Assemblies directory <br>
+4. LEggert_UMissouri_Bass_20180409-01669_Project_Report.pdf file
+5. LEggert_UMissouri_Bass_20180409-01669_Project_Statistics.tar.gz compressed directory
+6. Other
+7. VCF_Files
+
+You will not need any of the raw .fastq.gz files ('FASTQ_Sequence_Files' directory) for these analyses; all bioinformatic processing, i.e., alignment, assembly, etc., was completed at Floragenex, Inc. For these analyses, you will only need the full VCF file for the stringent filtering protocol, which is located in the 'VCF_Files' directory: `AR21_Aligned_Genotypes_stringent.vcf`. 
+
+Place the `AR21_Aligned_Genotypes_stringent.vcf` file along with the sample metadata in the /raw_data directory. You are good to start analyzing.
 
 If you have any questions or issues with data and/or code, please don't hesitate to contact me: jcgunn@uvm.edu
 
