@@ -1590,3 +1590,46 @@ This code produces output files for each model tested for the ILLI and SKIA popu
 ```
 
 This code produces output files for each model tested for the UPPARK and WHITE populations. For each model, there are two files, each beginning with "UPPARK_WHITE.", followed by [name_of_model]. One is `.optimized.txt`, and the other is `.log.txt`.
+
+#### 2d: Summarize output data for all population pairs.
+In this step, we are employing the 'Summarize_Outputs.py' base script to generate two summary .txt files for each population pair, which collates the information from the `.log.txt` and `.optimized.txt` and presents it in a more easily interpretable format. Most importantly, the output of the file 'Results_Summary_Short' gives the best scoring replicate for each model, and from this information, we can determine the best scoring model overall through model comparison.
+
+##### 2d.1. Summarize outputs for BAYOU and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for BAYOU and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 01:	Summarize DADI results for BAYOU and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/bayou_white/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+##### 2d.2. Summarize outputs for ELK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for ELK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 02:	Summarize DADI results for ELK and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/elk_white/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+##### 2d.3. Summarize outputs for ILLI and SKIA populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for ILLI and SKIA populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 03:	Summarize DADI results for ILLI and SKIA populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/illi_skia/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
+
+##### 2d.4. Summarize outputs for UPPARK and WHITE populations; copy and paste the code below in the shell file generated in Step 1a.1 above, which will collate output files from DADI:
+
+##### Command line code for summarizing data for UPPARK and WHITE populations. UNCOMMENT this code in the shell script:
+```{r}
+## Summarize DADI output 04:	Summarize DADI results for UPPARK and WHITE populations
+#python3 ../base_scripts/Summarize_Outputs.py ../../data/dadi_output/uppark_white/
+```
+
+This code produces two output files: `Results_Summary_Extended.txt` and `Results_Summary_Short.txt`.
