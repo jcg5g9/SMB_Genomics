@@ -475,3 +475,5 @@ At this point, the popgen (thinned) and finerad (non-thinned) datasets are fully
 ```
 
 ### ----------------------- END OF PHASE 1: FILTER RAW VCF FILE ----------------------- ###
+
+## ------------------------ END OF FILTERING AND PROCESSING ANALYSIS  ----------------------- ##

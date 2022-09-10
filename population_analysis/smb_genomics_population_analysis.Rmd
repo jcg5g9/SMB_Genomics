@@ -870,3 +870,6 @@ save(metadata_populations, file = "data/metadata/metadata_populations.Rda")
 ```
 
 ### ----------------------- END OF PHASE 4: POPULATION METADATA GENERATION ----------------------- ###
+
+## ------------------------ END OF POPULATION ANALYSIS  ----------------------- ##
+

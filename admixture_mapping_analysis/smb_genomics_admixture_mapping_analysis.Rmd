@@ -427,3 +427,4 @@ This code will show real-time progress of running through each replicate. It wil
 
 ### ----------------------- END OF PHASE 2: ADMIXTURE MAPPING ANALYSIS  ----------------------- ###
 
+## ------------------------ END OF ADMIXTURE MAPPING ANALYSIS  ----------------------- ##

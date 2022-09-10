@@ -4256,3 +4256,5 @@ This code produces the figure `UPPARK_WHITE_dadi_plots.png`, which showing model
 These figures were all used as the basis for Supplementary Figure 14 in our manuscript.
 
 ### ----------------------- END OF PHASE 4: DATA SUMMARIZATION AND PLOTTING ----------------------- ###
+
+## ------------------------ END OF DEMOGRAPHIC ANALYSIS  ----------------------- ##
