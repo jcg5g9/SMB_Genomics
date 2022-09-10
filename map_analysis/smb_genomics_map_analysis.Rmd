@@ -9,10 +9,10 @@ output: html_document
 We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
 
 ## Specific Aim: Generating species range maps for Smallmouth Bass and Neosho Bass
-In this analysis, we generate easily readible maps displaying the native distributions of the two species of interest, Smallmouth Bass and Neosho Bass. The following code generates two types of maps: 1) a full range map, in which the full native range of each species is displayed, and 2) a close-up map of the Central Interior Highlands (CIH), where the paraptry of the species' ranges is shown in detail. These are geo-referenced outline maps only. Shapes representing stream sites and/or populations were superimposed a posteriori on the maps in PowerPoint for publication figures.
+In this analysis, we generate easily readable maps displaying the native distributions of the two species of interest, Smallmouth Bass and Neosho Bass. The following code generates two types of maps: 1) a full range map, in which the full native range of each species is displayed, and 2) a close-up map of the Central Interior Highlands (CIH), where the parapatry of the species' ranges is shown in detail. These are geo-referenced outline maps only. Shapes representing stream sites and/or populations were superimposed <i>a posteriori</i> on the maps in PowerPoint for publication figures.
 
 ## Phases of analysis
-### Phase 1: Read-in and plot maps
+### Phase 1: Generate maps
 
 ### Libraries needed for analysis
 ```{r setup, echo = FALSE, include = FALSE}
@@ -31,6 +31,7 @@ library(rgdal)
 library(ggsn)
 ```
 
+## PHASE 1: GENERATE MAPS
 We are generating two types of species' native range maps: 1) a full species range map for Smallmouth Bass and Neosho Bass superimposed on the United States and southern Canada, and 2) a close-up species range map within the Central Interior Highlands (CIH) ecoregion. We are reading in the following data layers, which were downloaded from publically avaialbe online GIS databases:
 
 <b>Data layers used:</b> <br><br>
@@ -200,7 +201,6 @@ scalebar(transform = T,
          dist = 50,
          dist_unit = "km")
 
-
 dev.off()
 ```
 
@@ -209,7 +209,7 @@ This figure was used as the basis for Figure 1d in the manuscript. See below for
 ### STEP 3: Edit maps for publication-ready figure.
 After generating these outline maps, colored-in shapes and other map details were superimposed on the figures manually in PowerPoint to approximate GPS coordinates (not accurate or to scale).
 
-## ------------------------ END OF PHASE 1 ----------------------- ##
+## ------------------------ END OF PHASE 1: GENERATE MAPS ----------------------- ##
 
 ## ------------------------ END OF MAP ANALYSIS  ----------------------- ##
 
