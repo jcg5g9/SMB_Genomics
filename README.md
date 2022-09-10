@@ -5,7 +5,7 @@
 We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
 
 ## General information on repository structure
-This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage ing GitHub) for Gunn et al. (2022). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and 7 different "analysis" files, each of which corresponds with a specific  analysis conducted in our study:
+This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage ing GitHub) for Gunn et al. (2022). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and 7 different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
 
 1) map_analysis
 2) filtering_processing_analysis
@@ -29,7 +29,7 @@ To reproduce all analyses in Gunn et al. (2022), download this data repository a
 Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called "/raw_data". This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ## Data
-Raw .fastq sequence files from ddRADseq and accompanying metadata are available at Zenodo.org: `doi/10.5281/zenodo.7032495`
+Raw .fastq sequence files from ddRAD-seq and accompanying metadata are available at Zenodo.org: `doi/10.5281/zenodo.7032495`
 
 The genomic data, including raw .fastq.gz, intermediate conversion files (e.g., .bam etc...), .vcf files, and associated data summaries, are compressed as a .tar file (`SMB_ddRAD_rawdata.tar`).
 
