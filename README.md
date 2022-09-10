@@ -23,19 +23,19 @@ Within each analysis directory, you will find an R markdown script (.Rmd) with t
 
 The code directory will store all source code, shell scripts, lists of bash commands, and software packages needed for analysis. The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up to read all data and scripts and generate figures seamlessly.
 
-## Using the code: 
+## Using the code
 To reproduce all analyses in Gunn et al. (2022), download this data repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
 
 Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called "/raw_data". This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ## Data
-Raw .fastq sequence files from ddRADseq and accompanying metadata are available at Zenodo.org: doi/10.5281/zenodo.7032495 
+Raw .fastq sequence files from ddRADseq and accompanying metadata are available at Zenodo.org: `doi/10.5281/zenodo.7032495`
 
 The genomic data, including raw .fastq.gz, intermediate conversion files (e.g., .bam etc...), .vcf files, and associated data summaries, are compressed as a .tar file (`SMB_ddRAD_rawdata.tar`).
 
 Download these data to your working directory and run the unzipping code: `tar -xvf SMB_ddRAD_rawdata.tar`
 
-You should have 7 new items in the directory: <br> <br>
+You should have 7 new items in the directory: <br>
 
 1. BAM_mpileups directory <br>
 2. FASTQ_Sequence_Files directory <br>
