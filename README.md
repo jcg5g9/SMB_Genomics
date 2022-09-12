@@ -15,13 +15,18 @@ This is a publicly visible GitHub repository storing code (and a small amount of
 6) outlier_fst_analysis
 7) demographic_analysis
 
-Within each analysis directory, you will find an R markdown script (.Rmd) with the name of the analysis, which contains all of the code needed to run the full analysis. Additionally, you will find three sub-directories:
+Within each analysis directory, you will find an R markdown script (.Rmd) with the name of the analysis, which contains all of the code needed to run the full analysis. Additionally, you will find one:
 
 1) code
+
+The code directory will store all source code, shell scripts, lists of bash commands, and software packages needed for analysis. 
+
+Once you have downloaded the repository and located the code directory, you should create two additional sub-directories within each analysis (on the same level as the code directory):
+
 2) data
 3) figures
 
-The code directory will store all source code, shell scripts, lists of bash commands, and software packages needed for analysis. The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up to read all data and scripts and generate figures seamlessly.
+The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up so that the code reads all data and scripts and generates figures seamlessly.
 
 ## Using the code
 To reproduce all analyses in Gunn et al. (2022), download this data repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
