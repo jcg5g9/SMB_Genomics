@@ -99,6 +99,7 @@ In this step, we are filtering the dataset to omit any individual samples that d
 
 ##### Command line code for obtaining missing genotype call rate information. UNCOMMENT this code in the shell script:
 ```{bash}
+## missing individual file generation: generate a file of missing genotype call rates for all individuals
 #vcftools --vcf ../../../raw_data/smb_genomics.vcf --missing-indv --out ../../data/filtering_data/smb_missing
 ```
 
@@ -224,7 +225,8 @@ In this step, we are filtering the dataset generated in Step 5a above to retain 
 
 ##### Command line code for omitting poor quality SNPs. UNCOMMENT this code in the shell script:
 ```{bash}
-#vcftools --vcf ../../data/processed_vcf/03_filter_qual.vcf --minQ 20 --recode --recode-INFO-all --out ../../data/processed_vcf/04_filter_genotype
+## filter 04: filter out SNPs with less than 80% missing genotype calls across samples
+#vcftools --vcf ../../data/processed_vcf/03_filter_qual.vcf --max-missing 0.8 --recode --recode-INFO-all --out ../../data/processed_vcf/04_filter_genotype
 ```
 
 Run: `sbatch vcftools.sh`
