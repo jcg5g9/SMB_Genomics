@@ -199,8 +199,8 @@ This code generates the file: `data/processed_vcf/02_filter_depth.vcf`. This fil
 <b>SNPs filtered out</b> = 0 <br>
 <b>SNPs retained </b> = 127,429 <br>
 
-### STEP 5: Filter SNPs for a minimum depth of coverage of 15X
-In this step, we are filtering the dataset generated in Step 4a above to retain only SNPs that have a minimum depth of coverage across all individuals of 15X. 
+### STEP 5: Filter SNPs for a minimum Phred Quality Score of 20
+In this step, we are filtering the dataset generated in Step 4a above to retain only SNPs that have a minimum Phred quality score of 20. 
 
 #### 5a: Copy and paste the code below in the shell file generated in Step 2a above, which will eliminate SNPs with phred quality score less than 20.
 
