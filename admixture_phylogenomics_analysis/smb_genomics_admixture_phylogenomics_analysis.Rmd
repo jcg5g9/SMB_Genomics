@@ -35,7 +35,7 @@ In this step, we are reading in, cleaning, and filtering the raw metadata to pre
 #### 1a: Read in and clean metadata; run the Rmd chunk below:
 
 ##### Read in and clean metadata
-```{r METADATA}
+```{r}
 ## Read in metadata
 metadata <- read_excel("../raw_data/metadata.xlsx")
 
@@ -59,12 +59,12 @@ species_sample_sizes <- metadata %>%
   count()
 
 ## Get sample sizes by stream
-species_sample_sizes <- metadata %>%
+stream_sample_sizes <- metadata %>%
   group_by(stream) %>%
   count()
 ```
 
-These tables were used as the basis for maintext Table 1 in the manuscript (in the manuscript version of this table, we also include in the total sample sizes the samples filtered due to low genotype call rates).
+These tables were used as the basis for main text Table 1 in the manuscript (in the manuscript version of this table, we also include in the total sample sizes the samples filtered due to low genotype call rates).
 
 ### ----------------------- END OF PHASE 1: METADATA PREPARATION  ----------------------- ###
 
@@ -133,7 +133,7 @@ Run: `sbatch plink.sh`
 
 This code generates the file: `data/processed_bed/all_samples/01_all.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the full dataset.
 
-#### 2b: Generate a batch list file for running ADMIXTURE in parallel.
+#### 2b: Generate a batch list file for running ADMIXTURE on all samples in parallel.
 Here, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list  contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
 
 ##### 2b.1. Generate a batch list of commands to run in ADMIXTURE; run the Rmd chunk below:
@@ -156,10 +156,9 @@ for(ii in 1:nrow(nk)) {
       file=paste("code/batch_cmd_lists/01_all_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
-
 ```
 
-##### 2c: Generate a shell script to run ADMXITURE:
+##### 2c: Generate a shell script to run ADMXITURE on all samples:
 In this step, we are generating a universal bash shell script to run population genomic analyses for all samples in ADMIXTURE. The shell script for running all ADMIXTURE code is called "admixture.sh" and is adapted in the steps below to run the specified input files at each step. 
 
 ##### Generate ADMIXTURE bash shell script: `code/shell_scripts/admixture_all.sh`
@@ -384,7 +383,7 @@ pure_individuals <- data.frame(pure_individuals) %>%
   select(sample_id)
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(pure_indivs, 
+write_tsv(pure_individuals, 
           file = "data/filtering_data/pure_individuals.txt", 
           col_names = FALSE)
 
@@ -526,14 +525,14 @@ save(metadata_pure, file = "data/metadata/metadata_pure.Rda")
 
 Run: `sbatch plink.sh`
 
-This code generates the file: `data/processed_bed/all_samples/02_pure.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the pure dataset.
+This code generates the file: `data/processed_bed/pure_samples/02_pure.bed`, along with accompanying file types. This file should be used as input in analysis in ADMIXTURE for the pure dataset.
 
-#### 3f: Generate a batch list file for running ADMIXTURE in parallel.
-Here, we are creating a batch list of command line code to run ADMIXTURE analyses in parallel. The batch list contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
+#### 3f: Generate a batch list file for running ADMIXTURE on pure samples in parallel.
+Here, we are creating a batch list of command line code to run ADMIXTURE analyses on pure samples in parallel. The batch list contains a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>). We are running this analysis with a random seed (--seed=2324), 10-fold cross validation (--cv=10), for <i>K</i> = 1-20 equaling the number of streams in our data set plus Spotted Bass. <br>
 
 ##### 3f.1. Generate a batch list of commands to run in ADMIXTURE; run the Rmd chunk below:
 
-##### Generate batch commands: `code/batch_cmd_lists/01_all_batch_cmd_list.txt`
+##### Generate batch commands: `code/batch_cmd_lists/02_pure_batch_cmd_list.txt`
 ```{r}
 nk <- data.frame(c(1:20))
 
@@ -554,7 +553,7 @@ for(ii in 1:nrow(nk)) {
 
 ```
 
-##### 3g: Generate a shell script to run ADMXITURE:
+##### 3g: Generate a shell script to run ADMXITURE on pure samples:
 In this step, we are generating a universal bash shell script to run population genomic analyses for pure samples only in ADMIXTURE. The shell script for running all ADMIXTURE code is called "admixture.sh" and is adapted in the steps below to run the specified input files at each step. 
 
 ##### Generate ADMIXTURE bash shell script: `code/shell_scripts/admixture_pure.sh`
@@ -815,7 +814,7 @@ We read the snphylo out 'snphylo.output.bs.tree' into the software program FIGTR
 ### ----------------------- END OF PHASE 3: PHYLOGENOMIC ANALYSIS ----------------------- ###
 
 ## PHASE 4: SPOTTED BASS REMOVAL
-In this phase of the analysis, we are omitting all Spotted Bass sample from the analysis, as we are not interested in further investigating population genetics of Spotted Bass for this project.
+In this phase of the analysis, we are omitting all Spotted Bass samples from the analysis, as we are not interested in further investigating population genetics of Spotted Bass for this project.
 
 ### STEP 1: Generate list of Spotted Bass individuals
 
