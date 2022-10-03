@@ -628,10 +628,10 @@ dev.off()
 
 This figure was used as the basis for Figure 1c in the manuscript.
 
-##### 3k.3. Generate a q-plot for all data; run the Rmd chunk below:
+##### 3k.3. Generate a q-plot for pure data; run the Rmd chunk below:
 Given the very similar CV error values given for <i>K</i>=3, <i>K</i>=4, and <i>K</i>=5, even though 3 was the optimal number of clusters, we show results for each of these K values and produce figures for each.
 
-##### Generate q-plot for all samples: 1) `figures/admixture_figures/q_plot_figures/02_pure_k3.pdf`, 2) `figures/admixture_figures/q_plot_figures/02_pure_k4.pdf`, and 3) `figures/admixture_figures/q_plot_figures/02_pure_k5.pdf`
+##### Generate q-plot for pure samples: 1) `figures/admixture_figures/q_plot_figures/02_pure_k3.pdf`, 2) `figures/admixture_figures/q_plot_figures/02_pure_k4.pdf`, and 3) `figures/admixture_figures/q_plot_figures/02_pure_k5.pdf`
 ```{r}
 #Read-in ADMIXTURE q-value results for best K = 3
 pure_K3 <- readQ("data/admixture_data/q_data/pure_samples/02_pure.3.Q")
