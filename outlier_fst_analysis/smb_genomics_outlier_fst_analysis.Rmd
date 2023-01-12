@@ -2281,7 +2281,7 @@ neosho_neutral_genind <- scaleGen(neosho_neutral_genind,
 ```
 
 #### 3c: Run cross validation analysis on species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass samples only.
-In this step, we are running a cross-validation analysis, using 90% of samples in the data as a training set and 10% of data as a test set, maximum number of pcs at 300, and 30 replicates per PC value tested, to choose the number of PCs to use in each analysis. We are choosing hte number of PCs that maximizes successful assignment to our a priori defined populations, which will then give us the optimal clustering patterns of the data.
+In this step, we are running a cross-validation analysis, using 90% of samples in the data as a training set and 10% of data as a test set, maximum number of pcs at 300, and 30 replicates per PC value tested, to choose the number of PCs to use in each analysis. We are choosing the number of PCs that maximizes successful assignment to our a priori defined populations, which will then give us the optimal clustering patterns of the data.
 
 ##### 3c.1. Run cross validation tests on all hierarchical analyses; run the Rmd chunk below:
 
