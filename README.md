@@ -7,13 +7,13 @@ We investigated the extent of genomic divergence, local directional selection, a
 ## General information on repository structure
 This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage ing GitHub) for Gunn et al. (2022). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a project info folder (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), a .gitignore file, and 7 different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
 
-1) map_analysis
-2) filtering_processing_analysis
-3) admixture_phylogenomics_analysis
-4) population_analysis
-5) admixture_mapping_analysis
-6) outlier_fst_analysis
-7) demographic_analysis
+1) 01_map_analysis
+2) 02_filtering_processing_analysis
+3) 03_admixture_phylogenomics_analysis
+4) 04_population_analysis
+5) 05_admixture_mapping_analysis
+6) 06_outlier_fst_analysis
+7) 07_demographic_analysis
 
 Within each analysis directory, you will find an R markdown script (.Rmd) with the name of the analysis, which contains all of the code needed to run the full analysis. Additionally, you will find one:
 
