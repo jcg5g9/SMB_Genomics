@@ -17,6 +17,10 @@ In this analysis, we generate easily readable maps displaying the native distrib
 ### Libraries needed for analysis
 ```{r setup, echo = FALSE, include = FALSE}
 library(sf)
+library(ggspatial)
+#library(readxl)
+#library(tidyverse)
+#library(cowplot)
 ```
 
 ## PHASE 1: GENERATE MAPS
@@ -39,7 +43,7 @@ north_america <- read_sf(dsn = "data/shape_files/north_america",
                          layer = "north_america")
 
 # Read in shape files for the states of the United States
-state <- read_sf(dsn = "data/shape_files/states",
+states <- read_sf(dsn = "data/shape_files/states",
                  layer = "states")
 
 # Read in shape files for Canada
@@ -60,7 +64,7 @@ nb <- read_sf(dsn = "data/shape_files/species_ranges/nb",
 
 # Save Rda files for downstream analyses
 save(north_america, file = "data/north_america.Rda")
-save(state, file = "data/state.Rda")
+save(states, file = "data/states.Rda")
 save(canada, file = "data/canada.Rda")
 save(rivers, file = "data/rivers.Rda")
 save(smb, file = "data/smb.Rda")
@@ -77,7 +81,7 @@ save(nb, file = "data/nb.Rda")
 ```{r}
 # Load Rda files
 load("data/north_america.Rda")
-load("data/state.Rda")
+load("data/states.Rda")
 load("data/canada.Rda")
 load("data/rivers.Rda")
 load("data/smb.Rda")
@@ -155,7 +159,7 @@ This figure was used as the basis for Figure 1a in the manuscript. We overlayed 
 ```{r}
 # Load Rda files
 load("data/north_america.Rda")
-load("data/state.Rda")
+load("data/states.Rda")
 load("data/canada.Rda")
 load("data/rivers.Rda")
 load("data/smb.Rda")
@@ -204,7 +208,7 @@ plot(rivers,
      cex.axis = 2)
 
 # Plot scalebar last
-scalebar(transform = T,
+annotation_scale(transform = T,
          location = "bottomleft",
          x.min = -96,
          x.max = -91,

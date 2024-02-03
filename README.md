@@ -61,34 +61,34 @@ If you have any questions or issues with data and/or code, please don't hesitate
 ### Analysis 1: Generating Species Native Range Maps
 In this analysis, we generated easily readable maps displaying the native distributions of the two species of interest, Smallmouth Bass and Neosho Bass. We generated two types of maps: 1) a full range map, in which the full native range of each species is displayed, and 2) a close-up map of the Central Interior Highlands (CIH), where the paraptry of the species' ranges is shown in detail. In R, we generated only georeferenced outlines of these maps. Shapes representing stream sites and/or populations were superimposed <i>a posteriori</i> on the maps in PowerPoint.
 
-#### Run the code: `map_analysis/smb_genomics_map_analysis.Rmd`
+#### Run the code: `01_map_analysis/smb_genomics_map_analysis.Rmd`
 
 ### Analysis 2: SNP Filtering, Data Processing, and Preliminary Calculations
 In this analysis, we performed further quality filtering on the processed and genotyped SNPs generated at Floragenex, Inc. for Smallmouth Bass and Neosho Bass. Specifically, we screened the processed data for SNPs with greater than 15X read depth; fish samples with less than 20% genotype calls across all SNPs ("badsamples"); SNPs with a phred quality score less than 20 ("qual"); and SNPs with greater than 20% missing genotype calls across fish individuals ('missing').
 
-#### Run the code: `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd`
+#### Run the code: `02_filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd`
 
 ### Analysis 3: Admixture and phylogenomics
 In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess population genomic structure of Spotted Bass, Smallmouth Bass, and Neosho Bass in the CIH. Specifically, we conducted an initial screen of hybridization and gene flow by running maximum likelihood clustering on the full, filtered dataset and identified any individuals of interspecific origin between Spotted Bass and all other Interior Highlands fish (Smallmouth Bass and Neosho Bass) and individuals of interspecific origin between Smallmouth Bass and Neosho Bass. After removing hybrids, we conducted a separate admixture analysis and complementary phylogenomic analysis on the "pure" genomic samples to estimate genomic divergence between species.
 
-#### Run the code: `filtering_processing_analysis/smb_genomics_admixture_phylogenomics_analysis.Rmd`
+#### Run the code: `03_filtering_processing_analysis/smb_genomics_admixture_phylogenomics_analysis.Rmd`
 
 ### Analysis 4: Population Inference
 In this analysis, we used the finerad.vcf data generated in Analysis 2 (SNP Filtering...) to assess fine-scale coancestry between Smallmouth Bass, and Neosho Bass in the CIH using haplotype inference (excluding Spotted Bass). Specifically, we estimated coancestry in 1) the full dataset, with all pure and admixed individuals, excluding the Spotted Bass X Smallmouth Bass hybrid (BFC10) inferred from population genomic analysis in Analysis 3, 2) the pure dataset, with only pure individuals of Smallmouth Bass and Neosho Bass, and 3) the admixed dataset, with only admixed individuals of Neosho Bass (no admixed Smallmouth Bass were detected).
 
-#### Run the code: `population_analysis/smb_genomics_population_analysis.Rmd`
+#### Run the code: `04_population_analysis/smb_genomics_population_analysis.Rmd`
 
 ### Analysis 5: Admixture Mapping
 In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i>) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
 
-#### Run the code: `admixture_mapping_analysis/smb_genomics_admixture_mapping_analysis.Rmd`
+#### Run the code: `05_admixture_mapping_analysis/smb_genomics_admixture_mapping_analysis.Rmd`
 
 ## Analysis 6: Directional selection analysis
 In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to scan for signatures of directional selection on SNP loci with outlier Fst (high outlier Fst: directional selection; low Fst: balancing selection). We used two software programs with different underlying statistical frameworks to detect outliers and then used any outliers commonly detected in both analyses as canditates for being under strong selection. Specifically, we used the software program BAYESCAN (based in Bayesian analysis) and the R package PCAdapt principal component analysis (based in multivariate principal component analysis). We then employed DAPC in R to map patterns of population differentiation at any shared outlier and neutral loci to detect populations that may be under differential selection pressures and to detect signatures of genetic drift,
 
-#### Run the code: `outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
+#### Run the code: `06_outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
 
 ## Analysis 7: Demographic analysis
 In this analysis, we investigated the demographic history of populations found to be admixed between Smallmouth Bass and Neosho Bass based on admixture and phylogenomics (Analysis 3) and admixture mapping analysis (Analysis 5). Specifically, we used the joint site frequency spectrum (JSFS) of admixed populations within the Neosho Bass range (ELK, BAYOU, ILLI, and UPPARK) and the inferred interspecific parent population within the Smallmouth Bass range (SKIA, MISS, and WHITE) to determine the relative timing of admixture events by testing multiple demographic scenarios in a model-testing maximum likelihood framework. We inferred whether admixed populations were the results of relatively recent admixture, old admixture, or a combination of both and gleaned insights about the complexities of potential natural and anthropogenic sources of gene flow.
 
-#### Run the code: `demographic_analysis/smb_genomics_demographic_analysis.Rmd`
+#### Run the code: `07_demographic_analysis/smb_genomics_demographic_analysis.Rmd`
