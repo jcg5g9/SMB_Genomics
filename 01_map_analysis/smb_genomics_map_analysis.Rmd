@@ -18,9 +18,6 @@ In this analysis, we generate easily readable maps displaying the native distrib
 ```{r setup, echo = FALSE, include = FALSE}
 library(sf)
 library(ggspatial)
-#library(readxl)
-#library(tidyverse)
-#library(cowplot)
 ```
 
 ## PHASE 1: GENERATE MAPS
