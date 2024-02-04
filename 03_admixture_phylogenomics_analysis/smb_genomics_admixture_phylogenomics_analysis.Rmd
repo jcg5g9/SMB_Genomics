@@ -53,6 +53,9 @@ save(metadata, file = "../raw_data/metadata.Rda")
 
 #### Summarize metadata
 ```{r}
+# Load metadata
+load("../raw_data/metadata.Rda")
+
 ## Get sample sizes by species
 species_sample_sizes <- metadata %>%
   group_by(species) %>%
@@ -211,8 +214,10 @@ This command will extract the CV data for each value of K from the ADMIXTURE cro
 
 ##### Assess 10-fold cross-validation error and generate associated plot: `figures/admixture_figures/cv_figures/cv_all.pdf`
 ```{r}
+# Read in cross-validation result data
 cv_all <- read_excel("data/admixture_data/cv_data/all_samples/cv_all.xlsx")
 
+# Convert cv data to dataframe
 cv_all <- as.data.frame(cv_all)
 
 # Generate CV error plot for all samples
@@ -239,6 +244,9 @@ This figure was used as the basis for Supplementary Figure 3 in the manuscript (
 ```{r}
 #Read-in ADMIXTURE q-value results for best K = 4
 hybrid_screen_K4 <- readQ("data/admixture_data/q_data/all_samples/01_all.4.Q")
+
+#Save K4 data for downstream analyses
+save(hybrid_screen_K4, file = "data/hybrid_screen_k4.Rda")
 
 ## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho Bass)
 plotQ(hybrid_screen_K4,
@@ -271,6 +279,9 @@ plotQ(hybrid_screen_K4,
 
 #Read-in ADMIXTURE q-value results for best K = 3
 hybrid_screen_K3 <- readQ("data/admixture_data/q_data/all_samples/01_all.3.Q")
+
+#Save K3 data for downstream analyses
+save(hybrid_screen_K3, file = "data/hybrid_screen_k3.Rda")
 
 ## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho)
 plotQ(hybrid_screen_K3,
@@ -322,6 +333,9 @@ We considered an individual to be genetically "pure" if it possessed greater tha
 
 ##### Generate list of Spotted Bass hybrids: `data/filtering_data/bfc10.txt` 
 ```{r}
+# Load metadata
+load("../raw_data/metadata.Rda")
+
 ## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
 BFC10 <- metadata %>%
   filter(sample_id == "BFC10_1")
@@ -342,10 +356,16 @@ BFC10 <- as.vector(BFC10$sample_id)
 save(BFC10, file = "data/filtering_data/bcf10.Rda")
 ```
 
-##### 2h.2. Get list of pure individuals; run the Rmd chunk below to retain individuals with cluster membership to any one cluster > 0.95:
+##### 2h.2. Get list of pure individuals; run the Rmd chunk below to retain individuals with cluster membership to any one cluster > 0.95 at K=4 (optimal K):
 
 ##### Generate list of pure individuals: `data/filtering_data/pure_individuals.txt`
 ```{r}
+# Load metadata
+load("../raw_data/metadata.Rda")
+
+# Load K4 data
+load("data/hybrid_screen_k4.Rda")
+
 ## Read in Q value data for all individuals at K=4
 all_Q <- cbind(metadata, hybrid_screen_K4)
 
@@ -374,9 +394,9 @@ pure_smallmouth <- all_Q %>%
 
 ## Put all pure individuals together 
 pure_individuals <- rbind(pure_spotted,
-                     pure_midark, 
-                     pure_ark, 
-                     pure_smallmouth)
+                          pure_midark, 
+                          pure_ark, 
+                          pure_smallmouth)
 
 # Select the first column and convert to data frame
 pure_individuals <- data.frame(pure_individuals) %>%
@@ -390,6 +410,9 @@ write_tsv(pure_individuals,
 # Turn column into vector without column name to save as un-headered list for downstream filtering
 pure_individuals <- as.vector(pure_individuals$sample_id)
 
+# Save all Q data as .Rda file without column names
+save(all_Q, file = "data/filtering_data/all_Q.Rda")
+
 # Save the list of pure samples as a .Rda file without column names
 save(pure_individuals, file = "data/filtering_data/pure_individuals.Rda")
 ```
@@ -398,6 +421,9 @@ save(pure_individuals, file = "data/filtering_data/pure_individuals.Rda")
 
 ##### Generate list of pure individuals: `data/filtering_data/admixed_individuals.txt`
 ```{r}
+# Load all_Q data
+load("data/filtering_data/all_Q.Rda")
+
 ## Get admixed Midark samples (cluster within Neosho range) 
 admixed_midark <- all_Q %>%
   filter(midark < 0.95) %>%
@@ -409,8 +435,7 @@ admixed_ark <- all_Q %>%
   filter(north_ark > 0.05) # This is to account for the one sample with mixed ancestry among neosho clusters
 
 ## Put all pure individuals together 
-admixed_individuals <- rbind(admixed_midark, 
-                        admixed_ark)
+admixed_individuals <- rbind(admixed_midark, admixed_ark)
 
 # Select the first column and convert to data frame
 admixed_individuals <- data.frame(admixed_individuals) %>%
@@ -498,6 +523,9 @@ Run: `sbatch vcftools.sh`
 
 ##### Filter out admixed individuals from metadata
 ```{r}
+# Load metadata
+load("../raw_data/metadata.Rda")
+
 # Omit admixed individuals (Smallmouth Bass X Neosho Bass) from pure metadata
 metadata_pure <- metadata[ ! metadata$sample_id %in% admixed_individuals, ]
 
@@ -550,7 +578,6 @@ for(ii in 1:nrow(nk)) {
       file=paste("code/batch_cmd_lists/02_pure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
-
 ```
 
 ##### 3g: Generate a shell script to run ADMXITURE on pure samples:
@@ -606,8 +633,10 @@ This command will extract the CV data for each value of K from the ADMIXTURE cro
 
 ##### Assess 10-fold cross-validation error and generate associated plot: `figures/admixture_figures/cv_figures/cv_pure.pdf`
 ```{r}
+# Read in cross-validation data for pure individuals only
 cv_pure <- read_excel("data/admixture_data/cv_data/pure_samples/cv_pure.xlsx")
 
+# Convert to dataframe
 cv_pure <- as.data.frame(cv_pure)
 
 # Generate CV error plot for pure samples
@@ -822,6 +851,9 @@ In this phase of the analysis, we are omitting all Spotted Bass samples from the
 
 ##### Generate list of Spotted Bass individuals: `data/filtering_data/spotted_bass.txt` 
 ```{r}
+# Load metadata
+load("../raw_data/metadata.Rda")
+
 ## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
 spotted_bass <- metadata %>%
   filter(species == "Spotted_Bass")

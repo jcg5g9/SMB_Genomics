@@ -135,6 +135,9 @@ write_tsv(smb_genomics_badsamples,
 
 ##### Generate bar plot for badsamples: `figures/filtering_processing_figures/badsamples.pdf`
 ```{r}
+# Read in .imiss file
+smb_genomics_missing <- read_tsv("data/filtering_data/smb_genomics_missing.imiss")
+
 ## Remove the "_1" string from each sample name
 smb_genomics_missing <- as.data.frame(smb_genomics_missing) %>%
   mutate(INDV = factor(INDV))  %>%

@@ -112,6 +112,10 @@ This code generates the file: `data/processed_bed/all_samples/01_finerad_spb_hyb
 
 ##### Read in metadata and generate Spotted Bass list: `data/filtering_data/spotted_bass.txt`
 ```{r}
+# Load metadata
+load("../raw_data/metadata.Rda")
+
+# Filter out spotted bass only from metadata
 spotted_bass <- metadata %>%
   filter(species == "Spotted_Bass")
 
@@ -154,6 +158,7 @@ In this step, we are further filtering the finerad dataset to create datasets fo
 # Load in the .Rda file generated in the admixture analysis
 load("../admixture_phylogenomics_analysis/data/filtering_data/admixed_individuals.Rda")
 
+# Convert to dataframe
 admixed_individuals <- as.data.frame(admixed_individuals)
 
 # Save the list of bad samples as a .txt file without column names
@@ -191,6 +196,7 @@ This code generates the file: `data/processed_bed/all_samples/03_finerad_pure.vc
 # Load in the .Rda file generated in the admixture analysis
 load("../admixture_phylogenomics_analysis/data/filtering_data/pure_individuals.Rda")
 
+# Convert to dataframe
 pure_individuals <- as.data.frame(pure_individuals)
 
 # Save the list of bad samples as a .txt file without column names
@@ -331,6 +337,11 @@ smb_neosho_mcmcfile <- "data/mcmc_files/01_smb_neosho_chunks.mcmc.xml"
 
 # Read in tree file
 smb_neosho_treefile <- "data/tree_files/01_smb_neosho_chunks.mcmcTree.xml"
+
+# Save files as Rda files for downstream analyses and plotting
+save(smb_neosho_hapmap, file = "data/hap_maps/smb_neosho_hapmap.Rda")
+save(smb_neosho_mcmcfile, file = "data/mcmc_files/smb_neosho_mcmcfile.Rda")
+save(smb_neosho_treefile, file = "data/tree_files/smb_neosho_treefile.Rda")
 ```
 
 #### 1b: Read in files for pure samples; run the Rmd chunk below:
@@ -345,6 +356,11 @@ pure_mcmcfile <- "data/mcmc_files/02_pure_chunks.mcmc.xml"
 
 # Read in tree file
 pure_treefile <- "data/tree_files/02_pure_chunks.mcmcTree.xml"
+
+# Save files as Rda files for downstream analyses and plotting
+save(smb_neosho_hapmap, file = "data/hap_maps/pure_hapmap.Rda")
+save(pure_mcmcfile, file = "data/mcmc_files/pure_mcmcfile.Rda")
+save(pure_treefile, file = "data/tree_files/pure_treefile.Rda")
 ```
 
 #### 1c: Read in files for admixed samples; run the Rmd chunk below:
@@ -359,10 +375,15 @@ admixed_mcmcfile <- "data/mcmc_files/03_admixed_chunks.mcmc.xml"
 
 # Read in tree file
 admixed_treefile <- "data/tree_files/03_admixed_chunks.mcmcTree.xml"
+
+# Save files as Rda files for downstream analyses and plotting
+save(admixed_hapmap, file = "data/hap_maps/admixed_hapmap.Rda")
+save(admixed_mcmcfile, file = "data/mcmc_files/admixed_mcmcfile.Rda")
+save(admixed_treefile, file = "data/tree_files/admixed_treefile.Rda")
 ```
 
 ### STEP 2: Generate input files for plotting.
-In this step, we are using previously published source code by the developers of FINERADSTRUCTURE to get input files to plot coancestry matrices and phylogenetic trees. All code below is annotated to the best of our knowledge and corresponds directly with the published source code (FinestructureLibrary.R).
+In this step, we are using previously published source code by the developers of FINERADSTRUCTURE to get input files to plot coancestry matrices and phylogenetic trees. All code below is annotated to the best of our knowledge and corresponds directly with the published source code (FinestructureLibrary.R). Please note: given that this is published and peer-reviewed software, we do not attempt to explain annotations or code which we did not write; for this reason, some steps of the code, particularly in the plotting chunks, are obscure. We will do our best to continue updating this code to increase reproducibility and transparency of our analyses.
 
 #### 2a: Set path name for depositing completed fineRADstructure figures; run the Rmd chunk below:
 
@@ -373,8 +394,14 @@ plotsFolder <- "figures/coancestry_figures"
 
 # Set general name for analysis, which will be appended to each figure
 analysisName <- "coancestry" 
+
+# Set parameters for individuals and populations
 maxIndv <- 10000
 maxPop <-10000
+
+# Save parameters
+save(maxIndv, file = "data/maxIndv.Rda")
+save(maxPop, file = "data/maxPop.Rda")
 ```
 
 #### 2b: Set color palette to use for all coancestry heat map figures; run the Rmd chunk below:
@@ -390,11 +417,16 @@ my_palette <- colorRampPalette(c("white", "navyblue","deeppink2","black"))(n = 2
 
 ##### Extract data for Smallmouth Bass and Neosho Bass: 
 ```{r}
+# Load SMB Neosho files
+load("data/hap_maps/smb_neosho_hapmap.Rda")
+load("data/mcmc_files/smb_neosho_mcmcfile.Rda")
+load("data/tree_files/smb_neosho_treefile.Rda")
+
 # Generate matrix of data
 smb_neosho_dataraw <- as.matrix(read.table(smb_neosho_hapmap, 
-                                    row.names=1, 
-                                    header=T, 
-                                    skip=1)) # read in the pairwise coincidence 
+                                           row.names = 1, 
+                                           header = T, 
+                                           skip = 1))
 
 # Read in mcmc file
 smb_neosho_mcmcxml <- xmlTreeParse(smb_neosho_mcmcfile)
@@ -403,17 +435,26 @@ smb_neosho_mcmcdata <- as.data.frame.myres(smb_neosho_mcmcxml)
 # Read in tree file
 smb_neosho_treexml <- xmlTreeParse(smb_neosho_treefile)
 smb_neosho_ttree <- extractTree(smb_neosho_treexml)
+
+# Save tree files
+save(smb_neosho_treexml, file = "data/tree_files/smb_neosho_treexml.Rda")
+save(smb_neosho_ttree, file = "data/tree_files/smb_neosho_ttree.Rda")
 ```
 
 ##### 2b.2 Extract XML data from mcmc and tree files for Smallmouth Bass and Neosho Bass; run the Rmd code below:
 
 ##### Extract data for pure samples: 
 ```{r}
+# Save files as Rda files for downstream analyses and plotting
+load("data/hap_maps/pure_hapmap.Rda")
+load("data/mcmc_files/pure_mcmcfile.Rda")
+load("data/tree_files/pure_treefile.Rda")
+
 # Generate matrix of data
 pure_dataraw <- as.matrix(read.table(pure_hapmap, 
-                                    row.names=1, 
-                                    header=T, 
-                                    skip=1)) # read in the pairwise coincidence 
+                                     row.names = 1, 
+                                     header = T, 
+                                     skip = 1))
 
 # Read in mcmc file and convert to data frame
 pure_mcmcxml <- xmlTreeParse(pure_mcmcfile)
@@ -422,17 +463,26 @@ pure_mcmcdata <- as.data.frame.myres(pure_mcmcxml)
 # Read in tree file
 pure_treexml <- xmlTreeParse(pure_treefile)
 pure_ttree <- extractTree(pure_treexml)
+
+# Save tree files
+save(pure_treexml, file = "data/tree_files/pure_treexml.Rda")
+save(pure_ttree, file = "data/tree_files/pure_ttree.Rda")
 ```
 
 ##### 2b.3 Extract XML data from mcmc and tree files for admixed samples; run the Rmd code below:
 
 ##### Extract data for admixed samples: 
 ```{r}
+# Save files as Rda files for downstream analyses and plotting
+load("data/hap_maps/admixed_hapmap.Rda")
+load("data/mcmc_files/admixed_mcmcfile.Rda")
+load("data/tree_files/admixed_treefile.Rda")
+
 # Generate matrix of data
 admixed_dataraw <- as.matrix(read.table(admixed_hapmap, 
-                                    row.names=1, 
-                                    header=T, 
-                                    skip=1)) # read in the pairwise coincidence 
+                                        row.names = 1, 
+                                        header = T, 
+                                        skip = 1)) 
 
 # Read in mcmc file and convert to data frame
 admixed_mcmcxml <- xmlTreeParse(admixed_mcmcfile)
@@ -441,6 +491,10 @@ admixed_mcmcdata <- as.data.frame.myres(admixed_mcmcxml)
 # Read in tree file
 admixed_treexml <- xmlTreeParse(admixed_treefile)
 admixed_ttree <- extractTree(admixed_treexml)
+
+# Save tree files
+save(admixed_treexml, file = "data/tree_files/admixed_treexml.Rda")
+save(admixed_ttree, file = "data/tree_files/admixed_ttree.Rda")
 ```
 
 #### 2c. Generate input files for coancestry plots and dendrograms (phylogenies)
@@ -449,21 +503,27 @@ admixed_ttree <- extractTree(admixed_treexml)
 
 ##### Generate input files for Smallmouth Bass and Neosho Bass:
 ```{r}
-# Reduce the amount of significant digits printed in the posteror assignment probabilities (numbers shown in the tree):
-smb_neosho_ttree$node.label[smb_neosho_ttree$node.label!=""] <- format(as.numeric(smb_neosho_ttree$node.label[smb_neosho_ttree$node.label!=""]),digits=2)
+# Load tree files
+load("data/tree_files/smb_neosho_treexml.Rda")
+load("data/tree_files/smb_neosho_ttree.Rda")
+
+# Reduce the amount of significant digits printed in the posterior assignment probabilities:
+smb_neosho_ttree$node.label[smb_neosho_ttree$node.label!=""] <- format(as.numeric(smb_neosho_ttree$node.label[smb_neosho_ttree$node.label!=""]), digits=2)
 
 # convert to dendrogram format
 smb_neosho_tdend <- myapetodend(smb_neosho_ttree, factor=1)
 
-# Modulate map state
-smb_neosho_mapstate <- extractValue(smb_neosho_treexml,"Pop") # map state as a finestructure clustering
+# map state as a finestructure clustering
+smb_neosho_mapstate <- extractValue(smb_neosho_treexml,"Pop") 
 
-smb_neosho_mapstatelist <- popAsList(smb_neosho_mapstate) # .. and as a list of individuals in populations
+# .. and as a list of individuals in populations
+smb_neosho_mapstatelist <- popAsList(smb_neosho_mapstate) 
 
-smb_neosho_popnames <- lapply(smb_neosho_mapstatelist, NameSummary) # population names IN A REVERSIBLE FORMAT (I.E LOSSLESS)
-## NOTE: if your population labels don't correspond to the format we used (NAME<number>) YOU MAY HAVE TROUBLE HERE. YOU MAY NEED TO RENAME THEM INTO THIS FORM AND DEFINE YOUR POPULATION NAMES IN popnamesplot BELOW
+# population names IN A REVERSIBLE FORMAT (I.E LOSSLESS)
+smb_neosho_popnames <- lapply(smb_neosho_mapstatelist, NameSummary)
 
-smb_neosho_popnamesplot <-lapply(smb_neosho_mapstatelist, NameMoreSummary) # a nicer summary of the populations
+# Get a nicer summary of the populations
+smb_neosho_popnamesplot <-lapply(smb_neosho_mapstatelist, NameMoreSummary)
 
 # Clean up pop names
 names(smb_neosho_popnames) <- smb_neosho_popnamesplot 
@@ -474,32 +534,45 @@ smb_neosho_popdend <- makemydend(smb_neosho_tdend, smb_neosho_mapstatelist)
 
  # needed for obscure dendrogram reasons
 smb_neosho_popdend <- fixMidpointMembers(smb_neosho_popdend)
+
 # use NameMoreSummary to make popdend
 smb_neosho_popdendclear <- makemydend(smb_neosho_tdend, smb_neosho_mapstatelist, "NameMoreSummary") 
 
 # needed for obscure dendrogram reasons
 smb_neosho_popdendclear <- fixMidpointMembers(smb_neosho_popdendclear) 
+
+# Save tree files for downstream plotting
+save(smb_neosho_tdend, file = "data/tree_files/smb_neosho_tdend.Rda")
+save(smb_neosho_dataraw, file = "data/tree_files/smb_neosho_dataraw.Rda")
+save(smb_neosho_mapstatelist, file = "data/tree_files/smb_neosho_mapstatelist.Rda")
+save(smb_neosho_popdend, file = "data/tree_files/smb_neosho_popdend.Rda")
 ```
 
 ##### 2c.2. Generate input files for coancestry plots and dendrograms for pure samples; run the Rmd code below:
 
 ##### Generate input files for pure samples:
 ```{r}
-# Reduce the amount of significant digits printed in the posteror assignment probabilities (numbers shown in the tree):
-pure_ttree$node.label[pure_ttree$node.label!=""] <- format(as.numeric(pure_ttree$node.label[pure_ttree$node.label!=""]),digits=2)
+# Load tree files
+load("data/tree_files/pure_treexml.Rda")
+load("data/tree_files/pure_ttree.Rda")
+
+# Reduce the amount of significant digits printed in the posteror assignment probabilities:
+pure_ttree$node.label[pure_ttree$node.label!=""] <- format(as.numeric(pure_ttree$node.label[pure_ttree$node.label!=""]), digits=2)
 
 # convert to dendrogram format
 pure_tdend <- myapetodend(pure_ttree, factor=1)
 
-# Modulate map state
-pure_mapstate <- extractValue(pure_treexml,"Pop") # map state as a finestructure clustering
+# map state as a finestructure clustering
+pure_mapstate <- extractValue(pure_treexml,"Pop")
 
-pure_mapstatelist <- popAsList(pure_mapstate) # .. and as a list of individuals in populations
+# .. and as a list of individuals in populations
+pure_mapstatelist <- popAsList(pure_mapstate) 
 
-pure_popnames <- lapply(pure_mapstatelist, NameSummary) # population names IN A REVERSIBLE FORMAT (I.E LOSSLESS)
-## NOTE: if your population labels don't correspond to the format we used (NAME<number>) YOU MAY HAVE TROUBLE HERE. YOU MAY NEED TO RENAME THEM INTO THIS FORM AND DEFINE YOUR POPULATION NAMES IN popnamesplot BELOW
+# population names IN A REVERSIBLE FORMAT (I.E LOSSLESS)
+pure_popnames <- lapply(pure_mapstatelist, NameSummary)
 
-pure_popnamesplot <-lapply(pure_mapstatelist, NameMoreSummary) # a nicer summary of the populations
+# Get a nicer summary of the populations
+pure_popnamesplot <-lapply(pure_mapstatelist, NameMoreSummary) 
 
 # Clean up pop names
 names(pure_popnames) <- pure_popnamesplot 
@@ -508,34 +581,47 @@ names(pure_popnamesplot) <- pure_popnamesplot
 # use NameSummary to make popdend
 pure_popdend <- makemydend(pure_tdend, pure_mapstatelist) 
 
- # needed for obscure dendrogram reasons
+# needed for obscure dendrogram reasons
 pure_popdend <- fixMidpointMembers(pure_popdend)
+
 # use NameMoreSummary to make popdend
 pure_popdendclear <- makemydend(pure_tdend, pure_mapstatelist, "NameMoreSummary") 
 
 # needed for obscure dendrogram reasons
 pure_popdendclear <- fixMidpointMembers(pure_popdendclear) 
+
+# Save tree files for downstream plotting
+save(pure_tdend, file = "data/tree_files/pure_tdend.Rda")
+save(pure_dataraw, file = "data/tree_files/pure_dataraw.Rda")
+save(pure_mapstatelist, file = "data/tree_files/pure_mapstatelist.Rda")
+save(pure_popdend, file = "data/tree_files/pure_popdend.Rda")
 ```
 
 ##### 2c.3. Generate input files for coancestry plots and dendrograms for admixed samples; run the Rmd code below:
 
 ##### Generate input files for admixed samples:
 ```{r}
-# Reduce the amount of significant digits printed in the posteror assignment probabilities (numbers shown in the tree):
-admixed_ttree$node.label[admixed_ttree$node.label!=""] <- format(as.numeric(admixed_ttree$node.label[admixed_ttree$node.label!=""]),digits=2)
+# Save tree files
+load("data/tree_files/admixed_treexml.Rda")
+load("data/tree_files/admixed_ttree.Rda")
+
+# Reduce the amount of significant digits printed in the posteror assignment probabilities:
+admixed_ttree$node.label[admixed_ttree$node.label!=""] <- format(as.numeric(admixed_ttree$node.label[admixed_ttree$node.label!=""]), digits=2)
 
 # convert to dendrogram format
 admixed_tdend <- myapetodend(admixed_ttree, factor=1)
 
-# Modulate map state
-admixed_mapstate <- extractValue(admixed_treexml,"Pop") # map state as a finestructure clustering
+# map state as a finestructure clustering
+admixed_mapstate <- extractValue(admixed_treexml,"Pop") 
 
-admixed_mapstatelist <- popAsList(admixed_mapstate) # .. and as a list of individuals in populations
+# .. and as a list of individuals in populations
+admixed_mapstatelist <- popAsList(admixed_mapstate) 
 
-admixed_popnames <- lapply(admixed_mapstatelist, NameSummary) # population names IN A REVERSIBLE FORMAT (I.E LOSSLESS)
-## NOTE: if your population labels don't correspond to the format we used (NAME<number>) YOU MAY HAVE TROUBLE HERE. YOU MAY NEED TO RENAME THEM INTO THIS FORM AND DEFINE YOUR POPULATION NAMES IN popnamesplot BELOW
+# population names IN A REVERSIBLE FORMAT 
+admixed_popnames <- lapply(admixed_mapstatelist, NameSummary) 
 
-admixed_popnamesplot <-lapply(admixed_mapstatelist, NameMoreSummary) # a nicer summary of the populations
+# Get a nicer summary of the populations
+admixed_popnamesplot <-lapply(admixed_mapstatelist, NameMoreSummary) 
 
 # Clean up pop names
 names(admixed_popnames) <- admixed_popnamesplot 
@@ -544,13 +630,20 @@ names(admixed_popnamesplot) <- admixed_popnamesplot
 # use NameSummary to make popdend
 admixed_popdend <- makemydend(admixed_tdend, admixed_mapstatelist) 
 
- # needed for obscure dendrogram reasons
+# needed for obscure dendrogram reasons
 admixed_popdend <- fixMidpointMembers(admixed_popdend)
+
 # use NameMoreSummary to make popdend
 admixed_popdendclear <- makemydend(admixed_tdend, admixed_mapstatelist, "NameMoreSummary") 
 
 # needed for obscure dendrogram reasons
 admixed_popdendclear <- fixMidpointMembers(admixed_popdendclear) 
+
+# Save tree files for downstream plotting
+save(admixed_tdend, file = "data/tree_files/admixed_tdend.Rda")
+save(admixed_dataraw, file = "data/tree_files/admixed_dataraw.Rda")
+save(admixed_mapstatelist, file = "data/tree_files/admixed_mapstatelist.Rda")
+save(admixed_popdend, file = "data/tree_files/admixed_popdend.Rda")
 ```
 
 ### STEP 3: Plotting
@@ -563,7 +656,15 @@ The code below generates three heat map plots that may be used for publication f
 
 ##### Generate plot for Smallmouth Bass and Neosho Bass:
 ```{r}
-# Plot 1: Original order
+# Load plotting parameters
+load("data/maxIndv.Rda")
+load("data/maxPop.Rda")
+
+# Load files
+load("data/tree_files/smb_neosho_tdend.Rda")
+load("data/tree_files/smb_neosho_dataraw.Rda")
+load("data/tree_files/smb_neosho_mapstatelist.Rda")
+load("data/tree_files/smb_neosho_popdend.Rda")
 
 # Put labels in order corresponding to the tree
 smb_neosho_fullorder <- labels(smb_neosho_tdend)
@@ -587,7 +688,6 @@ plotFinestructure(smb_neosho_tmpmat,
                                t.srt = 1, 
                                t.off = -0.5, 
                                t.cex = 2))
-
 dev.off()
 
 
@@ -610,18 +710,18 @@ plotFinestructure(smb_neosho_tmpmat,
                                  t.srt = 1, 
                                  t.off = -0.5, 
                                  t.cex = 2))
-
 dev.off()
 
 ## Plot 3: Best: more informative and better looking labels
+
+# Format labels
 smb_neosho_mappopcorrectorder <- NameExpand(labels(smb_neosho_popdend))
-
 smb_neosho_mappopsizes <- sapply(smb_neosho_mappopcorrectorder,length)
-
 smb_neosho_labellocs <- PopCenters(smb_neosho_mappopsizes)
 
-xcrt=0
-ycrt=45
+# Set parameters
+xcrt = 0
+ycrt = 45
 
 # Generate plot 3
 pdf("figures/coancestry_figures/01_smb_neosho_best.pdf", height = 25, width = 25)
@@ -651,7 +751,15 @@ The code below generates three heat map plots that may be used for publication f
 
 ##### Generate plot for pure samples:
 ```{r}
-# Plot 1: Original order
+# Load plotting parameters
+load("data/maxIndv.Rda")
+load("data/maxPop.Rda")
+
+# Load files
+load("data/tree_files/pure_tdend.Rda")
+load("data/tree_files/pure_dataraw.Rda")
+load("data/tree_files/pure_mapstatelist.Rda")
+load("data/tree_files/pure_popdend.Rda")
 
 # Put labels in order corresponding to the tree
 pure_fullorder <- labels(pure_tdend)
@@ -675,7 +783,6 @@ plotFinestructure(pure_tmpmat,
                                t.srt = 1, 
                                t.off = -0.5, 
                                t.cex = 2))
-
 dev.off()
 
 
@@ -698,19 +805,19 @@ plotFinestructure(pure_tmpmat,
                                  t.srt = 1, 
                                  t.off = -0.5, 
                                  t.cex = 2))
-
 dev.off()
 
 ## Plot 3: Best: more informative and better looking labels
+
+# Format labels
 pure_mappopcorrectorder <- NameExpand(labels(pure_popdend))
-
 pure_mappopsizes <- sapply(pure_mappopcorrectorder,length)
-
 pure_labellocs <- PopCenters(pure_mappopsizes)
 
-xcrt=0
-ycrt=45
-
+# Set parmaters
+xcrt  =0
+ycrt = 45
+ 
 # Generate plot 3
 pdf("figures/coancestry_figures/02_pure_best.pdf", height = 25, width = 25)
  
@@ -728,7 +835,6 @@ plotFinestructure(pure_tmpmat,
                                t.off = -0.5, 
                                t.cex = 2), 
                   hmmar = c(3,0,0,1))
-
 dev.off()
 ```
 
@@ -739,7 +845,15 @@ The code below generates three heat map plots that may be used for publication f
 
 ##### Generate plot for Smallmouth Bass and Neosho Bass:
 ```{r}
-# Plot 1: Original order
+# Load plotting parameters
+load("data/maxIndv.Rda")
+load("data/maxPop.Rda")
+
+# Load files
+load("data/tree_files/admixed_tdend.Rda")
+load("data/tree_files/admixed_dataraw.Rda")
+load("data/tree_files/admixed_mapstatelist.Rda")
+load("data/tree_files/admixed_popdend.Rda")
 
 # Put labels in order corresponding to the tree
 admixed_fullorder <- labels(admixed_tdend)
@@ -763,7 +877,6 @@ plotFinestructure(admixed_tmpmat,
                                t.srt = 1, 
                                t.off = -0.5, 
                                t.cex = 2))
-
 dev.off()
 
 
@@ -786,18 +899,18 @@ plotFinestructure(admixed_tmpmat,
                                  t.srt = 1, 
                                  t.off = -0.5, 
                                  t.cex = 2))
-
 dev.off()
 
 ## Plot 3: Best: more informative and better looking labels
+
+# Format labels
 admixed_mappopcorrectorder <- NameExpand(labels(admixed_popdend))
-
 admixed_mappopsizes <- sapply(admixed_mappopcorrectorder,length)
-
 admixed_labellocs <- PopCenters(admixed_mappopsizes)
 
-xcrt=0
-ycrt=45
+# Set parameters
+xcrt = 0
+ycrt = 45
 
 # Generate plot 3
 pdf("figures/coancestry_figures/03_admixed_best.pdf", height = 25, width = 25)
@@ -816,7 +929,6 @@ plotFinestructure(admixed_tmpmat,
                                t.off = -0.5, 
                                t.cex = 2), 
                   hmmar = c(3,0,0,1))
-
 dev.off()
 ```
 

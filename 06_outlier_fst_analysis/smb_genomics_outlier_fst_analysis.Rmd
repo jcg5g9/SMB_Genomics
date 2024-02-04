@@ -122,6 +122,9 @@ save(spotted_bass, file = "data/filtering_data/spotted_bass.Rda")
 
 ##### Generate list file: `data/filtering_data/smallmouth_bass.txt`
 ```{r}
+# Load in full metadata
+load("../raw_data/metadata.Rda")
+
 # Filter all individuals but Spotted Bass
 smallmouth_bass <- metadata %>%
   filter(species == "Smallmouth_Bass")
@@ -146,6 +149,9 @@ save(smallmouth_bass, file = "data/filtering_data/smallmouth_bass.Rda")
 
 ##### Generate list file: `data/filtering_data/neosho_bass.txt`
 ```{r}
+# Load in full metadata
+load("../raw_data/metadata.Rda")
+
 # Filter all individuals but Spotted Bass
 neosho_bass <- metadata %>%
   filter(species == "Neosho_Bass")
@@ -437,9 +443,9 @@ metadata_populations_spb$population[metadata_populations_spb$population == "SPB"
 
 # Generate text file
 write_delim(metadata_populations_spb, 
-          delim = " ",
-          file = "data/pop_files/01_all_pops.txt", 
-          col_names = FALSE)
+            delim = " ",
+            file = "data/pop_files/01_all_pops.txt", 
+            col_names = FALSE)
 ```
 
 ##### 1c.2. Read in sample metadata and generate lists of populations for the species complex level.
@@ -472,9 +478,9 @@ metadata_populations_complex$population[metadata_populations_complex$population 
 
 # Generate text file
 write_delim(metadata_populations_complex, 
-          delim = " ",
-          file = "data/pop_files/02_species_complex_pops.txt", 
-          col_names = FALSE)
+            delim = " ",
+            file = "data/pop_files/02_species_complex_pops.txt", 
+            col_names = FALSE)
 ```
 
 ##### 1c.3. Read in sample metadata and generate lists of populations for the Neosho Bass level.
@@ -507,9 +513,9 @@ metadata_populations_neosho$population[metadata_populations_neosho$population ==
 
 # Generate text file
 write_delim(metadata_populations_neosho, 
-          delim = " ",
-          file = "data/pop_files/03_neosho_pops.txt", 
-          col_names = FALSE)
+            delim = " ",
+            file = "data/pop_files/03_neosho_pops.txt", 
+            col_names = FALSE)
 ```
 
 ##### 1c.4. Read in sample metadata and generate lists of populations for the Smallmouth Bass level.
@@ -542,9 +548,9 @@ metadata_populations_smallmouth$population[metadata_populations_smallmouth$popul
 
 # Generate text file
 write_delim(metadata_populations_smallmouth, 
-          delim = " ",
-          file = "data/pop_files/04_smallmouth_pops.txt", 
-          col_names = FALSE)
+            delim = " ",
+            file = "data/pop_files/04_smallmouth_pops.txt", 
+            col_names = FALSE)
 ```
 
 #### 1d: Generate a general bash shell script header for all PGDSPIDER conversion commands.
@@ -851,66 +857,10 @@ This code generates four oupt files here: `data/bayescan_output/04_smallmouth_ou
 ### STEP 2: Identify SNP loci associated with outlier Fst inferred in BAYESCAN.
 In this step, we are reading in the Fst results generated in the BAYESCAN analysis in Phase 2 Step 1 and identifying loci with outlier Fst values.
 
-#### 2a: Read in Fst results for all hiearchical analyses; run the Rmd chunk below.
-
-##### Read in Fst results for all analyses:
-```{r}
-# Read in data for all black bass samples (Spotted Bass, Neosho Bass, and Smallmouth Bass)
-all_fst <- read.table("data/bayescan_output/01_all_output/01_all_fst.txt")
-
-# Convert to dataframe
-all_fst <- as.data.frame(all_fst)
-
-# Modify column names
-colnames(all_fst) <- c("probability", "log_po", "q", "alpha", "fst")
-
-
-# Read in data for species complex samples (Neosho Bass and Smallmouth Bass)
-species_complex_fst <- read.table("data/bayescan_output/02_species_complex_output/02_species_complex_fst.txt")
-
-# Convert to dataframe
-species_complex_fst <- as.data.frame(species_complex_fst)
-  
-# Modify column names
-colnames(species_complex_fst) <- c("probability", "log_po", "q", "alpha", "fst")
-
-
-# Read in data for Neosho Bass
-neosho_fst <- read.table("data/bayescan_output/03_neosho_output/03_neosho_fst.txt")
-
-# Convert to dataframe
-neosho_fst <- as.data.frame(neosho_fst)
-
-# Modify column names
-colnames(neosho_fst) <- c("probability", "log_po", "q", "alpha", "fst")
-  
-
-# Read in data for Smallmouth Bass
-smallmouth_fst <- read.table("data/bayescan_output/04_smallmouth_output/04_smallmouth_fst.txt")
-
-# Convert to dataframe
-smallmouth_fst <- as.data.frame(smallmouth_fst)
-
-# Modify column names
-colnames(smallmouth_fst) <- c("probability", "log_po", "q", "alpha", "fst")
-```
-
-#### 2b: Identify outlier SNP loci
-In this step, we are identifying SNP loci with high probability of being under selection based on log10 of the posterior odds (log_po), which is given in column 2 of the BAYESCAN output data. Per the BAYESCAN user manual, any SNP with log10 posterior odds greater than or equal to 0.5 is deemed "substantially likely to be under selection". We therefore isolated all SNPs with log_po greater than 0.5 and designated them as "significant". All SNPs with log_po less than 0.5 were designated as "not significant".
-
-We provided information on the level of significance for each "significant" SNP per to the BAYESCAN user manual (retrieved from: http://www.cmpg.unibe.ch/software/BayeScan/files/BayeScan2.0_manual.pdf):
-
-<b>BAYESCAN levels of significance</b>: <br>
-2.00 <= log_po < infinity: decisive <br>
-1.50 <= log_po < 2.00: very strong <br>
-1.00 <= log_po < 1.50: strong <br>
-0.50 <= log_po < 1.00: substantial <br>
-0.00 <= log_po < 0.50: barely worth mentioning <br>
-
-##### 2b.1.  Generate metadata for SNP ID (RAD_kmer_...) and SNP position (nucleotide position on the kmer)
+#### 2a. Generate metadata for SNP ID (RAD_kmer_...) and SNP position (nucleotide position on the kmer)
 In this step, we are generating a list of SNP IDs and positions to append to the datasets below in order to determine the identity of outlier SNPs
 
-###### 2b.1.1.Generate SNP position and metadata; run the Rmd chunk below:
+##### 2a.1. Generate SNP position and metadata; run the Rmd chunk below:
 
 ##### Generate list of SNP ID and position:
 ```{r}
@@ -922,12 +872,39 @@ metadata_snps <- metadata_snps[,c(1,4)]
 
 # Rename columns
 colnames(metadata_snps) <- c("snp_id", "position")
+
+# Save SNP metadata
+save(metadata_snps, file = "data/metadata/metadata_snps.Rda")
 ```
 
-##### 2b.2. Isolate significant and insignificant SNPs for all black bass samples; run the Rmd chunk below:
+#### 2b. Identify outlier SNP loci
+In this step, we are identifying SNP loci with high probability of being under selection based on log10 of the posterior odds (log_po), which is given in column 2 of the BAYESCAN output data. Per the BAYESCAN user manual, any SNP with log10 posterior odds greater than or equal to 0.5 is deemed "substantially likely to be under selection". We therefore isolated all SNPs with log_po greater than 0.5 and designated them as "significant". All SNPs with log_po less than 0.5 were designated as "not significant".
 
-##### Outlier SNP identification for all black bass samples:
+We provided information on the level of significance for each "significant" SNP per to the BAYESCAN user manual (retrieved from: http://www.cmpg.unibe.ch/software/BayeScan/files/BayeScan2.0_manual.pdf):
+
+<b>BAYESCAN levels of significance</b>: <br>
+2.00 <= log_po < infinity: decisive <br>
+1.50 <= log_po < 2.00: very strong <br>
+1.00 <= log_po < 1.50: strong <br>
+0.50 <= log_po < 1.00: substantial <br>
+0.00 <= log_po < 0.50: barely worth mentioning <br>
+
+##### 2b.1: Read in Fst results for all samples and identify significant SNPs; run the Rmd chunk below.
+
+##### Read in Fst results for all analyses:
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Read in data for all black bass samples (Spotted Bass, Neosho Bass, and Smallmouth Bass)
+all_fst <- read.table("data/bayescan_output/01_all_output/01_all_fst.txt")
+
+# Convert to dataframe
+all_fst <- as.data.frame(all_fst)
+
+# Modify column names
+colnames(all_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+
 # Append SNP IDs to data
 all_fst <- cbind(metadata_snps, all_fst)
 
@@ -971,14 +948,33 @@ all_not_significant_bayescan$selection <- c(rep("insignificant", times = 50825))
 all_significant_bayescan$sig_level <- c(rep("very_strong", times = 1),rep("substantial", times = 2))
 all_not_significant_bayescan$sig_level <- c(rep("not_significant", times = 50825))
 
-#combine data into one dataframe
+# Save species complex significance data
+save(all_significant_bayescan, file = "data/bayescan_output/all_significant_bayescan.Rda")
+save(all_not_significant_bayescan, file = "data/bayescan_output/all_not_significant_bayescan.Rda")
+
+# combine data into one dataframe
 all_fst <- rbind(all_significant_bayescan, all_not_significant_bayescan)
+
+# Save all fst data
+save(all_fst, file = "data/fst_data/all_fst.Rda")
 ```
 
-##### 2b.3. Isolate significant and insignificant SNPs for species complex samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below:
+##### 2b.2: Read in Fst results for species complex samples and identify significant SNPs; run the Rmd chunk below.
 
-##### Outlier SNP identification for all black bass samples:
+##### Read in Fst results for species complex analyses:
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Read in data for species complex samples (Neosho Bass and Smallmouth Bass)
+species_complex_fst <- read.table("data/bayescan_output/02_species_complex_output/02_species_complex_fst.txt")
+
+# Convert to dataframe
+species_complex_fst <- as.data.frame(species_complex_fst)
+  
+# Modify column names
+colnames(species_complex_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+
 # Append SNP IDs to data
 species_complex_fst <- cbind(metadata_snps, species_complex_fst)
 
@@ -1023,17 +1019,35 @@ species_complex_significant_bayescan$sig_level <- c(rep("decisive", times = 118)
                                                 rep("very_strong", times = 86), 
                                                 rep("strong", times = 164), 
                                                 rep("substantial", times = 335))
-
 species_complex_not_significant_bayescan$sig_level <- c(rep("not_significant", times = 50125))
+
+# Save species complex significance data
+save(species_complex_significant_bayescan, file = "data/bayescan_output/species_complex_significant_bayescan.Rda")
+save(species_complex_not_significant_bayescan, file = "data/bayescan_output/species_complex_not_significant_bayescan.Rda")
 
 #combine data into one dataframe
 species_complex_fst <- rbind(species_complex_significant_bayescan, species_complex_not_significant_bayescan)
+
+# Save species complex fst data
+save(species_complex_fst, file = "data/fst_data/species_complex_fst.Rda")
 ```
 
-##### 2b.4. Isolate significant and insignificant SNPs for Neosho Bass only; run the Rmd chunk below:
+##### 2b.3: Read in Fst results for Neosho samples and identify significant SNPs; run the Rmd chunk below.
 
-##### Outlier SNP identification for all black bass samples:
+##### Read in Fst results for Neosho samples:
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Read in data for Neosho Bass
+neosho_fst <- read.table("data/bayescan_output/03_neosho_output/03_neosho_fst.txt")
+
+# Convert to dataframe
+neosho_fst <- as.data.frame(neosho_fst)
+
+# Modify column names
+colnames(neosho_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+
 # Append SNP IDs to data
 neosho_fst <- cbind(metadata_snps, neosho_fst)
 
@@ -1078,17 +1092,35 @@ neosho_significant_bayescan$sig_level <- c(rep("decisive", times = 2),
                                                 rep("very_strong", times = 5), 
                                                 rep("strong", times = 4), 
                                                 rep("substantial", times = 21))
-
 neosho_not_significant_bayescan$sig_level <- c(rep("not_significant", times = 50796))
+
+# Save Neosho significance data
+save(neosho_significant_bayescan, file = "data/bayescan_output/neosho_significant_bayescan.Rda")
+save(neosho_not_significant_bayescan, file = "data/bayescan_output/neosho_not_significant_bayescan.Rda")
 
 #combine data into one dataframe
 neosho_fst <- rbind(neosho_significant_bayescan, neosho_not_significant_bayescan)
+  
+# Save Neosho fst data
+save(neosho_fst, file = "data/fst_data/neosho_fst.Rda")
 ```
 
-##### 2b.5. Isolate significant and insignificant SNPs for  Smallmouth Bass only; run the Rmd chunk below:
+##### 2b.4: Read in Fst results for Smallmouth samples and identify significant SNPs; run the Rmd chunk below.
 
-##### Outlier SNP identification for all black bass samples:
+##### Read in Fst results for Smallmouth samples:
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Read in data for Smallmouth Bass
+smallmouth_fst <- read.table("data/bayescan_output/04_smallmouth_output/04_smallmouth_fst.txt")
+
+# Convert to dataframe
+smallmouth_fst <- as.data.frame(smallmouth_fst)
+
+# Modify column names
+colnames(smallmouth_fst) <- c("probability", "log_po", "q", "alpha", "fst")
+
 # Append SNP IDs to data
 smallmouth_fst <- cbind(metadata_snps, smallmouth_fst)
 
@@ -1130,11 +1162,17 @@ smallmouth_not_significant_bayescan$selection <- c(rep("insignificant", times = 
 
 # Append column for significance level ("sig_level"; decisive, very strong, substantial)
 smallmouth_significant_bayescan$sig_level <- c(rep("substantial", times = 6))
-
 smallmouth_not_significant_bayescan$sig_level <- c(rep("not_significant", times = 50822))
+
+# Save Smallmouth significance data
+save(smallmouth_significant_bayescan, file = "data/bayescan_output/smallmouth_significant_bayescan.Rda")
+save(smallmouth_not_significant_bayescan, file = "data/bayescan_output/smallmouth_not_significant_bayescan.Rda")
 
 #combine data into one dataframe
 smallmouth_fst <- rbind(smallmouth_significant_bayescan, smallmouth_not_significant_bayescan)
+
+# Save Smallmouth fst data
+save(smallmouth_fst, file = "data/fst_data/smallmouth_fst.Rda")
 ```
 
 #### 2c: Filter datasets to omit SNPs with log_po values of 1000 for clean visualization (because they distort the figure).
@@ -1143,6 +1181,12 @@ smallmouth_fst <- rbind(smallmouth_significant_bayescan, smallmouth_not_signific
 
 ##### Omit SNPs with log_po greater than or equal to 1000:
 ```{r}
+# Load all fst data
+load("data/fst_data/all_fst.Rda")
+load("data/fst_data/species_complex_fst.Rda")
+load("data/fst_data/neosho_fst.Rda")
+load("data/fst_data/smallmouth_fst.Rda")
+
 # Get SNPs with log_po = 1000 for all black bass samples
 all_1000 <- all_fst %>% 
       filter(log_po >= 1000) 
@@ -1174,6 +1218,12 @@ smallmouth_1000 <- smallmouth_fst %>%
 # Get SNPs with log_po < 1000 for Smallmouth Bass samples
 smallmouth_clean <- smallmouth_fst %>% 
       filter(log_po < 1000) #extract only snps with log10 less than 1000
+
+# Save all clean data
+save(all_clean, file = "data/fst_data/all_clean.Rda")
+save(species_complex_clean, file = "data/fst_data/species_complex_clean.Rda")
+save(neosho_clean, file = "data/fst_data/neosho_clean.Rda")
+save(smallmouth_clean, file = "data/fst_data/smallmouth_clean.Rda")
 ```
 
 ### STEP 3: Plot BAYESCAN Fst results
@@ -1184,6 +1234,12 @@ We chose to include each plot as separate panels in one figure. The plots are na
 
 ##### Generate plot for all black bass samples: `figures/bayescan_figures/fst.pdf`
 ```{r}
+# Load all clean st data
+load("data/fst_data/all_clean.Rda")
+load("data/fst_data/species_complex_clean.Rda")
+load("data/fst_data/neosho_clean.Rda")
+load("data/fst_data/smallmouth_clean.Rda")
+
 # Plot for all black bass samples
 a <- ggplot(all_clean, aes(x = log_po, y = fst, fill = sig_level)) + 
       geom_point(aes(fill = sig_level), alpha = 0.8, color = "black", pch = 21, size = 4, show.legend = F) +
@@ -1298,6 +1354,12 @@ neosho_bed <- read.pcadapt("data/processed_bed/03_neosho_output/03_neosho.bed", 
 
 # Read in data for Smallmouth Bass samples
 smallmouth_bed <- read.pcadapt("data/processed_bed/04_smallmouth_output/04_smallmouth.bed", type = "bed") 
+
+# Save formatted bed files
+save(all_bed, file = "data/processed_bed/all_bed.Rda")
+save(species_complex_bed, file = "data/processed_bed/species_complex_bed.Rda")
+save(neosho_bed, file = "data/processed_bed/neosho_bed.Rda")
+save(smallmouth_bed, file = "data/processed_bed/smallmouth_bed.Rda")
 ```
 
 #### 1b: Filter sample metadata to include only individuals and their corresponding populations in each hierarchical analysis. Population IDs will be used for later plotting; run the Rmd chunk below:
@@ -1359,6 +1421,12 @@ PCADAPT explicitly accounts for population structure in the data by testing diff
 
 ##### Run PCA through PCAdapt to identify outlier SNPs:
 ```{r}
+# Load bed files
+load("data/processed_bed/all_bed.Rda")
+load("data/processed_bed/species_complex_bed.Rda")
+load("data/processed_bed/neosho_bed.Rda")
+load("data/processed_bed/smallmouth_bed.Rda")
+
 #Run PCAdapt for all black bass samples 
 all_pca_k20 <- pcadapt(all_bed, K = 20, min.maf = 0.0001) 
 
@@ -1370,12 +1438,24 @@ neosho_pca_k20 <- pcadapt(neosho_bed, K = 20, min.maf = 0.0001)
 
 #Run PCAdapt for Smallmouth Bass samples 
 smallmouth_pca_k20 <- pcadapt(smallmouth_bed, K = 20, min.maf = 0.0001)
+
+# Save PCAdapt output
+save(all_pca_k20, file = "data/pcadapt_output/all_pca_k20.Rda")
+save(species_complex_pca_k20, file = "data/pcadapt_output/species_complex_pca_k20.Rda")
+save(neosho_pca_k20, file = "data/pcadapt_output/neosho_pca_k20.Rda")
+save(smallmouth_pca_k20, file = "data/pcadapt_output/smallmouth_pca_k20.Rda")
 ```
 
 ##### 2a.2. Choose the optimal number of K PCAs to retain in downstream analyses by assessing Scree plots; run the Rmd chunk below:
 
 ##### Visualize Scree plots:
 ```{r}
+# Load PCAdapt output
+load("data/pcadapt_output/all_pca_k20.Rda")
+load("data/pcadapt_output/species_complex_pca_k20.Rda")
+load("data/pcadapt_output/neosho_pca_k20.Rda")
+load("data/pcadapt_output/smallmouth_pca_k20.Rda")
+
 #Scree plot for all black bass samples 
 all_scree <- plot(all_pca_k20, option = "screeplot") 
 
@@ -1388,6 +1468,7 @@ neosho_scree <- plot(neosho_pca_k20, option = "screeplot")
 #Scree plot for Smallmouth Bass samples 
 smallmouth_scree <- plot(smallmouth_pca_k20, option = "screeplot") 
 ```
+
 Here, we used Catell's Rule to determine the optimal number of clusters to retain in PC analysis. Thus, we chose the number of K PCs to retain based on where the Scree plot line began to plateau. We then reran PCADAPT analysis on the optimal number of K to determine the amount of variance explained by that number of PCs in downstream analyses.
 
 ##### 2a.3. Extract Scree plot variance explained information and generate figures.
@@ -1397,6 +1478,12 @@ In tis step, we are extracting information on the variance explained by each Pri
 
 ##### Generate Scree plot figures for publication:
 ```{r}
+# Load PCAdapt output
+load("data/pcadapt_output/all_pca_k20.Rda")
+load("data/pcadapt_output/species_complex_pca_k20.Rda")
+load("data/pcadapt_output/neosho_pca_k20.Rda")
+load("data/pcadapt_output/smallmouth_pca_k20.Rda")
+
 ## Generate variance data for all black bass samples at K = 20
 
 # Get root variance information from PCA calculation above
@@ -1469,6 +1556,12 @@ sum(all_pca_variance_k20$variance) #96.19%
 sum(species_complex_pca_variance_k20$variance) #59.80% 
 sum(neosho_pca_variance_k20$variance) #53.52% 
 sum(smallmouth_pca_variance_k20$variance) #100.00% 
+
+# Save PCAdapt output
+save(all_pca_variance_k20, file = "data/pcadapt_output/all_pca_variance_k20.Rda")
+save(species_complex_pca_variance_k20, file = "data/pcadapt_output/species_complex_pca_variance_k20.Rda")
+save(neosho_pca_variance_k20, file = "data/pcadapt_output/neosho_pca_variance_k20.Rda")
+save(smallmouth_pca_variance_k20, file = "data/pcadapt_output/smallmouth_pca_variance_k20.Rda")
 ```
 
 ###### 2a.3.2. Generate variance explained figures; run the Rmd chunk below:
@@ -1476,6 +1569,12 @@ Here, we have chosen to include all individual Scree plots as panels in a single
 
 ##### Generate Scree plot figure: `figures/pcadapt_figures/variance.pdf`
 ```{r}
+# Save PCAdapt output
+load("data/pcadapt_output/all_pca_variance_k20.Rda")
+load("data/pcadapt_output/species_complex_pca_variance_k20.Rda")
+load("data/pcadapt_output/neosho_pca_variance_k20.Rda")
+load("data/pcadapt_output/smallmouth_pca_variance_k20.Rda")
+
 ## NOTE: Plots are named a,c,e,g because they are appended to the PCA plots generated below for the final publication. Those PCA plots have the missing letters (b,d,f,h)
 
 # Plot for all black bass samples
@@ -1544,6 +1643,12 @@ This plot is later combined with the associated PCA plots for one composite figu
 
 ##### PCADAPT analyses for optimal number of K clusters/PCs:
 ```{r}
+# Load bed files
+load("data/processed_bed/all_bed.Rda")
+load("data/processed_bed/species_complex_bed.Rda")
+load("data/processed_bed/neosho_bed.Rda")
+load("data/processed_bed/smallmouth_bed.Rda")
+
 #Run PCAdapt for all black bass samples at K = 2
 all_pca_k2 <- pcadapt(all_bed, K = 2, min.maf = 0.0001)
 
@@ -1555,6 +1660,12 @@ neosho_pca_k4 <- pcadapt(neosho_bed, K = 4, min.maf = 0.0001)
 
 #Run PCAdapt for Smallmout Bass samples at K = 3
 smallmouth_pca_k3 <- pcadapt(smallmouth_bed, K = 3, min.maf = 0.0001)
+
+# Save PCAdapt output
+save(all_pca_k2, file = "data/pcadapt_output/all_pca_k2.Rda")
+save(species_complex_pca_k2, file = "data/pcadapt_output/species_complex_pca_k2.Rda")
+save(neosho_pca_k4, file = "data/pcadapt_output/neosho_pca_k4.Rda")
+save(smallmouth_pca_k3, file = "data/pcadapt_output/smallmouth_pca_k3.Rda")
 ```
 
 ##### 2b.2. Extract variance explained information and generate figures.
@@ -1564,6 +1675,12 @@ In tis step, we are extracting information on the variance explained by each Pri
 
 ##### Generate Scree plot figures for publication:
 ```{r}
+# Load PCAdapt output
+load("data/pcadapt_output/all_pca_k2.Rda")
+load("data/pcadapt_output/species_complex_pca_k2.Rda")
+load("data/pcadapt_output/neosho_pca_k4.Rda")
+load("data/pcadapt_output/smallmouth_pca_k3.Rda")
+
 # Get root variance information from PCA calculation above
 all_pca_variance_k2 <- data.frame(root_variance = as.numeric(all_pca_k2$singular.values))
 
@@ -1632,6 +1749,12 @@ sum(smallmouth_pca_variance_k3$variance) #33.62%
 
 ##### Generate PCA figure: `figures/pcadapt_figures/pca.pdf`
 ```{r}
+# Load PCAdapt output
+load("data/pcadapt_output/all_pca_k2.Rda")
+load("data/pcadapt_output/species_complex_pca_k2.Rda")
+load("data/pcadapt_output/neosho_pca_k4.Rda")
+load("data/pcadapt_output/smallmouth_pca_k3.Rda")
+
 ## Extract PC information for all black bass samples
 
 # Get PC scores
@@ -1746,35 +1869,6 @@ plot_grid(b,d,f,h,
 dev.off()
 ```
 
-###### 2b.2.3. Generate Combined Scree and PCA figures for optimal number of K; run the Rmd chunk below:
-
-##### Generate a combined Scree and PCA plot: `figures/pcadapt_figures/scree_pca.pdf`
-```{r}
-# Get a named version of the Scree plot figure
-scree <-plot_grid(a,c,e,g, 
-                  nrow = 4, 
-                  labels = c("a","c","e","g"), 
-                  label_size = 30, 
-                  label_y = 1.03)
-
-pca <- plot_grid(b,d,f,h, 
-                 nrow = 4, 
-                 labels = c("b","d","f","h"), 
-                 label_y = 1.03, 
-                 label_size = 30)
-
-
-#Combine Scree and PCA plots
-pdf("figures/pcadapt_figures/scree_pca.pdf", width=14, height=17) 
-
-plot_grid(scree, 
-          pca, 
-          ncol = 2,
-          align = "v")
-
-dev.off()
-```
-
 ### STEP 3: Identify outlier SNP loci.
 In this step, we are identifying SNPs explaining the largest proportion of variance on each retained PC to determine SNPs potentially under selection.
 
@@ -1786,6 +1880,12 @@ In this step, we are identifying SNPs explaining the largest proportion of varia
 
 ## Get outlier SNPs using bonferroni p-value corrections
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Load PCAdapt output
+load("data/pcadapt_output/all_pca_k2.Rda")
+
 # Get p values for SNPs 
 all_pvals <- all_pca_k2$pvalues
 
@@ -1812,11 +1912,21 @@ all_significant_pcadapt <- all_pvals_bonf %>%
 #Retrieve non-significant SNPs
 all_not_significant_pcadapt <- all_pvals_bonf %>% 
    filter(p_val >= 0.05) 
+
+# Save all significance data
+save(all_significant_pcadapt, file = "data/pcadapt_output/all_significant_pcadapt.Rda")
+save(all_not_significant_pcadapt, file = "data/pcadapt_output/all_not_significant_pcadapt.Rda")
 ```
 
 ##### 3a.2. Idenitfy outlier loci for species complex samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below: 
 ## Get outlier SNPs using bonferroni p-value corrections
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Load PCAdapt output
+load("data/pcadapt_output/species_complex_pca_k2.Rda")
+
 # Get p values for SNPs 
 species_complex_pvals <- species_complex_pca_k2$pvalues
 
@@ -1843,12 +1953,22 @@ species_complex_significant_pcadapt <- species_complex_pvals_bonf %>%
 #Retrieve non-significant SNPs
 species_complex_not_significant_pcadapt <- species_complex_pvals_bonf %>% 
    filter(p_val >= 0.05) 
+
+# Save species_complex significance data
+save(species_complex_significant_pcadapt, file = "data/pcadapt_output/species_complex_significant_pcadapt.Rda")
+save(species_complex_not_significant_pcadapt, file = "data/pcadapt_output/species_complex_not_significant_pcadapt.Rda")
 ```
 
 ##### 3a.3. Idenitfy outlier loci for Neosho Bass samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below: 
 
 ## Get outlier SNPs using bonferroni p-value corrections
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Load PCAdapt output
+load("data/pcadapt_output/neosho_pca_k4.Rda")
+
 # Get p values for SNPs 
 neosho_pvals <- neosho_pca_k4$pvalues
 
@@ -1875,12 +1995,22 @@ neosho_significant_pcadapt <- neosho_pvals_bonf %>%
 #Retrieve non-significant SNPs
 neosho_not_significant_pcadapt <- neosho_pvals_bonf %>% 
    filter(p_val >= 0.05) 
+
+# Save neosho significance data
+save(neosho_significant_pcadapt, file = "data/pcadapt_output/neosho_significant_pcadapt.Rda")
+save(neosho_not_significant_pcadapt, file = "data/pcadapt_output/neosho_not_significant_pcadapt.Rda")
 ```
 
 ##### 3a.3. Idenitfy outlier loci for Neosho Bass samples (Neosho Bass and Smallmouth Bass); run the Rmd chunk below: 
 
 ## Get outlier SNPs using bonferroni p-value corrections
 ```{r}
+# Load SNP metadata
+load("data/metadata/metadata_snps.Rda")
+
+# Load PCAdapt output
+load("data/pcadapt_output/smallmouth_pca_k3.Rda")
+
 # Get p values for SNPs 
 smallmouth_pvals <- smallmouth_pca_k3$pvalues
 
@@ -1907,6 +2037,10 @@ smallmouth_significant_pcadapt <- smallmouth_pvals_bonf %>%
 #Retrieve non-significant SNPs
 smallmouth_not_significant_pcadapt <- smallmouth_pvals_bonf %>% 
    filter(p_val >= 0.05) 
+
+# Save Smallmouth significance data
+save(smallmouth_significant_pcadapt, file = "data/pcadapt_output/smallmouth_significant_pcadapt.Rda")
+save(smallmouth_not_significant_pcadapt, file = "data/pcadapt_output/smallmouth_not_significant_pcadapt.Rda")
 ```
 
 ### ----------------------- END OF PHASE 3: OUTLIER ANALYSIS WITH PCADAPT ----------------------- ###
@@ -1922,6 +2056,14 @@ In this phase of the analysis, we are conducting a multivariate analysis on SNPs
 
 ##### Merge datasets for all black bass samples:
 ```{r}
+# Load bayescan significance data for all samples
+load("data/bayescan_output/all_significant_bayescan.Rda")
+load("data/bayescan_output/all_not_significant_bayescan.Rda")
+
+# Load pcadapt significance data for all samples
+load("data/pcadapt_output/smallmouth_significant_pcadapt.Rda")
+load("data/pcadapt_output/smallmouth_not_significant_pcadapt.Rda")
+
 # Merge outlier loci
 all_outlier_snps <- merge(all_significant_bayescan, all_significant_pcadapt, by = "snp_id")
 
@@ -1955,6 +2097,14 @@ This code generates two files: `all_outlier_snps.txt` and `all_neutral_snps.txt`
 
 ##### Merge datasets for species complex samples:
 ```{r}
+# Load bayescan significance data for species_complex samples
+load("data/bayescan_output/species_complex_significant_bayescan.Rda")
+load("data/bayescan_output/species_complex_not_significant_bayescan.Rda")
+
+# Load pcadapt significance data for species_complex samples
+load("data/pcadapt_output/smspecies_complexmouth_significant_pcadapt.Rda")
+load("data/pcadapt_output/smspecies_complexmouth_not_significant_pcadapt.Rda")
+
 # Merge outlier loci
 species_complex_outlier_snps <- merge(species_complex_significant_bayescan, species_complex_significant_pcadapt, by = "snp_id")
 
@@ -1988,6 +2138,14 @@ This code generates two files: `species_complex_outlier_snps.txt` and `species_c
 
 ##### Merge datasets for Neosho Bass samples:
 ```{r}
+# Load bayescan significance data for neosho samples
+load("data/bayescan_output/neosho_significant_bayescan.Rda")
+load("data/bayescan_output/neosho_not_significant_bayescan.Rda")
+
+# Load pcadapt significance data for neosho samples
+load("data/pcadapt_output/smneoshomouth_significant_pcadapt.Rda")
+load("data/pcadapt_output/smneoshomouth_not_significant_pcadapt.Rda")
+
 # Merge outlier loci
 neosho_outlier_snps <- merge(neosho_significant_bayescan, neosho_significant_pcadapt, by = "snp_id")
 
@@ -2021,6 +2179,14 @@ This code generates two files: `neosho_outlier_snps.txt` and `neosho_neutral_snp
 
 ##### Merge datasets for Smallmouth Bass samples:
 ```{r}
+# Load bayescan significance data for smallmouth samples
+load("data/bayescan_output/smallmouth_significant_bayescan.Rda")
+load("data/bayescan_output/smallmouth_not_significant_bayescan.Rda")
+
+# Load pcadapt significance data for smallmouth samples
+load("data/pcadapt_output/smsmallmouthmouth_significant_pcadapt.Rda")
+load("data/pcadapt_output/smsmallmouthmouth_not_significant_pcadapt.Rda")
+
 # Merge outlier loci
 smallmouth_outlier_snps <- merge(smallmouth_significant_bayescan, smallmouth_significant_pcadapt, by = "snp_id")
 
@@ -2173,6 +2339,10 @@ all_outliers <- read.vcfR("data/processed_vcf/01_popgen_all_outlier_snps.vcf")
 # Read in neutral snps
 all_neutral <- read.vcfR("data/processed_vcf/01_popgen_all_neutral_snps.vcf")
 
+# Save formatted vcfs for downstream analyses
+save(all_outliers, file = "data/processed_Rda/all_outliers.Rda")
+save(all_neutral, file = "data/processed_Rda/all_neutral.Rda")
+
 # Read in VCF data for species complex samples
 
 # Read in outlier snps
@@ -2180,6 +2350,10 @@ species_complex_outliers <- read.vcfR("data/processed_vcf/02_popgen_species_comp
 
 # Read in neutral snps
 species_complex_neutral <- read.vcfR("data/processed_vcf/02_popgen_species_complex_neutral_snps.vcf")
+
+# Save formatted Rdas for downstream analyses
+save(species_complex_outliers, file = "data/processed_Rda/species_complex_outliers.Rda")
+save(species_complex_neutral, file = "data/processed_Rda/species_complex_neutral.Rda")
 
 # Read in VCF data for Neosho Bass samples
 
@@ -2189,6 +2363,10 @@ neosho_outliers <- read.vcfR("data/processed_vcf/03_popgen_neosho_outlier_snps.v
 # Read in neutral snps
 neosho_neutral <- read.vcfR("data/processed_vcf/03_popgen_neosho_neutral_snps.vcf")
 
+# Save formatted Rdas for downstream analyses
+save(neosho_outliers, file = "data/processed_Rda/neosho_outliers.Rda")
+save(neosho_neutral, file = "data/processed_Rda/neosho_neutral.Rda")
+
 # Read in VCF data for Smallmouth Bass samples
 
 # Read in outlier snps
@@ -2196,12 +2374,27 @@ smallmouth_outliers <- read.vcfR("data/processed_vcf/04_popgen_smallmouth_outlie
 
 # Read in neutral snps
 smallmouth_neutral <- read.vcfR("data/processed_vcf/04_popgen_smallmouth_neutral_snps.vcf")
+
+# Save formatted vcfs for downstream analyses
+save(smallmouth_outliers, file = "data/processed_Rda/smallmouth_outliers.Rda")
+save(smallmouth_neutral, file = "data/processed_Rda/smallmouth_neutral.Rda")
 ```
 
-##### 3a.2. Convert VCF files to genind objects, which are the preferred input type for DAPC, and include population designations in the object:
+##### 3a.2. Convert VCF files to genind objects, which are the preferred input type for DAPC, and include population designations in the object. Scale genind objects; run the Rmd chunk below:
+In this step, we are calibrating all genomic data and imputing missing values so that DAPC will run. We are using the "mean" method of imputation, where the value of the genotype is computed based on a population mean.
 
 ## Convert VCF to genind format for DAPC:
 ```{r}
+# Load all vcf files
+load("data/processed_Rda/all_outliers.Rda")
+load("data/processed_Rda/all_neutral.Rda")
+load("data/processed_Rda/species_complex_outliers.Rda")
+load("data/processed_Rda/species_complex_neutral.Rda")
+load("data/processed_Rda/neosho_outliers.Rda")
+load("data/processed_Rda/neosho_neutral.Rda")
+load("data/processed_Rda/smallmouth_outliers.Rda")
+load("data/processed_Rda/smallmouth_neutral.Rda")
+
 ## Convert files to genind objects
 
 # Convert files for all black bass samples
@@ -2237,86 +2430,108 @@ neosho_neutral_genind@pop <- as.factor(neosho_pops)
 # Include populations for Smallmouth Bass samples 
 # smallmouth_outliers_genind@pop <- as.factor(smallmouth_pops) # No SNPs to work with (this code will not run)
 smallmouth_neutral_genind@pop <- as.factor(smallmouth_pops)
-```
 
-Since there are no shared outlier SNPs for the black bass species combined dataset and for the Smallmouth Bass only dataset, we are at this point only moving forward with analysis on the species complex samples (Neosho Bass and Smallmouth Bass) and are not further analyzing all black bass species or only Smallmouth Bass.
 
-#### 3b: Scale and impute missing data in genind objects.
-In this step, we are calibrating all genomic data and imputing missing values so that DAPC will run. We are using the "mean" method of imputation, where the value of the genotype is computed based on a population mean.
-
-##### 3b.1. Scale and impute data for species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass samples only; run the Rmd chunk below:
-
-##### Scale and impute data:
-```{r}
 ## Scale data for species complex samples
 
 # Scale outlier SNPs
 species_complex_outliers_genind <- scaleGen(species_complex_outliers_genind, 
-                                          center = TRUE, 
-                                          scale = TRUE, 
-                                          NA.method = c("mean"), 
-                                          truenames = TRUE)
+                                            center = TRUE, 
+                                            scale = TRUE, 
+                                            NA.method = c("mean"), 
+                                            truenames = TRUE)
 
 # Scale neutral SNPs
 species_complex_neutral_genind <- scaleGen(species_complex_neutral_genind, 
-                                          center = TRUE, 
-                                          scale = TRUE, 
-                                          NA.method = c("mean"), 
-                                          truenames = TRUE)
+                                           center = TRUE, 
+                                           scale = TRUE, 
+                                           NA.method = c("mean"), 
+                                           truenames = TRUE)
 
 ## Scale data for Neosho Bass samples
 
 # Scale outlier SNPs
 neosho_outliers_genind <- scaleGen(neosho_outliers_genind, 
-                                           center = TRUE, 
-                                           scale = TRUE, 
-                                           NA.method = c("mean"), 
-                                           truenames = TRUE)
+                                   center = TRUE, 
+                                   scale = TRUE, 
+                                   NA.method = c("mean"), 
+                                   truenames = TRUE)
+
 # Scale neutral SNPs
 neosho_neutral_genind <- scaleGen(neosho_neutral_genind, 
-                                          center = TRUE, 
-                                          scale = TRUE, 
-                                          NA.method = c("mean"), 
-                                          truenames = TRUE)
+                                  center = TRUE, 
+                                  scale = TRUE, 
+                                  NA.method = c("mean"), 
+                                  truenames = TRUE)
+
+# Save all genind files
+save(all_neutral_genind, file = "data/genind_files/all_neutral_genind.Rda")
+save(species_complex_outliers_genind, file = "data/genind_files/species_complex_outliers_genind.Rda")
+save(species_complex_neutral_genind, file = "data/genind_files/species_complex_neutral_genind.Rda")
+save(neosho_outliers_genind, file = "data/genind_files/neosho_outliers_genind.Rda")
+save(neosho_neutral_genind, file = "data/genind_files/neosho_neutral_genind.Rda")
+save(smallmouth_neutral_genind, file = "data/genind_files/smallmouth_neutral_genind.Rda")
 ```
+
+Since there are no shared outlier SNPs for the black bass species combined dataset and for the Smallmouth Bass only dataset, we are at this point only moving forward with analysis on the species complex samples (Neosho Bass and Smallmouth Bass) and are not further analyzing all black bass species or only Smallmouth Bass.
 
 #### 3c: Run cross validation analysis on species complex samples (Neosho Bass and Smallmouth Bass) and Neosho Bass samples only.
 In this step, we are running a cross-validation analysis, using 90% of samples in the data as a training set and 10% of data as a test set, maximum number of pcs at 300, and 30 replicates per PC value tested, to choose the number of PCs to use in each analysis. We are choosing the number of PCs that maximizes successful assignment to our a priori defined populations, which will then give us the optimal clustering patterns of the data.
 
-##### 3c.1. Run cross validation tests on all hierarchical analyses; run the Rmd chunk below:
+##### 3c.1. Run cross validation tests on all hierarchical analyses and extract data; run the Rmd chunk below:
 
 ##### Run cross validation for DAPC:
 ```{r}
+# Load all genind files
+load("data/genind_files/all_neutral_genind.Rda")
+load("data/genind_files/species_complex_outliers_genind.Rda")
+load("data/genind_files/species_complex_neutral_genind.Rda")
+load("data/genind_files/neosho_outliers_genind.Rda")
+load("data/genind_files/neosho_neutral_genind.Rda")
+load("data/genind_files/smallmouth_neutral_genind.Rda")
+
 ## Run cross validation for species complex samples
 
 # Run analysis for outlier SNPs
 species_complex_outliers_xval<- xvalDapc(species_complex_outliers_genind,
-                                species_complex_pops,
-                                n.pca.max = 300, 
-                                training.set = 0.9,
-                                result = "groupMean",
-                                center = TRUE, 
-                                scale = FALSE, 
-                                n.pca = NULL,
-                                n.rep = 30, 
-                                xval.plot = TRUE)
+                                         species_complex_pops,
+                                         n.pca.max = 300, 
+                                         training.set = 0.9,
+                                         result = "groupMean",
+                                         center = TRUE, 
+                                         scale = FALSE, 
+                                         n.pca = NULL,
+                                         n.rep = 30, 
+                                         xval.plot = TRUE)
 
 # Run analysis for neutral SNPs
 species_complex_neutral_xval <- xvalDapc(species_complex_neutral_genind, 
-                               species_complex_pops,
-                               n.pca.max = 300, 
-                               training.set = 0.9,
-                               result = "groupMean",
-                               center = TRUE, 
-                               scale = FALSE, 
-                               n.pca = NULL,
-                               n.rep = 30, 
-                               xval.plot = TRUE)
+                                         species_complex_pops,
+                                         n.pca.max = 300, 
+                                         training.set = 0.9,
+                                         result = "groupMean",
+                                         center = TRUE, 
+                                         scale = FALSE, 
+                                         n.pca = NULL,
+                                         n.rep = 30, 
+                                         xval.plot = TRUE)
 
 ## Run cross validation for Neosho Bass samples
 
 # Run analysis for outlier SNPs
 neosho_outliers_xval <- xvalDapc(neosho_outliers_genind,
+                                 neosho_pops,
+                                 n.pca.max = 300, 
+                                 training.set = 0.9,
+                                 result = "groupMean",
+                                 center = TRUE, 
+                                 scale = FALSE, 
+                                 n.pca = NULL,
+                                 n.rep = 30, 
+                                 xval.plot = TRUE)
+
+# Run analysis for neutral SNPs
+neosho_neutral_xval <- xvalDapc(neosho_neutral_genind, 
                                 neosho_pops,
                                 n.pca.max = 300, 
                                 training.set = 0.9,
@@ -2327,25 +2542,8 @@ neosho_outliers_xval <- xvalDapc(neosho_outliers_genind,
                                 n.rep = 30, 
                                 xval.plot = TRUE)
 
-# Run analysis for neutral SNPs
-neosho_neutral_xval <- xvalDapc(neosho_neutral_genind, 
-                               neosho_pops,
-                               n.pca.max = 300, 
-                               training.set = 0.9,
-                               result = "groupMean",
-                               center = TRUE, 
-                               scale = FALSE, 
-                               n.pca = NULL,
-                               n.rep = 30, 
-                               xval.plot = TRUE)
-```
-
-##### 3c.2. Generate plots to display results of cross validation; run the Rmd chunk below to create figure.
-
-###### 3c.2.1. Extract cross validation statistics data from analyses run in Step 3c.1.
-
 ##### Extract cross-validaiton data:
-```{r}
+
 ## Extract cross validation data from species complex samples
 
 # Get xval data for outlier SNPs
@@ -2407,12 +2605,24 @@ species_complex_outliers_xval_data <- merge(species_complex_outliers_xval_aves, 
 species_complex_neutral_xval_data <- merge(species_complex_neutral_xval_aves, species_complex_neutral_xval_sd, by = "n.pca")
 neosho_outliers_xval_data <- merge(neosho_outliers_xval_aves, neosho_outliers_xval_sd, by = "n.pca")
 neosho_neutral_xval_data <- merge(neosho_neutral_xval_aves, neosho_neutral_xval_sd, by = "n.pca")
+
+# Save all xval data
+save(species_complex_outliers_xval_data, file = "data/xval_data/species_complex_outliers_xval_data.Rda")
+save(species_complex_neutral_xval_data, file = "data/xval_data/species_complex_neutral_xval_data.Rda")
+save(neosho_outliers_xval_data, file = "data/xval_data/neosho_outliers_xval_data.Rda")
+save(neosho_neutral_xval_data, file = "data/xval_data/neosho_neutral_xval_data.Rda")
 ```
 
 ###### 3c.2.2. Generate plots for cross validation results; run the Rmd chunk below:
 
 ##### Generate figure for cross validation results: `figures/dapc_figures/xval.pdf`
 ```{r}
+# Load all xval data
+load("data/xval_data/species_complex_outliers_xval_data.Rda")
+load("data/xval_data/species_complex_neutral_xval_data.Rda")
+load("data/xval_data/neosho_outliers_xval_data.Rda")
+load("data/xval_data/neosho_neutral_xval_data.Rda")
+
 # Plot for species complex outlier SNPs
 a <- ggplot(species_complex_outliers_xval_data, aes(x = n.pca, y = mean_success)) +
    geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=2) +
@@ -2473,6 +2683,12 @@ For this analysis, it is necessary to pay attention to the console, because it w
 
 ## Run DAPC analyses:
 ```{r}
+# Load genind files
+load("data/genind_files/species_complex_outliers_genind.Rda")
+load("data/genind_files/species_complex_neutral_genind.Rda")
+load("data/genind_files/neosho_outliers_genind.Rda")
+load("data/genind_files/neosho_neutral_genind.Rda")
+
 #Run DAPC on species complex outlier SNPs
 species_complex_outliers_dapc <- dapc(species_complex_outliers_genind, species_complex_pops) # 25 PCs 
 
@@ -2485,6 +2701,12 @@ neosho_outliers_dapc <- dapc(neosho_outliers_genind, neosho_pops) # 6 PCs
 
 #Run DAPC on Neosho Bass outlier SNPs
 neosho_neutrals_dapc <- dapc(neosho_neutral_genind, neosho_pops) # 10 PCs
+
+# Save dapc files
+save(species_complex_outliers_dapc, file = "data/dapc_data/species_complex_outliers_dapc.Rda")
+save(species_complex_neutral_dapc, file = "data/dapc_data/species_complex_neutral_dapc.Rda")
+save(neosho_outliers_dapc, file = "data/dapc_data/neosho_outliers_dapc.Rda")
+save(neosho_neutral_dapc, file = "data/dapc_data/neosho_neutral_dapc.Rda")
 ```
 
 ##### 3d.1. Extract PC and Discriminant Functions plots (insets in the scatter() dapc function), which give information on the number of PCs used and the number of Discriminant functions retained.
@@ -2492,6 +2714,12 @@ We generated individual scatter plots for our DAPC analyses above and manually e
 
 ###### 3d.1.1. Generate individual DAPC scatter plots for extracting PC and DF mini-plots:
 ```{r}
+# Load dapc files
+load("data/dapc_data/species_complex_outliers_dapc.Rda")
+load("data/dapc_data/species_complex_neutral_dapc.Rda")
+load("data/dapc_data/neosho_outliers_dapc.Rda")
+load("data/dapc_data/neosho_neutral_dapc.Rda")
+
 ##Get the little PCA-explained and LDs used graphs from species complex outliers 
 pdf("figures/dapc_figures/pcld_species_complex_outliers.pdf", width=11, height=9)
 
@@ -2542,6 +2770,12 @@ In this step, we are plotting all results from DAPC analysis.
 
 ##### Extract LD information:
 ```{r}
+# Load dapc files
+load("data/dapc_data/species_complex_outliers_dapc.Rda")
+load("data/dapc_data/species_complex_neutral_dapc.Rda")
+load("data/dapc_data/neosho_outliers_dapc.Rda")
+load("data/dapc_data/neosho_neutral_dapc.Rda")
+
 ## Get LD and population information from species complex sample outlier SNPs
 
 # Get lds
@@ -2586,14 +2820,25 @@ neosho_neutral_ld <- cbind(data.frame(neosho_pops), neosho_neutral_ld)
 
 # Modify column names
 colnames(neosho_neutral_ld) <- c("pop","LD1","LD2")
+
+# Save LD data
+save(species_complex_outliers_ld, file = "data/dapc_data/species_complex_outliers_ld.Rda")
+save(species_complex_neutral_ld, file = "data/dapc_data/species_complex_neutral_ld.Rda")
+save(neosho_outliers_ld, file = "data/dapc_data/neosho_outliers_ld.Rda")
+save(neosho_neutral_ld, file = "data/dapc_data/neosho_neutral_ld.Rda")
 ```
 
 ##### 3e.2. Plot DAPC results; run the Rmd chunk below:
 We have chosen to combine each DAPC analysis as an individual panel into a single plot. Plots are named "a", "b", "c", "d" and are included in that order in the manuscript. 
 
 ##### Extract LD information:
-
 ```{r}
+# Save LD data
+load("data/dapc_data/species_complex_outliers_ld.Rda")
+load("data/dapc_data/species_complex_neutral_ld.Rda")
+load("data/dapc_data/neosho_outliers_ld.Rda")
+load("data/dapc_data/neosho_neutral_ld.Rda")
+
 # Plot species complex outlier SNPs
 a <- ggplot(species_complex_outliers_ld, aes(x = LD1, y = LD2, fill = pop)) +
    geom_point(aes(fill = pop), color = "black", pch = 21, size = 6, show.legend = F) +
