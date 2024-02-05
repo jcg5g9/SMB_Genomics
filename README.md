@@ -1,7 +1,7 @@
 # Reproduce analyses for Gunn et al. 2022
 <font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for Gunn et al. (2022). Each step below gives a summary of the analysis and directs you to a general code file which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts. Each analysis is contained within sub-directories of the same name in the main R project directory.</font>
 
-Find the article here: <a href="url">https://onlinelibrary.wiley.com/doi/10.1002/ece3.9370</a> 
+<b>Find the article here</b>: <a href="url">https://onlinelibrary.wiley.com/doi/10.1002/ece3.9370</a> 
 
 Citation here: Gunn, J. C., Berkman, L. K.,Koppelman, J., Taylor, A. T., Brewer, S. K., Long, J. M., &Eggert, L. S. (2022). Genomic divergence, local adaptation,and complex demographic history may inform managementof a popular sportfish species complex. Ecology and Evolution, 12, e9370.
 
