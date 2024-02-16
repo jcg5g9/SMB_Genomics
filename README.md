@@ -34,6 +34,16 @@ Once you have downloaded the repository and located the code directory, you shou
 
 The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up so that the code reads all data and scripts and generates figures seamlessly.
 
+```mermaid
+graph TD
+  SMB_Genomics --> README.md
+  SMB_Genomics --> SMB_Genomics.Rproj
+  SMB_Genomics --> .gitignore
+  SMB_Genomics --> raw_data
+  SMB_Genomics --> 'analysis_directories'
+
+```
+
 ## Using the code
 To reproduce all analyses in Gunn et al. (2022), download this repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
 
