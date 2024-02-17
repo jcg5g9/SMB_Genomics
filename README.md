@@ -21,15 +21,6 @@ This is a publicly visible GitHub repository storing code (and a small amount of
 6) 06_outlier_fst_analysis
 7) 07_demographic_analysis
 
-```mermaid
-graph TD
-  SMB_Genomics --> README.md
-  SMB_Genomics --> SMB_Genomics.Rproj
-  SMB_Genomics --> .gitignore
-  SMB_Genomics --> raw_data
-  SMB_Genomics --> 'analysis_directories`
-```
-
 Within each analysis directory, you will find an R markdown script (.Rmd) with the name of the analysis, which contains all of the code needed to run the full analysis. Additionally, you will find:
 
 1) code
@@ -43,12 +34,17 @@ Once you have downloaded the repository and located the code directory, you shou
 
 The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up so that the code reads all data and scripts and generates figures seamlessly.
 
+
 ```mermaid
 graph TD
-  raw_data --> code
-  analysis_directory --> code
-  analysis_directory --> data
-  analysis_directory --> figures
+  SMB_Genomics --> README.md
+  SMB_Genomics --> SMB_Genomics.Rproj
+  SMB_Genomics --> .gitignore
+  SMB_Genomics --> raw_data
+  SMB_Genomics --> analysis_directories
+  analysis_directories --> code
+  analysis_directories --> data
+  analysis_directories --> figures
 ```
 
 ## Using the code
