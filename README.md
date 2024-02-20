@@ -97,7 +97,7 @@ graph TD
   analysis_directories ---> figures
   SMB_Genomics --> raw_data
   AR21_Aligned_Genotypes_stringent.vcf ----> raw_data
-  metadata.xlsx --> raw_data
+  metadata.xlsx ----> raw_data
 ```
 <center>Figure 2. Place `.vcf` and metadata files in raw_data directory</center>
 
