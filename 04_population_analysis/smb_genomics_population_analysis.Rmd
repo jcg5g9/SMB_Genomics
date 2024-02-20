@@ -45,7 +45,7 @@ Malinsky, M., Trucchi, E., Lawson, D. J., & Falush, D. (2018). RADpainter and fi
 In this step, we are filtering out Spotted Bass and the single Spotted Bass X Neosho Bass hybrid (BFC10) from the full, non-thinned dataset, since we are interested in assessing coance
 
 #### 1a: Generate a general bash shell script header for data filtering in VCFTools
-In this step, we are generating another bash shell script to run individual sample filtering in VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
+In this step, we are generating another bash shell script to run individual sample filtering in VCFTools (see `02_filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
 ##### 1a.1: Copy and paste the code below in a new shell script file: 
 
@@ -78,7 +78,7 @@ Make sure to copy the `popgen.vcf` dataset generated in Analysis 2 into a new su
 ##### Generate list of Spotted Bass hybrid: `data/filtering_data/bfc10.txt` 
 ```{r}
 # Load in the .Rda file generated in the admixture analysis
-load("../admixture_phylogenomics_analysis/data/filtering_data/bcf10.Rda")
+load("../03_admixture_phylogenomics_analysis/data/filtering_data/bcf10.Rda")
 
 BFC10 <- as.data.frame(BFC10)
 
@@ -156,7 +156,7 @@ In this step, we are further filtering the finerad dataset to create datasets fo
 ##### Generate list of admixed individuals (to be removed from the dataset): `data/filtering_data/admixed_individuals.txt` 
 ```{r}
 # Load in the .Rda file generated in the admixture analysis
-load("../admixture_phylogenomics_analysis/data/filtering_data/admixed_individuals.Rda")
+load("../03_admixture_phylogenomics_analysis/data/filtering_data/admixed_individuals.Rda")
 
 # Convert to dataframe
 admixed_individuals <- as.data.frame(admixed_individuals)
@@ -194,7 +194,7 @@ This code generates the file: `data/processed_bed/all_samples/03_finerad_pure.vc
 ##### Generate list of pure individuals (to be removed from the dataset): `data/filtering_data/pure_individuals.txt` 
 ```{r}
 # Load in the .Rda file generated in the admixture analysis
-load("../admixture_phylogenomics_analysis/data/filtering_data/pure_individuals.Rda")
+load("../03_admixture_phylogenomics_analysis/data/filtering_data/pure_individuals.Rda")
 
 # Convert to dataframe
 pure_individuals <- as.data.frame(pure_individuals)

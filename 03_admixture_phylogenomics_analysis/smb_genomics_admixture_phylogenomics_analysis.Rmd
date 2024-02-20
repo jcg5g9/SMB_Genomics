@@ -457,7 +457,7 @@ save(admixed_individuals, file = "data/filtering_data/admixed_individuals.Rda")
 In this step, we are rerunning ADMIXTURE on only the individuals inferred to be genetically pure from the full hybrid screen analysis in Step 2. We are performing this step to assess population genetic structure without the influence of admixed individuals, and the results from this analysis will be compared to a phylogenomic analysis in Phase 3 of the analysis.
 
 #### 3a: Generate a general bash shell script header for data filtering in VCFTools
-In this step, we are generating another bash shell script to run all individual sample filtering in VCFTools (see `filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
+In this step, we are generating another bash shell script to run all individual sample filtering in VCFTools (see `02_filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd` for details on programs needed, etc.). Here, we only generate the annotated header for the shell script, and in subsequent steps, we include and provide details on each data filtering step and the associated lines of code in Rmd chunks. The shell script for running all VCFTools code is called "vcftools.sh".
 
 ##### 3a.1. Copy and paste the code below in a new shell script file:
 

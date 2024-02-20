@@ -30,7 +30,7 @@ library(viridis)
 ```
 
 ## PHASE 1: DATA PREPARATION
-In this phase of the analysis, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the software programs BAYESCAN and the R package PCAdapt. For BAYESCAN, we are using the intermediate conversion software PGDSPIDER to generate input files, and for PCAdapt, we are again using the program PLINK.
+In this phase of the analysis, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`03_admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the software programs BAYESCAN and the R package PCAdapt. For BAYESCAN, we are using the intermediate conversion software PGDSPIDER to generate input files, and for PCAdapt, we are again using the program PLINK.
 
 For the outlier Fst analysis, we are conducing scans for outlier loci hiearchically at the black bass species level (between Spotted Bass, Smallmouth Bass, and Neosho Bass), among species within the Smallmouth Bass species complex (Smallmouth Bass and Neosho Bass), and among populations within black bass species. The goal with this structure is to reduce false positive detection due to population structure and to detect potentially selected SNPs at each hierarchical level.
 
@@ -423,7 +423,7 @@ In this step, we are generating text files listing all samples in at each genome
 ##### Generate population file: `data/pop_files/01_all_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
-load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+load("../04_population_analysis/data/metadata/metadata_populations_spb.Rda")
 
 # Convert factors to characters
 metadata_populations_spb <- metadata_populations_spb %>%
@@ -455,7 +455,7 @@ write_delim(metadata_populations_spb,
 ##### Generate population file: `data/pop_files/02_species_complex_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
-load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+load("../04_population_analysis/data/metadata/metadata_populations_spb.Rda")
 
 # Filter out Spotted Bass
 metadata_populations_complex <- metadata_populations_spb %>%
@@ -490,7 +490,7 @@ write_delim(metadata_populations_complex,
 ##### Generate population file: `data/pop_files/03_neosho_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
-load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+load("../04_population_analysis/data/metadata/metadata_populations_spb.Rda")
 
 # Filter out Spotted Bass and Smallmouth Bass
 metadata_populations_neosho <- metadata_populations_spb %>%
@@ -525,7 +525,7 @@ write_delim(metadata_populations_neosho,
 ##### Generate population file: `data/pop_files/04_neosho_pops.txt`
 ```{r}
 # Load in full sample metadata file with population designations (inferred in Analysis 4, population_analysis)
-load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+load("../04_population_analysis/data/metadata/metadata_populations_spb.Rda")
 
 # Filter out Spotted Bass and Neosho Bass
 metadata_populations_smallmouth <- metadata_populations_spb %>%
@@ -1367,7 +1367,7 @@ save(smallmouth_bed, file = "data/processed_bed/smallmouth_bed.Rda")
 ##### Generate sample metadata for plotting:
 ```{r}
 # Load in raw metadata
-load("../population_analysis/data/metadata/metadata_populations_spb.Rda")
+load("../04_population_analysis/data/metadata/metadata_populations_spb.Rda")
 
 # Generate metadata for all black bass samples
 all_metadata <- metadata_populations_spb %>%

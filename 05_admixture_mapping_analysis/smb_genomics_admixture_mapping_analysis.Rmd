@@ -24,7 +24,7 @@ library(devtools)
 ```
 
 ## PHASE 1: DATA PREPARATION
-In this phase, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
+In this phase, we are converting the fully filtered, thinned dataset excluding Spotted Bass and the Spotted Bass hybrid (`03_admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf`) into input files compatible with the MatLab software program MIXMAPPER. Specifically, we are converting the vcf file to .ind, .snp, and .geno files, which was done using the software program EIGENSOFT
 
 All analyses conducted by calling commands in bash shell scripts were performed on the Lewis high-performance computing cluster at the University of Missouri <br>
 
@@ -110,7 +110,7 @@ Running this command will generate an executable for compute_moment_stats
 Running this command will generate an executable for compute_most_additive trees.
 
 ### STEP 4: Generate input files for MIXMAPPER.
-In this step, we are using the fully filtered, non-thinned VCF dataset excluding the spotted bass hybrid `admixture_phylogenomics_analysis/data/processed_vcf/popgen_spb_hybrid.vcf` generated in Analysis 2 (SNP Filtering...) and generating input files for MIXMAPPER. 
+In this step, we are using the fully filtered, non-thinned VCF dataset excluding the spotted bass hybrid `03_admixture_phylogenomics_analysis/data/processed_vcf/popgen_spb_hybrid.vcf` generated in Analysis 2 (SNP Filtering...) and generating input files for MIXMAPPER. 
 
 #### 4a: Convert the fully filtered, non-thinned VCF dataset into PED (pedigree) format.
 In this step, we are using the software program PLINK to convert the full dataset to .ped format, which will then be used in subsequent steps to convert to eigenstrat format.
@@ -140,7 +140,7 @@ In this step, we are generating a universal bash shell script to run all file ty
 # module load plink/plink-high-contig-1.90p (UNCOMMENT THIS LINE TO RUN THE CODE)
 ```
 
-Make sure to copy the `admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
+Make sure to copy the `03_admixture_phylogenomics_analysis/data/processed_vcf/03_popgen_spb.vcf` dataset generated in Analysis 2 into a new sub-directory of the `data/` folder in this directory: `data/processed_vcf`
 
 ##### 4a.2. Copy and paste the code below in the shell file generated in Step 4a.1.1 above, which will generate a .ped file for the full dataset:
 
@@ -318,7 +318,7 @@ ind_file <- ind_file %>%
   separate(sample_id, into = c("sample_id","u"), sep = " ", remove = T)
 
 # Load in metadata for populations generated in Analysis 4 (population analysis)
-load("../population_analysis/data/metadata/metadata_population.Rda")
+load("../04_population_analysis/data/metadata/metadata_population.Rda")
 
 # cbind ind_file with population designations
 ind_file <- cbind(ind_file, metadata_populations)
