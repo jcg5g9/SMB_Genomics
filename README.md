@@ -32,23 +32,37 @@ Once you have downloaded the repository and located the code directory, you shou
 
 The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up so that the code reads all data and scripts and generates figures seamlessly.
 
+```mermaid
+graph TD
+  SMB_Genomics --> README.md
+  SMB_Genomics --> SMB_Genomics.Rproj
+  SMB_Genomics --> .gitignore
+  SMB_Genomics --> analysis_directories
+  analysis_directories --> smb_genomics_analysis.Rmd
+  analysis_directories --> code
+  analysis_directories --> data
+  analysis_directories --> figures
+```
+<center>Figure 1. Graphical map of project directory structure</center>
+
+## Using the code
+To reproduce all analyses in Gunn et al. (2022), download this repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
+
+Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called "raw_data". This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ```mermaid
 graph TD
   SMB_Genomics --> README.md
   SMB_Genomics --> SMB_Genomics.Rproj
   SMB_Genomics --> .gitignore
-  SMB_Genomics --> raw_data
   SMB_Genomics --> analysis_directories
+  analysis_directories --> smb_genomics_analysis.Rmd
   analysis_directories --> code
   analysis_directories --> data
   analysis_directories --> figures
+  SMB_Genomics --> raw_data
 ```
-
-## Using the code
-To reproduce all analyses in Gunn et al. (2022), download this repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
-
-Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called "raw_data". This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
+<center>Figure 2. Include a `raw_data` directory in the project home directory</center>
 
 ## Data
 Raw .fastq sequence files from ddRAD-seq and accompanying metadata are available at Zenodo.org: <a href="url">doi/10.5281/zenodo.7032495</a>
@@ -70,6 +84,22 @@ You should have 7 new items in the directory: <br>
 You will not need any of the raw .fastq.gz files ('FASTQ_Sequence_Files' directory) for these analyses; all bioinformatic processing, i.e., alignment, assembly, etc., was completed at Floragenex, Inc. For these analyses, you will only need the full VCF file for the stringent filtering protocol, which is located in the 'VCF_Files' directory: `AR21_Aligned_Genotypes_stringent.vcf`. 
 
 Place the `AR21_Aligned_Genotypes_stringent.vcf` file along with the sample metadata in the /raw_data directory. You are good to start analyzing.
+
+```mermaid
+graph TD
+  SMB_Genomics --> README.md
+  SMB_Genomics --> SMB_Genomics.Rproj
+  SMB_Genomics --> .gitignore
+  SMB_Genomics --> analysis_directories
+  analysis_directories --> smb_genomics_analysis.Rmd
+  analysis_directories --> code
+  analysis_directories --> data
+  analysis_directories --> figures
+  SMB_Genomics --> raw_data
+  AR21_Aligned_Genotypes_stringent.vcf --> raw_data
+  metadata.xlsx --> raw_data
+```
+<center>Figure 2. Place `.vcf` and metadata files in raw_data directory</center>
 
 If you have any questions or issues with data and/or code, please don't hesitate to contact me: jcgunn@uvm.edu
 
