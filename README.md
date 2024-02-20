@@ -61,6 +61,9 @@ flowchart LR
   E[analysis_directories] ---> H[data]
   E[analysis_directories] ---> I[figures]
   A{SMB_Genomics} --> J[raw_data]
+  
+  %% Link colors %%
+  linkStyle 8 stroke:red
 ```
 <center>Figure 2. Include a `raw_data` directory in the project home directory</center>
 
