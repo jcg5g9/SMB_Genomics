@@ -96,8 +96,8 @@ flowchart LR
   E[analysis_directories] ---> H[data]
   E[analysis_directories] ---> I[figures]
   A{SMB_Genomics} --> J[raw_data]
-  K(AR21_Aligned_Genotypes_stringent.vcf) ----> J[raw_data]
-  L(metadata.xlsx) ----> J[raw_data]
+  K(AR21_Aligned_Genotypes_stringent.vcf) --> J[raw_data]
+  L(metadata.xlsx) --> J[raw_data]
 ```
 <center>Figure 2. Place `.vcf` and metadata files in raw_data directory</center>
 
