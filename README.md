@@ -38,10 +38,10 @@ graph TD
   SMB_Genomics --> SMB_Genomics.Rproj
   SMB_Genomics --> .gitignore
   SMB_Genomics --> analysis_directories
-  analysis_directories --> smb_genomics_analysis.Rmd
-  analysis_directories --> code
-  analysis_directories --> data
-  analysis_directories --> figures
+  analysis_directories ---> smb_genomics_analysis.Rmd
+  analysis_directories ---> code
+  analysis_directories ---> data
+  analysis_directories ---> figures
 ```
 <center>Figure 1. Graphical map of project directory structure</center>
 
@@ -56,10 +56,10 @@ graph TD
   SMB_Genomics --> SMB_Genomics.Rproj
   SMB_Genomics --> .gitignore
   SMB_Genomics --> analysis_directories
-  analysis_directories --> smb_genomics_analysis.Rmd
-  analysis_directories --> code
-  analysis_directories --> data
-  analysis_directories --> figures
+  analysis_directories ---> smb_genomics_analysis.Rmd
+  analysis_directories ---> code
+  analysis_directories ---> data
+  analysis_directories ---> figures
   SMB_Genomics --> raw_data
 ```
 <center>Figure 2. Include a `raw_data` directory in the project home directory</center>
@@ -91,10 +91,10 @@ graph TD
   SMB_Genomics --> SMB_Genomics.Rproj
   SMB_Genomics --> .gitignore
   SMB_Genomics --> analysis_directories
-  analysis_directories --> smb_genomics_analysis.Rmd
-  analysis_directories --> code
-  analysis_directories --> data
-  analysis_directories --> figures
+  analysis_directories ---> smb_genomics_analysis.Rmd
+  analysis_directories ---> code
+  analysis_directories ---> data
+  analysis_directories ---> figures
   SMB_Genomics --> raw_data
   AR21_Aligned_Genotypes_stringent.vcf ----> raw_data
   metadata.xlsx --> raw_data
