@@ -33,11 +33,11 @@ Once you have downloaded the repository and located the code directory, you shou
 The data directory will store all raw data, processed data, and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up so that the code reads all data and scripts and generates figures seamlessly.
 
 ```mermaid
-graph TD
-  SMB_Genomics --> README.md
-  SMB_Genomics --> SMB_Genomics.Rproj
-  SMB_Genomics --> .gitignore
-  SMB_Genomics --> analysis_directories
+flowchart LR
+  {SMB_Genomics} --> README.md
+  {SMB_Genomics} --> SMB_Genomics.Rproj
+  {SMB_Genomics} --> .gitignore
+  {SMB_Genomics} --> analysis_directories
   analysis_directories ---> smb_genomics_analysis.Rmd
   analysis_directories ---> code
   analysis_directories ---> data
@@ -51,16 +51,16 @@ To reproduce all analyses in Gunn et al. (2022), download this repository and pl
 Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called "raw_data". This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ```mermaid
-graph TD
-  SMB_Genomics --> README.md
-  SMB_Genomics --> SMB_Genomics.Rproj
-  SMB_Genomics --> .gitignore
-  SMB_Genomics --> analysis_directories
+flowchart LR
+  {SMB_Genomics} --> README.md
+  {SMB_Genomics} --> SMB_Genomics.Rproj
+  {SMB_Genomics} --> .gitignore
+  {SMB_Genomics} --> analysis_directories
   analysis_directories ---> smb_genomics_analysis.Rmd
   analysis_directories ---> code
   analysis_directories ---> data
   analysis_directories ---> figures
-  SMB_Genomics --> raw_data
+  {SMB_Genomics} --> raw_data
 ```
 <center>Figure 2. Include a `raw_data` directory in the project home directory</center>
 
@@ -87,17 +87,17 @@ Place the `AR21_Aligned_Genotypes_stringent.vcf` file along with the sample meta
 
 ```mermaid
 flowchart LR
-  SMB_Genomics --> README.md
-  SMB_Genomics --> SMB_Genomics.Rproj
-  SMB_Genomics --> .gitignore
-  SMB_Genomics --> analysis_directories
+  {SMB_Genomics} --> README.md
+  {SMB_Genomics} --> SMB_Genomics.Rproj
+  {SMB_Genomics} --> .gitignore
+  {SMB_Genomics} --> analysis_directories
   analysis_directories ---> smb_genomics_analysis.Rmd
   analysis_directories ---> code
   analysis_directories ---> data
   analysis_directories ---> figures
-  SMB_Genomics --> raw_data
-  AR21_Aligned_Genotypes_stringent.vcf(Round) ----> raw_data
-  metadata.xlsx(Round) ----> raw_data
+  {SMB_Genomics} --> raw_data
+  (AR21_Aligned_Genotypes_stringent.vcf) ----> raw_data
+  (metadata.xlsx) ----> raw_data
 ```
 <center>Figure 2. Place `.vcf` and metadata files in raw_data directory</center>
 
