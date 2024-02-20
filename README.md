@@ -34,14 +34,14 @@ The data directory will store all raw data, processed data, and metadata needed 
 
 ```mermaid
 flowchart LR
-  {SMB_Genomics} --> README.md
-  {SMB_Genomics} --> SMB_Genomics.Rproj
-  {SMB_Genomics} --> .gitignore
-  {SMB_Genomics} --> analysis_directories
-  analysis_directories ---> smb_genomics_analysis.Rmd
-  analysis_directories ---> code
-  analysis_directories ---> data
-  analysis_directories ---> figures
+  A{SMB_Genomics} --> B(README.md)
+  A{SMB_Genomics} --> C(SMB_Genomics.Rproj)
+  A{SMB_Genomics} --> D(.gitignore)
+  A{SMB_Genomics} --> E[analysis_directories]
+  E[analysis_directories] ---> F(smb_genomics_analysis.Rmd)
+  E[analysis_directories] ---> G[code]
+  E[analysis_directories] ---> H[data]
+  E[analysis_directories] ---> I[figures]
 ```
 <center>Figure 1. Graphical map of project directory structure</center>
 
@@ -52,15 +52,15 @@ Once all directories are downloaded, create a new sub-directory within the home 
 
 ```mermaid
 flowchart LR
-  {SMB_Genomics} --> README.md
-  {SMB_Genomics} --> SMB_Genomics.Rproj
-  {SMB_Genomics} --> .gitignore
-  {SMB_Genomics} --> analysis_directories
-  analysis_directories ---> smb_genomics_analysis.Rmd
-  analysis_directories ---> code
-  analysis_directories ---> data
-  analysis_directories ---> figures
-  {SMB_Genomics} --> raw_data
+  A{SMB_Genomics} --> B(README.md)
+  A{SMB_Genomics} --> C(SMB_Genomics.Rproj)
+  A{SMB_Genomics} --> D(.gitignore)
+  A{SMB_Genomics} --> E[analysis_directories]
+  E[analysis_directories] ---> F(smb_genomics_analysis.Rmd)
+  E[analysis_directories] ---> G[code]
+  E[analysis_directories] ---> H[data]
+  E[analysis_directories] ---> I[figures]
+  A{SMB_Genomics} --> J[raw_data]
 ```
 <center>Figure 2. Include a `raw_data` directory in the project home directory</center>
 
@@ -95,9 +95,9 @@ flowchart LR
   E[analysis_directories] ---> G[code]
   E[analysis_directories] ---> H[data]
   E[analysis_directories] ---> I[figures]
-  J{SMB_Genomics} --> K[raw_data]
-  L(AR21_Aligned_Genotypes_stringent.vcf) ----> K[raw_data]
-  M(metadata.xlsx) ----> K[raw_data]
+  A{SMB_Genomics} --> J[raw_data]
+  K(AR21_Aligned_Genotypes_stringent.vcf) ----> J[raw_data]
+  L(metadata.xlsx) ----> J[raw_data]
 ```
 <center>Figure 2. Place `.vcf` and metadata files in raw_data directory</center>
 
