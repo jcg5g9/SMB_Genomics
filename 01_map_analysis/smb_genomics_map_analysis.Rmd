@@ -15,7 +15,8 @@ In this analysis, we generate easily readable maps displaying the native distrib
 ### Phase 1: Generate maps
 
 ### Libraries needed for analysis
-```{r setup, echo = FALSE, include = FALSE}
+```{r setup}
+library(ggplot2)
 library(sf)
 library(ggspatial)
 ```
@@ -88,7 +89,7 @@ load("data/nb.Rda")
 pdf("figures/full_range.pdf", width=7, height = 5)
 
 # Plot North America first
-plot(north_america, 
+plot(north_america$geometry, 
      col= alpha("white", 0.8), 
      border = "black", 
      axes = T, 
@@ -96,7 +97,7 @@ plot(north_america,
      xlim = c(-126,-60)) 
 
 # Plot Canada second
-plot(canada, 
+plot(canada$geometry, 
      add = T,
      col= alpha("white", 0.8), 
      border = "black", 
@@ -105,7 +106,7 @@ plot(canada,
      xlim = c(-126,-60)) 
 
 # Plot states in the United States third
-plot(state, 
+plot(states$geometry, 
      add = T,
      col= alpha("white", 0.8), 
      border = "black", 
@@ -114,7 +115,7 @@ plot(state,
      xlim = c(-126,-60)) 
 
 # Plot smallmouth bass fourth
-plot(smb, 
+plot(smb$geometry, 
      add = T,
      col = alpha("grey84", 0.8), 
      border = T, 
@@ -123,7 +124,7 @@ plot(smb,
      xlim = c(-126,-60))
 
 # Plot neosho bass fifth
-plot(nb, 
+plot(nb$geometry, 
      add = T,
      col = alpha("grey54", 0.9), 
      border = T, 
@@ -166,7 +167,7 @@ load("data/nb.Rda")
 pdf("figures/cih.pdf", width = 9, height = 8) 
 
 # Plot states first
-plot(states, 
+plot(states$geometry, 
      col=alpha("white", 0.3), 
      border = "black", 
      axes = T, 
@@ -175,7 +176,7 @@ plot(states,
      cex.axis = 1.6)
 
 # Plot smallmouth bass range second
-plot(smb, 
+plot(smb$geometry, 
      add = T, 
      col = "gray94", 
      border = T, 
@@ -185,7 +186,7 @@ plot(smb,
      cex.axis = 2)
 
 # Plot neosho bass range third
-plot(nb, 
+plot(nb$geometry, 
      add = T, 
      col = "grey74", 
      border = T, 
@@ -195,7 +196,7 @@ plot(nb,
      cex.axis = 2)
 
 # Plot rivers fourth
-plot(rivers, 
+plot(rivers$geometry, 
      add = T, 
      col="blue", 
      border = F, 
