@@ -3,10 +3,10 @@
 
 <b>Find the article here</b>: <a href="url">https://onlinelibrary.wiley.com/doi/10.1002/ece3.9370</a> 
 
-<b>Citation here</b>: Gunn, J. C., Berkman, L. K.,Koppelman, J., Taylor, A. T., Brewer, S. K., Long, J. M., &Eggert, L. S. (2022). Genomic divergence, local adaptation,and complex demographic history may inform managementof a popular sportfish species complex. Ecology and Evolution, 12, e9370.
+<b>Citation here</b>: Gunn, J. C., Berkman, L. K., Koppelman, J., Taylor, A. T., Brewer, S. K., Long, J. M., & Eggert, L. S. (2022). Genomic divergence, local adaptation, and complex demographic history may inform management of a popular sportfish species complex. <i>Ecology and Evolution</i>, 12, e9370.
 
 ## Project: Population genomic analysis of Smallmouth Bass and Neosho Bass in the Central Interior Highlands
-We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
+We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admixture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
 
 ## General information on repository structure
 This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage in GitHub) for Gunn et al. (2022). In the home directory of the repository (SMB_Genomics), you will find a README.md file (the source script for this information), the R Project file (SMB_Genomics.Rproj), a .gitignore file, and 7 different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
@@ -112,12 +112,12 @@ If you have any questions or issues with data and/or code, please don't hesitate
 
 ## Analyses
 
-### Analysis 1: Generating Species Native Range Maps
+### Analysis 1: Generating species native range maps
 In this analysis, we generated easily readable maps displaying the native distributions of the two species of interest, Smallmouth Bass and Neosho Bass. We generated two types of maps: 1) a full range map, in which the full native range of each species is displayed, and 2) a close-up map of the Central Interior Highlands (CIH), where the paraptry of the species' ranges is shown in detail. In R, we generated only geo-referenced outlines of these maps. Shapes representing stream sites and/or populations were superimposed <i>a posteriori</i> on the maps in PowerPoint.
 
 #### Run the code: `01_map_analysis/smb_genomics_map_analysis.Rmd`
 
-### Analysis 2: SNP Filtering, Data Processing, and Preliminary Calculations
+### Analysis 2: SNP filtering, data processing, and preliminary calculations
 In this analysis, we performed further quality filtering on the processed and genotyped SNPs generated at Floragenex, Inc. for Smallmouth Bass and Neosho Bass. Specifically, we screened the processed data for SNPs with greater than 15X read depth; fish samples with less than 20% genotype calls across all SNPs ("badsamples"); SNPs with a phred quality score less than 20 ("qual"); and SNPs with greater than 20% missing genotype calls across fish individuals ('missing').
 
 #### Run the code: `02_filtering_processing_analysis/smb_genomics_filtering_processing_analysis.Rmd`
@@ -127,18 +127,18 @@ In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filte
 
 #### Run the code: `03_filtering_processing_analysis/smb_genomics_admixture_phylogenomics_analysis.Rmd`
 
-### Analysis 4: Population Inference
+### Analysis 4: Population inference
 In this analysis, we used the finerad.vcf data generated in Analysis 2 (SNP Filtering...) to assess fine-scale coancestry between Smallmouth Bass, and Neosho Bass in the CIH using haplotype inference (excluding Spotted Bass). Specifically, we estimated coancestry in 1) the full dataset, with all pure and admixed individuals, excluding the Spotted Bass X Smallmouth Bass hybrid (BFC10) inferred from population genomic analysis in Analysis 3, 2) the pure dataset, with only pure individuals of Smallmouth Bass and Neosho Bass, and 3) the admixed dataset, with only admixed individuals of Neosho Bass (no admixed Smallmouth Bass were detected).
 
 #### Run the code: `04_population_analysis/smb_genomics_population_analysis.Rmd`
 
-### Analysis 5: Admixture Mapping
-In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i>) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
+### Analysis 5: Admixture mapping analysis
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP filtering...) to assess assess the relative timing of admixture events between Smallmouth Bass and Neosho Bass. Specifically, we used moment statistics in MatLab with the software program MIXMAPPER to build a scaffold phylogeny with significantly pure (non-admixed) populations (based on our <i>a posteriori</i>) discovered populations in Analysis 4) and to map significantly admixed populations (also based on our discovered populations in Analysis 4) onto the tree. 
 
 #### Run the code: `05_admixture_mapping_analysis/smb_genomics_admixture_mapping_analysis.Rmd`
 
 ### Analysis 6: Directional selection analysis
-In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to scan for signatures of directional selection on SNP loci with outlier Fst (high outlier Fst: directional selection; low Fst: balancing selection). We used two software programs with different underlying statistical frameworks to detect outliers and then used any outliers commonly detected in both analyses as canditates for being under strong selection. Specifically, we used the software program BAYESCAN (based in Bayesian analysis) and the R package PCAdapt principal component analysis (based in multivariate principal component analysis). We then employed DAPC in R to map patterns of population differentiation at any shared outlier and neutral loci to detect populations that may be under differential selection pressures and to detect signatures of genetic drift,
+In this analysis, we used the popgen.vcf data generated in Analysis 2 (SNP Filtering...) to scan for signatures of directional selection on SNP loci with outlier Fst (high outlier Fst: directional selection; low Fst: balancing selection). We used two software programs with different underlying statistical frameworks to detect outliers and then used any outliers commonly detected in both analyses as canditates for being under strong selection. Specifically, we used the software program BAYESCAN (based in Bayesian analysis) and the R package PCAdapt principal component analysis (based in multivariate principal component analysis). We then employed DAPC in R to map patterns of population differentiation at any shared outlier and neutral loci to detect populations that may be under differential selection pressures and to detect signatures of genetic drift.
 
 #### Run the code: `06_outlier_fst_analysis/smb_genomics_outlier_fst_analysis.Rmd`
 
