@@ -1,5 +1,5 @@
 ---
-title: "Analysis 1: Generating Species Native Range Maps"
+title: "Analysis 1: Generating species' native range maps"
 author: "Joe Gunn"
 date: "9/11/2019"
 output: html_document
@@ -224,5 +224,5 @@ After generating these outline maps, colored-in shapes and other map details wer
 
 ## ------------------------ END OF PHASE 1: GENERATE MAPS ----------------------- ##
 
-## ------------------------ END OF MAP ANALYSIS  ----------------------- ##
+## ------------------------ END OF ANALYSIS 1: GENERATING SPECIES' NATIVE RANGE MAPS  ----------------------- ##
 

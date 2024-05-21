@@ -895,4 +895,4 @@ Run: `sbatch vcftools.sh`
 
 ### ----------------------- END OF PHASE 4: SPOTTED BASS REMOVAL ----------------------- ###
 
-## ------------------------ END OF ADMIXTURE PHYLOGENOMIC ANALYSIS  ----------------------- ##
+## ------------------------ END OF ANALYSIS 3: ADMIXTURE AND PHYLOGENOMICS ----------------------- ##

@@ -1,5 +1,5 @@
 ---
-title: 'Analysis 5: Admixture Mapping'
+title: 'Analysis 5: Admixture mapping'
 author: "Joe Gunn"
 date: "2022-08-31"
 output: html_document
@@ -427,4 +427,4 @@ This code will show real-time progress of running through each replicate. It wil
 
 ### ----------------------- END OF PHASE 2: ADMIXTURE MAPPING ANALYSIS  ----------------------- ###
 
-## ------------------------ END OF ADMIXTURE MAPPING ANALYSIS  ----------------------- ##
+## ------------------------ END OF ANALYSIS 5: ADMIXTURE MAPPING ----------------------- ##

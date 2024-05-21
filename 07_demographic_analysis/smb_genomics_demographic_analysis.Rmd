@@ -1,5 +1,5 @@
 ---
-title: 'Analysis 7: Demographic analysis'
+title: 'Analysis 7: Demographic inference'
 author: "Joe Gunn"
 date: "2022-09-05"
 output: html_document
@@ -4257,4 +4257,4 @@ These figures were all used as the basis for Supplementary Figure 14 in our manu
 
 ### ----------------------- END OF PHASE 4: DATA SUMMARIZATION AND PLOTTING ----------------------- ###
 
-## ------------------------ END OF DEMOGRAPHIC ANALYSIS  ----------------------- ##
+## ------------------------ END OF ANALYSIS 7: DEMOGRAPHIC INFERENCE ----------------------- ##

@@ -1,5 +1,5 @@
 ---
-title: "Analysis 2: SNP Filtering, Data Processing, and Preliminary Calculations"
+title: "Analysis 2: SNP filtering, data processing, and preliminary calculations"
 author: "Joe Gunn"
 date: "12/11/2019"
 output: html_document
@@ -481,4 +481,4 @@ At this point, the popgen (thinned) and finerad (non-thinned) datasets are fully
 
 ### ----------------------- END OF PHASE 1: FILTER RAW VCF FILE ----------------------- ###
 
-## ------------------------ END OF FILTERING AND PROCESSING ANALYSIS  ----------------------- ##
+## ------------------------ END OF ANALYSIS 2: SNP FILTERING, DATA PROCESSING, AND PRELIMINARY CALCULATIONS ----------------------- ##

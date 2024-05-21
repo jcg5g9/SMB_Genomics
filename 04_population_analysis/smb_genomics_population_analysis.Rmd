@@ -1,5 +1,5 @@
 ---
-title: 'Analysis 4: Population Inference'
+title: 'Analysis 4: Population inference'
 author: "Joe Gunn"
 date: "2022-08-29"
 output: html_document
@@ -983,5 +983,5 @@ save(metadata_populations, file = "data/metadata/metadata_populations.Rda")
 
 ### ----------------------- END OF PHASE 4: POPULATION METADATA GENERATION ----------------------- ###
 
-## ------------------------ END OF POPULATION ANALYSIS  ----------------------- ##
+## ------------------------ END OF ANALYSIS 4: POPULATION INFERENCE  ----------------------- ##
 
