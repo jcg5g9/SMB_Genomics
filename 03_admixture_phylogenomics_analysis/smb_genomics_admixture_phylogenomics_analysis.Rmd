@@ -1,5 +1,5 @@
 ---
-title: 'Analysis 3: Admixture and Phylogenomics'
+title: 'Analysis 3: Admixture and phylogenomics'
 author: "Joe Gunn"
 date: "10/30/2019"
 output: html_document

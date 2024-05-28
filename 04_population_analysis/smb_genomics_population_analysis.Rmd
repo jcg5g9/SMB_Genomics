@@ -25,7 +25,9 @@ library(cowplot)
 library(devtools)
 library(XML)
 library(RColorBrewer)
-source("code/source_code/FinestructureLibrary.R") #Fine-structure R source code
+
+#Fine-structure R source code
+source("code/source_code/FinestructureLibrary.R") 
 ```
 
 ## PHASE 1: DATA PREPARATION
