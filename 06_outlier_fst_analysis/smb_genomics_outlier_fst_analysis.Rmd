@@ -96,11 +96,11 @@ In this step, we are generating lists of individuals to filter from the VCF data
 ##### Generate list file: `data/filtering_data/spotted_bass.txt`
 ```{r}
 # Load in full metadata
-load("../raw_data/metadata.Rda")
+load("../02_filtering_processing_analysis/data/metadata.Rda")
 
 # Filter all individuals but Spotted Bass
 spotted_bass <- metadata %>%
-  filter(species == "Spotted_Bass")
+  filter(species == "Spotted Bass")
 
 # Convert to dataframe
 spotted_bass <- data.frame(spotted_bass) %>%
@@ -123,11 +123,11 @@ save(spotted_bass, file = "data/filtering_data/spotted_bass.Rda")
 ##### Generate list file: `data/filtering_data/smallmouth_bass.txt`
 ```{r}
 # Load in full metadata
-load("../raw_data/metadata.Rda")
+load("../02_filtering_processing_analysis/data/metadata.Rda")
 
 # Filter all individuals but Spotted Bass
 smallmouth_bass <- metadata %>%
-  filter(species == "Smallmouth_Bass")
+  filter(species == "Smallmouth Bass")
 
 # Convert to dataframe
 smallmouth_bass <- data.frame(smallmouth_bass) %>%
@@ -150,11 +150,11 @@ save(smallmouth_bass, file = "data/filtering_data/smallmouth_bass.Rda")
 ##### Generate list file: `data/filtering_data/neosho_bass.txt`
 ```{r}
 # Load in full metadata
-load("../raw_data/metadata.Rda")
+load("../02_filtering_processing_analysis/data/metadata.Rda")
 
 # Filter all individuals but Spotted Bass
 neosho_bass <- metadata %>%
-  filter(species == "Neosho_Bass")
+  filter(species == "Neosho Bass")
 
 # Convert to dataframe
 neosho_bass <- data.frame(neosho_bass) %>%
@@ -430,16 +430,16 @@ metadata_populations_spb <- metadata_populations_spb %>%
   mutate(population = as.character(population))
 
 # Rename population designations in SPID format ("pop_1", "pop_2", etc.)
-metadata_populations_spb$population[metadata_populations_spb$population == "MIDARK"] <- "pop_1"
-metadata_populations_spb$population[metadata_populations_spb$population == "MISS"] <- "pop_2"
-metadata_populations_spb$population[metadata_populations_spb$population == "SKIA"] <- "pop_3"
-metadata_populations_spb$population[metadata_populations_spb$population == "LMULB"] <- "pop_4"
-metadata_populations_spb$population[metadata_populations_spb$population == "WHITE"] <- "pop_5"
-metadata_populations_spb$population[metadata_populations_spb$population == "ELK"] <- "pop_6"
-metadata_populations_spb$population[metadata_populations_spb$population == "ILLI"] <- "pop_7"
-metadata_populations_spb$population[metadata_populations_spb$population == "UPPARK"] <- "pop_8"
-metadata_populations_spb$population[metadata_populations_spb$population == "BAYOU"] <- "pop_9"
-metadata_populations_spb$population[metadata_populations_spb$population == "SPB"] <- "pop_10"
+metadata_populations_spb$population <- factor(with(metadata_populations_spb, ifelse(population=="MIDARK", "pop_1",
+                                                                                    ifelse(population=="MISS", "pop_2",
+                                                                                           ifelse(population=="SKIA", "pop_3",
+                                                                                                  ifelse(population=="LMULB", "pop_4",
+                                                                                                         ifelse(population=="WHITE", "pop_5",
+                                                                                                                ifelse(population=="ELK", "pop_6",
+                                                                                                                       ifelse(population=="ILLI", "pop_7",
+                                                                                                                              ifelse(population=="UPPARK", "pop_8",
+                                                                                                                                     ifelse(population=="BAYOU", "pop_9",
+                                                                                                                                            ifelse(population=="SPB", "pop_10","done"))))))))))))
 
 # Generate text file
 write_delim(metadata_populations_spb, 
@@ -466,15 +466,15 @@ metadata_populations_complex <- metadata_populations_complex %>%
   mutate(population = as.character(population))
 
 # Rename population designations in SPID format ("pop_1", "pop_2", etc.)
-metadata_populations_complex$population[metadata_populations_complex$population == "MIDARK"] <- "pop_1"
-metadata_populations_complex$population[metadata_populations_complex$population == "MISS"] <- "pop_2"
-metadata_populations_complex$population[metadata_populations_complex$population == "SKIA"] <- "pop_3"
-metadata_populations_complex$population[metadata_populations_complex$population == "LMULB"] <- "pop_4"
-metadata_populations_complex$population[metadata_populations_complex$population == "WHITE"] <- "pop_5"
-metadata_populations_complex$population[metadata_populations_complex$population == "ELK"] <- "pop_6"
-metadata_populations_complex$population[metadata_populations_complex$population == "ILLI"] <- "pop_7"
-metadata_populations_complex$population[metadata_populations_complex$population == "UPPARK"] <- "pop_8"
-metadata_populations_complex$population[metadata_populations_complex$population == "BAYOU"] <- "pop_9"
+metadata_populations_complex$population <- factor(with(metadata_populations_complex, ifelse(population=="MIDARK", "pop_1",
+                                                                                            ifelse(population=="MISS", "pop_2",
+                                                                                                   ifelse(population=="SKIA", "pop_3",
+                                                                                                          ifelse(population=="LMULB", "pop_4",
+                                                                                                                 ifelse(population=="WHITE", "pop_5",
+                                                                                                                        ifelse(population=="ELK", "pop_6",
+                                                                                                                               ifelse(population=="ILLI", "pop_7",
+                                                                                                                                      ifelse(population=="UPPARK", "pop_8",
+                                                                                                                                             ifelse(population=="BAYOU", "pop_9","done")))))))))))
 
 # Generate text file
 write_delim(metadata_populations_complex, 
@@ -504,12 +504,12 @@ metadata_populations_neosho <- metadata_populations_neosho %>%
   mutate(population = as.character(population))
 
 # Rename population designations in SPID format ("pop_1", "pop_2", etc.)
-metadata_populations_neosho$population[metadata_populations_neosho$population == "MIDARK"] <- "pop_1"
-metadata_populations_neosho$population[metadata_populations_neosho$population == "LMULB"] <- "pop_2"
-metadata_populations_neosho$population[metadata_populations_neosho$population == "ELK"] <- "pop_3"
-metadata_populations_neosho$population[metadata_populations_neosho$population == "ILLI"] <- "pop_4"
-metadata_populations_neosho$population[metadata_populations_neosho$population == "UPPARK"] <- "pop_5"
-metadata_populations_neosho$population[metadata_populations_neosho$population == "BAYOU"] <- "pop_6"
+metadata_populations_neosho$population <- factor(with(metadata_populations_neosho, ifelse(population=="MIDARK", "pop_1",
+                                                                                          ifelse(population=="LMULB", "pop_2",
+                                                                                                 ifelse(population=="ELK", "pop_3",
+                                                                                                        ifelse(population=="ILLI", "pop_4",
+                                                                                                               ifelse(population=="UPPARK", "pop_5",
+                                                                                                                      ifelse(population=="BAYOU", "pop_6","done"))))))))
 
 # Generate text file
 write_delim(metadata_populations_neosho, 
@@ -542,9 +542,9 @@ metadata_populations_smallmouth <- metadata_populations_smallmouth %>%
   mutate(population = as.character(population))
 
 # Rename population designations in SPID format ("pop_1", "pop_2", etc.)
-metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "WHITE"] <- "pop_1"
-metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "MISS"] <- "pop_2"
-metadata_populations_smallmouth$population[metadata_populations_smallmouth$population == "SKIA"] <- "pop_3"
+metadata_populations_smallmouth$population <- factor(with(metadata_populations_smallmouth, ifelse(population=="WHITE", "pop_1",
+                                                                                                   ifelse(population=="MISS", "pop_2",
+                                                                                                          ifelse(population=="SKIA", "pop_3","done")))))
 
 # Generate text file
 write_delim(metadata_populations_smallmouth, 

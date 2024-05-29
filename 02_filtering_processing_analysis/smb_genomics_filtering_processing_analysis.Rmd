@@ -9,7 +9,7 @@ output: html_document
 We investigated the extent of genomic divergence, local directional selection, and admixture between the Smallmouth Bass (<i>Micropterus dolomieu</i>) and the Neosho Bass (<i>M. velox</i>) in the Central Interior Highlands (CIH) ecoregion of central north America. Specifically, we used ddRADseq data to assessed the phylogenomic relationship between and within species, characterizing inter- and intraspecific diversity and SNPs potentially under local directional selection at the population level. Additionally, we inferred the relative timing of admxiture in Neosho Bass streams where there is known introgressive hybridization with Smallmouth Bass to understand the influence of natural, historic geographic factors on mixing (stream capture or transient flooding) vs. anthropogenic factors (i.e., non-native introductions through stocking), which is known to have occurred widely in these economically valuable species. We ultimately hoped to provide novel insights into the diversity of endemic, ecologically important and popular sport fish in the CIH.
 
 ## Specific Aim: Filtering SNP and individual sample data and performing preliminary allele frequency calculations
-In this analysis, we filter the raw VCF data, representing 95 samples consisting of Spotted Bass, Smallmouth Bass, and Neosho Bass, and 127,429 ddRADseq loci markers for all samples. We performed the following filtering steps, in this order:
+In this analysis, we enumerate and summarize the full sample metadata (i.e., how many fish per species and per population ), and we filter the raw VCF SNP variant data, representing 95 samples consisting of Spotted Bass, Smallmouth Bass, and Neosho Bass, and 127,429 ddRADseq loci markers for all samples. We performed the following filtering steps, in this order:
 
 <b> Filtering Steps for full dataset </b>: <br>
 1. removal of samples with greater than 20% missing genotype calls across SNPs <br>
@@ -30,7 +30,8 @@ At this point in the filtering process, we split the data into two distinct data
 We detail each step of the filtering process below.
 
 ## Phases of analysis:
-### Phase 1: Filter raw VCF file
+### Phase 1: Data enumeration and summary
+### Phase 2: Filter raw VCF file
 
 ## Libraries needed for Analysis
 ```{r libraries, echo = FALSE}
@@ -40,7 +41,105 @@ library(cowplot)
 library(devtools)
 ```
 
-## PHASE 1: Filter raw VCF file
+## PHASE 1: Data enumeration and summary
+In this phase of the analysis, we enumerate the full dataset and summarize sample sizes per species and per population for the study.
+
+### STEP 1: Read in and clean metadata for all black bass samples.
+In this step, we read in previously curated metadata for three black bass species, including Smallmouth Bass (<i>Micropterus dolomieu</i>), Neosho Bass (<i>M. velox</i>), and Spotted Bass (<i>M. punctulatus</i>) collected from across the species' native ranges in the central interior highlands (`../raw_data/metadata.xlsx`).
+
+#### 1a. Read in and clean sample metadata.
+In this step, we read in the full metadata for all fish included in the study. Data include: 
+
+   1. "sample_id": a unique, alphanumeric ID for each fish sample
+   2. "species": species of black bass (Neosho Bass, Smallmouth Bass, or Spotted Bass)
+   3. "stream": stream or lake population from which an individual was collected
+   
+##### 1a.1. Read in full metadata and convert characters to factors; run the Rmd chunk below.
+
+##### Read in and clean full metadata:
+```{r}
+# Read in raw metadata file
+metadata <- read_excel("../raw_data/metadata.xlsx")
+
+# Convert characters to factors
+metadata <- metadata %>%
+  mutate(sample_id = factor(sample_id),
+         species = factor(species), 
+         stream = factor(stream))
+
+# Save metadata for downstream analyses
+save(metadata, file = "data/metadata.Rda")
+```
+
+### STEP 2: Summarize the full metadata.
+In this step, we are summarizing the full dataset by calculating the number of samples within groups of interest (i.e., species and streams within species).
+
+#### 2a. Read in and summarize metadata data; run the Rmd chunk below:
+
+##### Summarize full metadata:
+```{r}
+# Load metadata
+load("data/metadata.Rda")
+
+# Calculate number of elephant samples per species
+metadata %>% 
+  count()
+
+# Calculate number of individuals per species
+metadata %>% 
+  group_by(species) %>%
+  count()
+
+# Calculate number of individuals per stream or lake population
+metadata %>% 
+  group_by(stream) %>%
+  count()
+```
+
+### Metadata summary:
+
+## Total
+<b><i>N</i><sub>total</sub></b> = 95 <br>
+
+## By species
+<b><i>N</i><sub>Neosho Bass</sub></b> = 66 <br>
+<b><i>N</i><sub>Smallmouth Bass</sub></b> = 25 <br>
+<b><i>N</i><sub>Spotted Bass</sub></b> = 4 <br>
+
+## By stream
+<b>Neosho Bass</b>
+<b><i>N</i><sub>Baron Fork</sub></b> = 6 <br>
+<b><i>N</i><sub>Big Piney AR</sub></b> = 2 <br>
+<b><i>N</i><sub>Big Sugar Creek</sub></b> = 6 <br>
+<b><i>N</i><sub>Buffalo Creek</sub></b> = 6 <br>
+<b><i>N</i><sub>Caney Creek</sub></b> = 5 <br>
+<b><i>N</i><sub>Elk River</sub></b> = 7 <br>
+<b><i>N</i><sub>Honey Creek</sub></b> = 6 <br>
+<b><i>N</i><sub>Illinois Bayou</sub></b> = 5 <br>
+<b><i>N</i><sub>Illinois River</sub></b> = 7 <br>
+<b><i>N</i><sub>Lee Creek</sub></b> = 7 <br>
+<b><i>N</i><sub>Illinois Bayou</sub></b> = 4 <br>
+<b><i>N</i><sub>Elk River</sub></b> = 7 <br>
+<b><i>N</i><sub>Mulberry River</sub></b> = 4 <br>
+<b><i>N</i><sub>Spavinaw Creek</sub></b> = 6 <br>
+<b><i>N</i><sub>Sycamore Creek</sub></b> = 2 <br>
+
+<b>Smallmouth Bass</b>
+<b><i>N</i><sub>Big Piney MO</sub></b> = 5 <br>
+<b><i>N</i><sub>Crooked Creek</sub></b> = 4 <br>
+<b><i>N</i><sub>Skiatook Lake</sub></b> = 5 <br>
+<b><i>N</i><sub>Stockton Lake</sub></b> = 4 <br>
+<b><i>N</i><sub>Tablerock Lake</sub></b> = 4 <br>
+<b><i>N</i><sub>White River</sub></b> = 3 <br>
+
+<b>Spotted Bass</b>
+<b><i>N</i><sub>Spotted Bass</sub></b> = 4 <br>
+
+These results are the basis for Table 1 in the final ms.
+
+### ----------------------- END OF PHASE 1: DATA ENUMERATION AND SUMMARY ----------------------- ###
+
+## PHASE 2: Filter raw VCF file
 In this phase of the analysis, we are filtering the final, raw VCF file which was generated with stringent filtering criteria at Floragenex, Inc. (see `project_info/Floragenex_project_report.pdf`). The file was originally named "AR21_Aligned_Genotypes_stringent.vcf"; we renamed the file "smb_genomics.vcf" for convenience, and the file can be found here: `raw_data/smb_genomics.vcf`. <br>
 
 Importantly, raw sequences (.fastq files) generated by Illumina ddRAD-seq were NOT mapped to a reference genome, as there was not a closely related and annotated reference genome at the time of analysis. Thus, the first column of the VCF ("#CHROM"), which customarily contains chromosomal information, instead includes a numerical designation for the RAD kmer (95 bp haplotype sequence) on which the SNP was found. The nucleotide position of the SNP ("#POS" column) is also given. Each RAD kmer is also referred to as a "contig". <br>
@@ -479,6 +578,6 @@ At this point, the popgen (thinned) and finerad (non-thinned) datasets are fully
 #cp B_02_finerad_filter_het45 ../analysis_data/finerad.vcf
 ```
 
-### ----------------------- END OF PHASE 1: FILTER RAW VCF FILE ----------------------- ###
+### ----------------------- END OF PHASE 2: FILTER RAW VCF FILE ----------------------- ###
 
 ## ------------------------ END OF ANALYSIS 2: SNP FILTERING, DATA PROCESSING, AND PRELIMINARY CALCULATIONS ----------------------- ##

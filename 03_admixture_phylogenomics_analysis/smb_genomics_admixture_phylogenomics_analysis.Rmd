@@ -37,16 +37,16 @@ In this step, we are reading in, cleaning, and filtering the raw metadata to pre
 ##### Read in and clean metadata
 ```{r}
 ## Read in metadata
-metadata <- read_excel("../raw_data/metadata.xlsx")
+metadata <- read_excel("../02_filtering_processing_analysis/data/metadata.Rda")
 
 ## Omit samples removed from filtering steps in Analysis 2
 metadata <- metadata %>%
-  filter(sample_id != "GRSPB34_1") %>%
-  filter(sample_id != "BFORK32_1") %>%
-  filter(sample_id != "ER05_1")
+  filter(sample_id != "GRSPB34") %>%
+  filter(sample_id != "BFORK32") %>%
+  filter(sample_id != "ER05")
 
 ## Save metadata for use in future analyses
-save(metadata, file = "../raw_data/metadata.Rda")
+save(metadata, file = "data/metadata.Rda")
 ```
 
 #### 1b: Summarize sample sizes by species and stream; run the Rmd chunk below:
@@ -54,7 +54,7 @@ save(metadata, file = "../raw_data/metadata.Rda")
 #### Summarize metadata
 ```{r}
 # Load metadata
-load("../raw_data/metadata.Rda")
+load("data/metadata.Rda")
 
 ## Get sample sizes by species
 species_sample_sizes <- metadata %>%
@@ -242,8 +242,11 @@ This figure was used as the basis for Supplementary Figure 3 in the manuscript (
 
 ##### Generate q-plots for all samples: 1) `figures/admixture_figures/q_plot_figures/01_all_k4.pdf` and 2) `figures/admixture_figures/q_plot_figures/01_all_k3.pdf`
 ```{r}
-#Read-in ADMIXTURE q-value results for best K = 4
+#Read in ADMIXTURE q-value results for best K = 4
 hybrid_screen_K4 <- readQ("data/admixture_data/q_data/all_samples/01_all.4.Q")
+
+# Read in metadata
+load("data/metadata.Rda")
 
 #Save K4 data for downstream analyses
 save(hybrid_screen_K4, file = "data/hybrid_screen_k4.Rda")
@@ -257,7 +260,7 @@ plotQ(hybrid_screen_K4,
       grplab = metadata,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("SPRMO49_1","GRSPB52_1","GRSPB51_1","GLVR11_1","STOCK03_1","STOCK04_1","STOCK05_1","STOCK06_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","TBLR01_1","TBLR02_1","TBLR03_1","TBLR04_1","GRSPB35_1","GRSPB36_1","GRSPB37_1","GRSPB39_1","GRSPB41_1","GRSPB50_1","SKIA03_1","SKIA04_1","SKIA05_1","SKIA06_1","SKIA09_1","BC01_1","BC07_1","BC08_1","BC09_1","BC12_1","BC14_1","SC06_1","SC37_1","MI419_1","MI420_1","MI421_1","MI422_1","MI423_1","MI425_1","ER17_1","ER20_1","ER30_1","ER33_1","ER35_1","ER44_1","HC38_1","HC40_1","HC41_1","HC42_1","HC43_1","HC44_1","SPVW11_1","SPVW02_1","SPVW05_1","SPVW07_1","SPVW12_1","SPVW14_1","NOIS07_1","NOIS08_1","NOIS12_1","NOIS18_1","GLVR4_1","SPRMO11_1","SPRMO19_1","BFORK02_1","BFORK23_1","BFORK24_1","BFORK30_1","BFORK49_1","GRSPB02_1","GRSPB03_1","GRSPB69_1","CANEY15_1","CANEY16_1","BFC02_1","BFC06_1","BFC10_1","BFC49_1","AR16_1","AR18_1","AR19_1","AR21_1","AR29_1","AR30_1","AT02_1","AT05_1","AT08_1","AT09_1","AT12_1"),
+      subsetgrp =  c("SPRMO49","GRSPB52","GRSPB51","GLVR11","STOCK03","STOCK04","STOCK05","STOCK06","BP01","BP02","BP07","BP10","BP17","TBLR01","TBLR02","TBLR03","TBLR04","GRSPB35","GRSPB36","GRSPB37","GRSPB39","GRSPB41","GRSPB50","SKIA03","SKIA04","SKIA05","SKIA06","SKIA09","BC01","BC07","BC08","BC09","BC12","BC14","SC06","SC37","MI419","MI420","MI421","MI422","MI423","MI425","ER17","ER20","ER30","ER33","ER35","ER44","HC38","HC40","HC41","HC42","HC43","HC44","SPVW11","SPVW02","SPVW05","SPVW07","SPVW12","SPVW14","NOIS07","NOIS08","NOIS12","NOIS18","GLVR4","SPRMO11","SPRMO19","BFORK02","BFORK23","BFORK24","BFORK30","BFORK49","GRSPB02","GRSPB03","GRSPB69","CANEY15","CANEY16","BFC02","BFC06","BFC10","BFC49","AR16","AR18","AR19","AR21","AR29","AR30","AT02","AT05","AT08","AT09","AT12"),
       clustercol = c("forestgreen","goldenrod3","deepskyblue","deeppink2"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -292,7 +295,7 @@ plotQ(hybrid_screen_K3,
       grplab = metadata,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("SPRMO49_1","GRSPB52_1","GRSPB51_1","GLVR11_1","STOCK03_1","STOCK04_1","STOCK05_1","STOCK06_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","TBLR01_1","TBLR02_1","TBLR03_1","TBLR04_1","GRSPB35_1","GRSPB36_1","GRSPB37_1","GRSPB39_1","GRSPB41_1","GRSPB50_1","SKIA03_1","SKIA04_1","SKIA05_1","SKIA06_1","SKIA09_1","BC01_1","BC07_1","BC08_1","BC09_1","BC12_1","BC14_1","SC06_1","SC37_1","MI419_1","MI420_1","MI421_1","MI422_1","MI423_1","MI425_1","ER17_1","ER20_1","ER30_1","ER33_1","ER35_1","ER44_1","HC38_1","HC40_1","HC41_1","HC42_1","HC43_1","HC44_1","SPVW11_1","SPVW02_1","SPVW05_1","SPVW07_1","SPVW12_1","SPVW14_1","NOIS07_1","NOIS08_1","NOIS12_1","NOIS18_1","GLVR4_1","SPRMO11_1","SPRMO19_1","BFORK02_1","BFORK23_1","BFORK24_1","BFORK30_1","BFORK49_1","GRSPB02_1","GRSPB03_1","GRSPB69_1","CANEY15_1","CANEY16_1","BFC02_1","BFC06_1","BFC10_1","BFC49_1","AR16_1","AR18_1","AR19_1","AR21_1","AR29_1","AR30_1","AT02_1","AT05_1","AT08_1","AT09_1","AT12_1"),
+      subsetgrp =  c("SPRMO49","GRSPB52","GRSPB51","GLVR11","STOCK03","STOCK04","STOCK05","STOCK06","BP01","BP02","BP07","BP10","BP17","TBLR01","TBLR02","TBLR03","TBLR04","GRSPB35","GRSPB36","GRSPB37","GRSPB39","GRSPB41","GRSPB50","SKIA03","SKIA04","SKIA05","SKIA06","SKIA09","BC01","BC07","BC08","BC09","BC12","BC14","SC06","SC37","MI419","MI420","MI421","MI422","MI423","MI425","ER17","ER20","ER30","ER33","ER35","ER44","HC38","HC40","HC41","HC42","HC43","HC44","SPVW11","SPVW02","SPVW05","SPVW07","SPVW12","SPVW14","NOIS07","NOIS08","NOIS12","NOIS18","GLVR4","SPRMO11","SPRMO19","BFORK02","BFORK23","BFORK24","BFORK30","BFORK49","GRSPB02","GRSPB03","GRSPB69","CANEY15","CANEY16","BFC02","BFC06","BFC10","BFC49","AR16","AR18","AR19","AR21","AR29","AR30","AT02","AT05","AT08","AT09","AT12"),
       clustercol = c("goldenrod3","deepskyblue","deeppink2"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -334,11 +337,11 @@ We considered an individual to be genetically "pure" if it possessed greater tha
 ##### Generate list of Spotted Bass hybrids: `data/filtering_data/bfc10.txt` 
 ```{r}
 # Load metadata
-load("../raw_data/metadata.Rda")
+load("data/metadata.Rda")
 
 ## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
 BFC10 <- metadata %>%
-  filter(sample_id == "BFC10_1")
+  filter(sample_id == "BFC10")
 
 # Select the first column and convert to data frame
 BFC10 <- data.frame(BFC10) %>%
@@ -361,7 +364,7 @@ save(BFC10, file = "data/filtering_data/bcf10.Rda")
 ##### Generate list of pure individuals: `data/filtering_data/pure_individuals.txt`
 ```{r}
 # Load metadata
-load("../raw_data/metadata.Rda")
+load("data/metadata.Rda")
 
 # Load K4 data
 load("data/hybrid_screen_k4.Rda")
@@ -371,7 +374,7 @@ all_Q <- cbind(metadata, hybrid_screen_K4)
 
 ## Filter out BCF10 (Spotted Bass X Smallmouth Bass hybrid)
 all_Q <- all_Q %>%
-  filter(sample_id != "BFC10_1")
+  filter(sample_id != "BFC10")
 
 ## Change column names on dataset
 colnames(all_Q) <- c("sample_id", "species", "stream", "north_ark", "spotted_bass", "midark", "smallmouth_bass")
@@ -524,7 +527,7 @@ Run: `sbatch vcftools.sh`
 ##### Filter out admixed individuals from metadata
 ```{r}
 # Load metadata
-load("../raw_data/metadata.Rda")
+load("data/metadata.Rda")
 
 # Omit admixed individuals (Smallmouth Bass X Neosho Bass) from pure metadata
 metadata_pure <- metadata[ ! metadata$sample_id %in% admixed_individuals, ]
@@ -665,6 +668,9 @@ Given the very similar CV error values given for <i>K</i>=3, <i>K</i>=4, and <i>
 #Read-in ADMIXTURE q-value results for best K = 3
 pure_K3 <- readQ("data/admixture_data/q_data/pure_samples/02_pure.3.Q")
 
+# Load pure metadata
+load("data/metadata/metadata_pure.Rda")
+
 ## Generate figure, with labels in order by species (Spotted Bass, then Smallmouth Bass, then Neosho Bass)
 plotQ(pure_K3,
       showindlab = T, 
@@ -675,7 +681,7 @@ plotQ(pure_K3,
       showgrplab = F,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("GRSPB51_1","GRSPB52_1","SPRMO49_1","GLVR11_1","TBLR02_1","TBLR04_1","TBLR01_1","TBLR03_1","GRSPB37_1","GRSPB41_1","GRSPB39_1","GRSPB50_1","GRSPB35_1","GRSPB36_1","STOCK04_1","STOCK03_1","STOCK06_1","STOCK05_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","SKIA04_1","SKIA09_1","SKIA03_1","SKIA06_1","SKIA05_1","SC37_1","SC06_1","HC43_1","HC40_1","HC38_1","HC41_1","HC44_1","HC42_1","BFORK23_1","CANEY16_1","GRSPB69_1","BFORK02_1","GRSPB02_1","GRSPB03_1","BFORK49_1","NOIS12_1","BFC06_1","BFC49_1","BFC02_1","AR18_1","AR19_1","AR21_1","AR16_1"),
+      subsetgrp =  c("GRSPB51","GRSPB52","SPRMO49","GLVR11","TBLR02","TBLR04","TBLR01","TBLR03","GRSPB37","GRSPB41","GRSPB39","GRSPB50","GRSPB35","GRSPB36","STOCK04","STOCK03","STOCK06","STOCK05","BP01","BP02","BP07","BP10","BP17","SKIA04","SKIA09","SKIA03","SKIA06","SKIA05","SC37","SC06","HC43","HC40","HC38","HC41","HC44","HC42","BFORK23","CANEY16","GRSPB69","BFORK02","GRSPB02","GRSPB03","BFORK49","NOIS12","BFC06","BFC49","BFC02","AR18","AR19","AR21","AR16"),
       clustercol = c("deeppink2","goldenrod3","deepskyblue"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -708,7 +714,7 @@ plotQ(pure_K4,
       showgrplab = F,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("GRSPB51_1","GRSPB52_1","SPRMO49_1","GLVR11_1","TBLR02_1","TBLR04_1","TBLR01_1","TBLR03_1","GRSPB37_1","GRSPB41_1","GRSPB39_1","GRSPB50_1","GRSPB35_1","GRSPB36_1","STOCK04_1","STOCK03_1","STOCK06_1","STOCK05_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","SKIA04_1","SKIA09_1","SKIA03_1","SKIA06_1","SKIA05_1","SC37_1","SC06_1","HC43_1","HC40_1","HC38_1","HC41_1","HC44_1","HC42_1","BFORK23_1","CANEY16_1","GRSPB69_1","BFORK02_1","GRSPB02_1","GRSPB03_1","BFORK49_1","NOIS12_1","BFC06_1","BFC49_1","BFC02_1","AR18_1","AR19_1","AR21_1","AR16_1"),
+      subsetgrp =  c("GRSPB51","GRSPB52","SPRMO49","GLVR11","TBLR02","TBLR04","TBLR01","TBLR03","GRSPB37","GRSPB41","GRSPB39","GRSPB50","GRSPB35","GRSPB36","STOCK04","STOCK03","STOCK06","STOCK05","BP01","BP02","BP07","BP10","BP17","SKIA04","SKIA09","SKIA03","SKIA06","SKIA05","SC37","SC06","HC43","HC40","HC38","HC41","HC44","HC42","BFORK23","CANEY16","GRSPB69","BFORK02","GRSPB02","GRSPB03","BFORK49","NOIS12","BFC06","BFC49","BFC02","AR18","AR19","AR21","AR16"),
       clustercol = c("goldenrod3","deeppink2","deepskyblue","navyblue"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -741,7 +747,7 @@ plotQ(pure_K5,
       showgrplab = F,
       ordergrp = T,
       selgrp = "sample_id",
-      subsetgrp =  c("GRSPB51_1","GRSPB52_1","SPRMO49_1","GLVR11_1","TBLR02_1","TBLR04_1","TBLR01_1","TBLR03_1","GRSPB37_1","GRSPB41_1","GRSPB39_1","GRSPB50_1","GRSPB35_1","GRSPB36_1","STOCK04_1","STOCK03_1","STOCK06_1","STOCK05_1","BP01_1","BP02_1","BP07_1","BP10_1","BP17_1","SKIA04_1","SKIA09_1","SKIA03_1","SKIA06_1","SKIA05_1","SC37_1","SC06_1","HC43_1","HC40_1","HC38_1","HC41_1","HC44_1","HC42_1","BFORK23_1","CANEY16_1","GRSPB69_1","BFORK02_1","GRSPB02_1","GRSPB03_1","BFORK49_1","NOIS12_1","BFC06_1","BFC49_1","BFC02_1","AR18_1","AR19_1","AR21_1","AR16_1"),
+      subsetgrp =  c("GRSPB51","GRSPB52","SPRMO49","GLVR11","TBLR02","TBLR04","TBLR01","TBLR03","GRSPB37","GRSPB41","GRSPB39","GRSPB50","GRSPB35","GRSPB36","STOCK04","STOCK03","STOCK06","STOCK05","BP01","BP02","BP07","BP10","BP17","SKIA04","SKIA09","SKIA03","SKIA06","SKIA05","SC37","SC06","HC43","HC40","HC38","HC41","HC44","HC42","BFORK23","CANEY16","GRSPB69","BFORK02","GRSPB02","GRSPB03","BFORK49","NOIS12","BFC06","BFC49","BFC02","AR18","AR19","AR21","AR16"),
       clustercol = c("deeppink2","goldenrod3","forestgreen","deepskyblue","navyblue"),
       showlegend = F,
       legendmargin = c(2,2,2,2),
@@ -822,13 +828,13 @@ In this step, we are conducting phylogenomic analysis on the pure VCF dataset ('
     -a: gives the ID for the final SNP in VCF
     -b: perform bootstrapping
     -B: number of bootstrap replicates
-    -o: GLVR11_1 (outgroup; Spotted Bass)
+    -o: GLVR11 (outgroup; Spotted Bass)
   
-We run 1,000 bootstrap replicates and set a Spotted Bass sample (GLVR11_1) as an outgroup to root the tree (this is based on our knowledge of the phylogenetic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass)
+We run 1,000 bootstrap replicates and set a Spotted Bass sample (GLVR11) as an outgroup to root the tree (this is based on our knowledge of the phylogenetic relationship between Spotted Bass, Smallmouth Bass, and Neosho Bass)
 
 ##### Command line code for running SNPHYLO. UNCOMMENT this code in the shell script:
 ```{r}
-# snphylo.sh -v ../vcfdata/all_pure.vcf -r -a 288336 -b -B 1000 -o GLVR11_1
+# snphylo.sh -v ../vcfdata/all_pure.vcf -r -a 288336 -b -B 1000 -o GLVR11
 ```
 
 #### 2b. Run SNPHYLO analysis. Navigate to `code/shell_scripts/snphylo.sh` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
@@ -852,11 +858,11 @@ In this phase of the analysis, we are omitting all Spotted Bass samples from the
 ##### Generate list of Spotted Bass individuals: `data/filtering_data/spotted_bass.txt` 
 ```{r}
 # Load metadata
-load("../raw_data/metadata.Rda")
+load("data/metadata.Rda")
 
 ## Get list with just BFC10 to be omitted in downstream analysis (we then omit it from the full dataset in the step below)
 spotted_bass <- metadata %>%
-  filter(species == "Spotted_Bass")
+  filter(species == "Spotted Bass")
 
 # Select the first column and convert to data frame
 spotted_bass <- data.frame(spotted_bass) %>%

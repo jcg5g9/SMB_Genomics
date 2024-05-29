@@ -115,11 +115,11 @@ This code generates the file: `data/processed_bed/all_samples/01_finerad_spb_hyb
 ##### Read in metadata and generate Spotted Bass list: `data/filtering_data/spotted_bass.txt`
 ```{r}
 # Load metadata
-load("../raw_data/metadata.Rda")
+load("../02_filtering_processing_analysis/data/metadata.Rda")
 
 # Filter out spotted bass only from metadata
 spotted_bass <- metadata %>%
-  filter(species == "Spotted_Bass")
+  filter(species == "Spotted Bass")
 
 # Select the first column and convert to data frame
 spotted_bass <- data.frame(spotted_bass) %>%
